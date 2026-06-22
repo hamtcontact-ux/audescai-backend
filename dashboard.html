@@ -4,7 +4,7 @@
 
 <head>
     <script>
-        window.onerror = function(msg, url, line, col, error) {
+        window.onerror = function (msg, url, line, col, error) {
             alert("Error: " + msg + "\nEn: " + url + "\nLínea: " + line + (error ? "\nDetalles: " + error.stack : ""));
             return false;
         };
@@ -17,7 +17,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyALrJvcf7XiDwB_P4PoT4hJ5UFsiXQrngg",
@@ -157,7 +157,8 @@
 <body
     class="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden selection:bg-primary/30 selection:text-primary-fixed">
     <!-- Sidebar mobile overlay backdrop -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-background/60 backdrop-blur-sm z-30 hidden transition-opacity duration-300"></div>
+    <div id="sidebar-overlay"
+        class="fixed inset-0 bg-background/60 backdrop-blur-sm z-30 hidden transition-opacity duration-300"></div>
 
     <!-- SideNavBar -->
     <nav id="sidebar"
@@ -170,7 +171,8 @@
                 </div>
                 <div>
                     <h1 class="font-title-lg text-title-lg font-bold text-primary tracking-tight">AudescAI</h1>
-                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Accesibilidad Premium</p>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                        Accesibilidad Premium</p>
                 </div>
             </div>
             <button id="mobile-sidebar-close" class="md:hidden text-on-surface-variant hover:text-on-surface p-1">
@@ -193,14 +195,16 @@
                 </a>
             </li>
             <li>
-                <a id="nav-settings-btn" class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
+                <a id="nav-settings-btn"
+                    class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
                     href="#">
                     <span class="material-symbols-outlined">settings</span>
                     <span>Configuración</span>
                 </a>
             </li>
             <li>
-                <a id="nav-logout-btn" class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
+                <a id="nav-logout-btn"
+                    class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
                     href="#">
                     <span class="material-symbols-outlined">logout</span>
                     <span>Cerrar Sesión</span>
@@ -221,14 +225,15 @@
                 <span class="material-symbols-outlined">add</span>
                 Nuevo Proyecto
             </button>
-            <div
-                id="user-profile-btn"
+            <div id="user-profile-btn"
                 class="flex items-center gap-sm px-sm py-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
-                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                <div
+                    class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                     <span class="material-symbols-outlined">person</span>
                 </div>
                 <div class="truncate">
-                    <p id="user-email-display" class="font-label-md text-label-md text-on-surface font-semibold truncate">Cargando...</p>
+                    <p id="user-email-display"
+                        class="font-label-md text-label-md text-on-surface font-semibold truncate">Cargando...</p>
                     <p class="font-label-sm text-label-sm text-on-surface-variant">Usuario</p>
                 </div>
             </div>
@@ -240,7 +245,8 @@
         <header
             class="sticky top-0 z-30 glass-panel border-b-0 border-white/5 px-md md:px-lg h-20 flex justify-between items-center">
             <div class="flex items-center">
-                <button id="mobile-sidebar-toggle" class="md:hidden text-on-surface hover:text-primary transition-colors p-2 mr-2">
+                <button id="mobile-sidebar-toggle"
+                    class="md:hidden text-on-surface hover:text-primary transition-colors p-2 mr-2">
                     <span class="material-symbols-outlined text-[28px]">menu</span>
                 </button>
                 <h2 class="font-headline-md text-headline-md text-on-surface">Mis Proyectos</h2>
@@ -259,7 +265,7 @@
                     <span class="material-symbols-outlined text-[20px]">cloud_upload</span>
                     + Subir Nuevo Video
                 </button>
-                
+
                 <!-- Botón de Búsqueda Móvil -->
                 <button
                     class="sm:hidden w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
@@ -283,9 +289,10 @@
                 <!-- Se cargará dinámicamente desde Firestore -->
             </div>
         </div>
-        
+
         <!-- Mobile FAB (Floating Action Button) for upload -->
-        <button id="mobile-fab-upload" class="sm:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary text-on-primary shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all glow-btn border border-primary/20 ring-4 ring-primary/10 animate-bounce">
+        <button id="mobile-fab-upload"
+            class="sm:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary text-on-primary shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all glow-btn border border-primary/20 ring-4 ring-primary/10 animate-bounce">
             <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">add</span>
         </button>
     </main>
@@ -360,11 +367,15 @@
                 <div class="p-lg flex flex-col gap-sm">
                     <div class="flex flex-col gap-xs">
                         <label class="font-label-sm text-label-sm text-on-surface-variant">OPENAI_API_KEY</label>
-                        <input id="settings-api-key" type="password" class="w-full bg-surface-container-high border border-outline-variant rounded-md p-2 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all" placeholder="sk-proj-...">
-                        <p class="text-[10px] text-on-surface-variant/50">Tu clave se guarda localmente en este navegador.</p>
+                        <input id="settings-api-key" type="password"
+                            class="w-full bg-surface-container-high border border-outline-variant rounded-md p-2 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
+                            placeholder="sk-proj-...">
+                        <p class="text-[10px] text-on-surface-variant/50">Tu clave se guarda localmente en este
+                            navegador.</p>
                     </div>
                 </div>
-                <div class="p-md border-t border-white/10 flex justify-end gap-3 bg-surface-container-low/50 rounded-b-xl">
+                <div
+                    class="p-md border-t border-white/10 flex justify-end gap-3 bg-surface-container-low/50 rounded-b-xl">
                     <button
                         class="px-5 py-2 rounded-lg text-on-surface font-label-md hover:bg-white/5 transition-colors border border-outline-variant/30"
                         id="cancel-settings-btn">Cancelar</button>
@@ -717,14 +728,14 @@
                         return new Promise((resolve, reject) => {
                             const xhr = new XMLHttpRequest();
                             xhr.open('POST', cloudinaryUrl, true);
-                            
+
                             xhr.upload.onprogress = (e) => {
                                 if (e.lengthComputable) {
                                     const uploadProgress = (e.loaded / e.total) * 70; // Escala a 10-80%
                                     updateProgressUI(10 + uploadProgress, 'Subiendo video...');
                                 }
                             };
-                            
+
                             xhr.onload = () => {
                                 if (xhr.status >= 200 && xhr.status < 300) {
                                     try {
@@ -737,7 +748,7 @@
                                     reject(new Error('Fallo la subida a Cloudinary: ' + xhr.statusText));
                                 }
                             };
-                            
+
                             xhr.onerror = () => reject(new Error('Error de red en la subida a Cloudinary'));
                             xhr.send(formData);
                         });
@@ -756,8 +767,7 @@
                     });
 
                     // 4. Petición HTTP POST hacia n8n en Coolify
-                    const n8nUrl = 'http://n8n-itsqful57xby634nt9mr2a6g.187.77.255.196.sslip.io/webhook/procesar-video';
-                    
+                    const n8nUrl = 'https://n8n.cineparaciegos.com/webhook/procesar-video';
                     const res = await fetch(n8nUrl, {
                         method: 'POST',
                         headers: {
@@ -837,4 +847,5 @@
         });
     </script>
 </body>
+
 </html>
