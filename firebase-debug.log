@@ -1,0 +1,17 @@
+[debug] [2026-06-22T06:48:10.432Z] ----------------------------------------------------------------------
+[debug] [2026-06-22T06:48:10.435Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Hamt\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-06-22T06:48:10.435Z] CLI Version:   15.22.0
+[debug] [2026-06-22T06:48:10.436Z] Platform:      win32
+[debug] [2026-06-22T06:48:10.436Z] Node Version:  v24.16.0
+[debug] [2026-06-22T06:48:10.436Z] Detected Agent: unknown
+[debug] [2026-06-22T06:48:10.436Z] Time:          Mon Jun 22 2026 03:48:10 GMT-0300 (hora estándar de Argentina)
+[debug] [2026-06-22T06:48:10.436Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-06-22T06:48:12.387Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-06-22T06:48:12.388Z] > authorizing via signed-in user (hamtcontact@gmail.com)
+[debug] [2026-06-22T06:48:12.388Z] [iam] checking project audescai for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-06-22T06:48:12.389Z] Checked if tokens are valid: true, expires at: 1782114427244
+[debug] [2026-06-22T06:48:12.389Z] Checked if tokens are valid: true, expires at: 1782114427244
+[debug] [2026-06-22T06:48:12.390Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions [none]
+[debug] [2026-06-22T06:48:12.390Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions  x-goog-user-project=audescai
+[debug] [2026-06-22T06:48:12.391Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}

@@ -3,6 +3,12 @@
 <html class="dark" lang="es">
 
 <head>
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            alert("Error: " + msg + "\nEn: " + url + "\nLínea: " + line + (error ? "\nDetalles: " + error.stack : ""));
+            return false;
+        };
+    </script>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>AudescAI - Panel de Control</title>
@@ -151,7 +157,7 @@
 <body
     class="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden selection:bg-primary/30 selection:text-primary-fixed">
     <!-- Sidebar mobile overlay backdrop -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-background/60 backdrop-blur-sm z-35 hidden transition-opacity duration-300"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-background/60 backdrop-blur-sm z-30 hidden transition-opacity duration-300"></div>
 
     <!-- SideNavBar -->
     <nav id="sidebar"
@@ -792,9 +798,7 @@
                                     window.location.href = `editor.html?project=${projectId}`;
                                 }, 300);
                             }, 1000);
-                        }
-                    );
-                } catch (err) {
+                        } catch (err) {
                     console.error(err);
                     alert(`Error en el procesamiento: ${err.message}`);
                     procOverlay.classList.add('opacity-0');
