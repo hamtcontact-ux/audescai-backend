@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Servidor Backend Monolítico (Flask)
+  backend:
+    build: .
+    container_name: audescai_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./CARPETA_VIDEO:/app/CARPETA_VIDEO
+      - ./RESULTADOS_AD:/app/RESULTADOS_AD
+      - ./TEMP_PROCESAMIENTO:/app/TEMP_PROCESAMIENTO
+    restart: always
+
+  # Orquestador de flujos n8n autohospedado en su versión gratuita
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n_orquestador
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - METRICS_ENABLED=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./CARPETA_VIDEO:/data/videos
+    restart: always
+
+volumes:
+  n8n_data:

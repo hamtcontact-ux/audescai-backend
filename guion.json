@@ -1,0 +1,110 @@
+[
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 6,
+        "id": 1,
+        "start": 0,
+        "text": "NOCHE, CALLE. Una persona con sombrero observa desde la acera junto a un coche.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 12,
+        "id": 2,
+        "start": 6,
+        "text": "Una persona con sombrero sostiene un maletín y mira hacia la puerta.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 18,
+        "id": 3,
+        "start": 12,
+        "text": "La persona con sombrero toca la puerta mientras sostiene el maletín.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "id": 13,
+        "start": 18.8,
+        "end": 22.8,
+        "text": "",
+        "voice": "es-ES-AlvaroNeural",
+        "audio_url": null,
+        "conflict": false
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 30,
+        "id": 5,
+        "start": 24,
+        "text": "Un objeto rectangular y sucio descansa en un cubo de basura.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 36,
+        "id": 6,
+        "start": 30,
+        "text": "La persona con sombrero observa al gato blanco y negro que duerme en la caja.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 42,
+        "id": 8,
+        "start": 36,
+        "text": "La mujer de abrigo oscuro sostiene al gato blanco y negro y lo mira atentamente.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 48,
+        "id": 7,
+        "start": 45.4,
+        "text": "acaricia al gato que duerme en la caja.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 54,
+        "id": 9,
+        "start": 48,
+        "text": "La mujer de sombrero acaricia al gato blanco y negro que le toca la nariz.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 60,
+        "id": 10,
+        "start": 54,
+        "text": "La nieve cae suavemente sobre las casas mientras las luces de las ventanas brillan.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": false,
+        "end": 66,
+        "id": 11,
+        "start": 60,
+        "text": "La mujer de abrigo oscuro acaricia al gato mientras la nieve sigue cayendo.",
+        "voice": "es-ES-AlvaroNeural"
+    },
+    {
+        "audio_url": null,
+        "conflict": true,
+        "end": 69.93,
+        "id": 12,
+        "start": 66,
+        "text": "La mujer de cabello corto sostiene un libro mientras acaricia al gato sobre sus piernas.",
+        "voice": "es-ES-AlvaroNeural"
+    }
+]

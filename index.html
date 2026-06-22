@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AudescAI - Audiodescripciones con Inteligencia Artificial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#23005c",
+                        "tertiary-container": "#009ada",
+                        "surface-container": "#171f33",
+                        "primary-container": "#4d8eff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-container": "#002d43",
+                        "primary": "#adc6ff",
+                        "secondary": "#d0bcff",
+                        "outline": "#8c909f",
+                        "surface-container-low": "#131b2e",
+                        "inverse-on-surface": "#283044",
+                        "on-tertiary": "#00344d",
+                        "outline-variant": "#424754",
+                        "tertiary-fixed-dim": "#89ceff",
+                        "on-primary-container": "#00285d",
+                        "on-secondary-container": "#c4abff",
+                        "surface-tint": "#adc6ff",
+                        "surface-container-high": "#222a3d",
+                        "tertiary-fixed": "#c9e6ff",
+                        "secondary-container": "#571bc1",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "surface-dim": "#0b1326",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "inverse-surface": "#dae2fd",
+                        "secondary-fixed": "#e9ddff",
+                        "on-primary-fixed": "#001a42",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-variant": "#2d3449",
+                        "background": "#0b1326",
+                        "primary-fixed-dim": "#adc6ff",
+                        "inverse-primary": "#005ac2",
+                        "on-background": "#dae2fd",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "on-surface": "#dae2fd",
+                        "surface-bright": "#31394d",
+                        "error": "#ffb4ab",
+                        "on-error": "#690005",
+                        "surface": "#0b1326",
+                        "on-primary": "#002e6a",
+                        "surface-container-lowest": "#060e20",
+                        "error-container": "#93000a",
+                        "tertiary": "#89ceff",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-secondary": "#3c0091",
+                        "surface-container-highest": "#2d3449",
+                        "on-error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "2.5rem",
+                        "md": "1.5rem",
+                        "xs": "0.5rem",
+                        "container-max": "1280px",
+                        "xl": "4rem",
+                        "base": "4px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "sm": "1rem"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-md": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-effect:hover {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased selection:bg-primary selection:text-on-primary min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl w-full sticky top-0 z-50 shadow-sm border-b border-white/10 duration-300 ease-in-out">
+<div class="max-w-container-max mx-auto px-gutter flex justify-between items-center h-20">
+<div class="font-headline-md text-headline-md font-bold text-on-surface">AudescAI</div>
+<nav class="hidden md:flex space-x-md">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors hover:opacity-80 transition-opacity" href="#features">Características</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors hover:opacity-80 transition-opacity" href="#pricing">Precios</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors hover:opacity-80 transition-opacity" href="#about">Acerca de</a>
+</nav>
+<div class="flex items-center space-x-sm">
+<a class="font-label-md text-label-md text-on-surface hover:text-primary transition-colors hidden md:block" href="dashboard.html">Iniciar Sesión</a>
+<a class="bg-primary text-on-primary font-label-md text-label-md px-sm py-xs rounded-full glow-effect transition-all hidden md:block" href="dashboard.html">Comenzar</a>
+<button id="mobile-menu-btn" class="md:hidden text-on-surface hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined text-[28px]">menu</span>
+</button>
+</div>
+</div>
+<!-- Mobile Menu Dropdown -->
+<div id="mobile-menu" class="hidden md:hidden bg-surface-container border-b border-white/10 absolute left-0 right-0 top-20 flex flex-col p-md gap-sm transition-all duration-300 ease-in-out shadow-lg z-40">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary py-2 border-b border-white/5" href="#features">Características</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary py-2 border-b border-white/5" href="#pricing">Precios</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary py-2 border-b border-white/5" href="#about">Acerca de</a>
+<a class="font-label-md text-label-md text-on-surface hover:text-primary py-2 border-b border-white/5" href="dashboard.html">Iniciar Sesión</a>
+<a class="bg-primary text-on-primary font-label-md text-label-md py-2.5 rounded-full text-center glow-effect mt-2" href="dashboard.html">Comenzar Gratis</a>
+</div>
+</header>
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="relative pt-xl pb-xl md:pt-32 md:pb-32 overflow-hidden px-margin-mobile md:px-gutter max-w-container-max mx-auto flex flex-col items-center text-center">
+<div class="absolute inset-0 z-0 pointer-events-none flex justify-center items-center opacity-30">
+<div class="w-[800px] h-[800px] bg-primary/20 rounded-full blur-[120px]"></div>
+<div class="w-[600px] h-[600px] bg-secondary/10 rounded-full blur-[100px] absolute mix-blend-screen"></div>
+</div>
+<div class="z-10 max-w-3xl space-y-lg">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">
+                    Automatiza la inclusión con <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">audiodescripciones</span> impulsadas por IA.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+                    AudescAI ayuda a universidades y productores de video a cumplir con las normas de accesibilidad con descripciones automáticas de alta fidelidad. Optimiza tu flujo de trabajo y llega a todos.
+                </p>
+<div class="flex flex-col sm:flex-row justify-center items-center gap-sm pt-sm">
+<button onclick="window.location.href='dashboard.html'" class="w-full sm:w-auto bg-primary text-on-primary font-title-lg text-title-lg px-lg py-sm rounded-full glow-effect transition-all flex items-center justify-center gap-xs">
+                        Comenzar Gratis
+                        <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+</button>
+<button onclick="window.location.href='dashboard.html'" class="w-full sm:w-auto border border-outline text-on-surface font-title-lg text-title-lg px-lg py-sm rounded-full hover:bg-surface-variant transition-all">
+                        Ver Demo
+                    </button>
+</div>
+</div>
+<!-- Dashboard Preview / Abstract Visual -->
+<div class="mt-xl w-full max-w-5xl rounded-xl overflow-hidden glass-card shadow-2xl relative z-10 p-sm aspect-video" data-alt="A sleek, futuristic user interface dashboard displaying audio waveforms being processed by an AI algorithm. The aesthetic is deep dark mode with glowing electric blue and violet accents. Crisp typography and minimalist layout convey advanced technological precision within a premium SaaS platform environment.">
+<!-- Decorative Dashboard Structure -->
+<div class="w-full h-full bg-surface rounded-lg border border-outline-variant flex flex-col overflow-hidden">
+<div class="h-12 border-b border-outline-variant flex items-center px-sm gap-sm bg-surface-container-low">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-error"></div>
+<div class="w-3 h-3 rounded-full bg-outline"></div>
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+</div>
+<div class="flex-grow flex justify-center">
+<div class="bg-surface-variant px-sm py-xs rounded-md text-xs text-on-surface-variant font-mono">audesc-ai-processing-engine.mp4</div>
+</div>
+</div>
+<div class="flex-grow flex p-sm gap-sm">
+<div class="w-64 border-r border-outline-variant pr-sm space-y-sm hidden md:block">
+<div class="h-8 bg-surface-variant rounded w-full animate-pulse"></div>
+<div class="h-8 bg-surface-variant rounded w-3/4 animate-pulse opacity-70"></div>
+<div class="h-8 bg-surface-variant rounded w-5/6 animate-pulse opacity-50"></div>
+</div>
+<div class="flex-grow flex flex-col gap-sm">
+<div class="h-48 bg-surface-variant rounded-lg relative overflow-hidden flex items-end justify-between px-xs pb-xs gap-1">
+<!-- Abstract Waveform -->
+<div class="w-full h-1/3 bg-gradient-to-t from-primary/20 to-transparent absolute bottom-0 left-0"></div>
+<div class="w-2 h-12 bg-primary rounded-t-sm opacity-80"></div>
+<div class="w-2 h-24 bg-primary rounded-t-sm opacity-90"></div>
+<div class="w-2 h-16 bg-primary rounded-t-sm opacity-70"></div>
+<div class="w-2 h-32 bg-secondary rounded-t-sm opacity-100"></div>
+<div class="w-2 h-20 bg-primary rounded-t-sm opacity-80"></div>
+<div class="w-2 h-40 bg-secondary rounded-t-sm opacity-90 shadow-[0_0_10px_rgba(208,188,255,0.5)]"></div>
+<div class="w-2 h-14 bg-primary rounded-t-sm opacity-60"></div>
+<div class="w-2 h-28 bg-primary rounded-t-sm opacity-80"></div>
+<div class="w-2 h-10 bg-primary rounded-t-sm opacity-50"></div>
+</div>
+<div class="flex-grow bg-surface-variant rounded-lg p-sm space-y-2">
+<div class="h-4 bg-outline-variant rounded w-1/4"></div>
+<div class="h-3 bg-surface-container-high rounded w-full"></div>
+<div class="h-3 bg-surface-container-high rounded w-5/6"></div>
+<div class="h-3 bg-surface-container-high rounded w-4/6"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Feature Section -->
+<section class="py-xl bg-surface-container-low px-margin-mobile md:px-gutter" id="features">
+<div class="max-w-container-max mx-auto">
+<div class="text-center mb-xl">
+<h2 class="font-headline-md-mobile md:font-headline-md text-headline-md-mobile md:text-headline-md text-on-surface mb-sm">Potenciando a los Creadores de Contenido</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Aprovecha la IA avanzada para generar audiodescripciones de alta fidelidad de forma rápida y eficiente, asegurando que tu contenido sea accesible para todos.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Feature 1 -->
+<div class="glass-card p-lg rounded-xl flex flex-col items-start space-y-md hover:-translate-y-1 transition-transform duration-300">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-size: 28px;">psychology</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Precisión Impulsada por IA</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Descripciones rápidas y precisas impulsadas por los últimos modelos. Nuestra IA entiende el contexto, la emoción y los matices visuales para crear descripciones ricas y significativas.</p>
+</div>
+<!-- Feature 2 -->
+<div class="glass-card p-lg rounded-xl flex flex-col items-start space-y-md hover:-translate-y-1 transition-transform duration-300">
+<div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-size: 28px;">gavel</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Cumplimiento Normativo Sencillo</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Cumple con los estándares de accesibilidad ADA e internacionales. Genera descripciones conformes a las pautas WCAG automáticamente, reduciendo el riesgo legal y expandiendo tu audiencia.</p>
+</div>
+<!-- Feature 3 -->
+<div class="glass-card p-lg rounded-xl flex flex-col items-start space-y-md hover:-translate-y-1 transition-transform duration-300">
+<div class="w-12 h-12 rounded-lg bg-tertiary-container/10 flex items-center justify-center text-tertiary-container">
+<span class="material-symbols-outlined" style="font-size: 28px;">account_balance</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Escalable para Instituciones</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Diseñado para universidades y productores de alto volumen. Procesa sin problemas catálogos completos de cursos o bibliotecas de medios con nuestro robusto motor de procesamiento por lotes.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="py-xl px-margin-mobile md:px-gutter max-w-container-max mx-auto" id="pricing">
+<div class="text-center mb-xl">
+<h2 class="font-headline-md-mobile md:font-headline-md text-headline-md-mobile md:text-headline-md text-on-surface mb-sm">Elige tu Impacto</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Precios transparentes diseñados para escalar con tus necesidades de accesibilidad.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md items-center">
+<!-- Starter Card -->
+<div class="glass-card p-lg rounded-xl flex flex-col space-y-md">
+<h3 class="font-title-lg text-title-lg text-on-surface">Inicio</h3>
+<div class="flex items-baseline gap-xs">
+<span class="font-display-lg-mobile text-display-lg-mobile text-on-surface">$29</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/mes</span>
+</div>
+<ul class="space-y-sm flex-grow pt-sm">
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            10 horas de video al mes
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Modelos de IA estándar
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Soporte por correo electrónico
+                        </li>
+</ul>
+<button class="w-full border border-outline text-on-surface font-label-md text-label-md px-sm py-sm rounded-full hover:bg-surface-variant transition-colors mt-lg">Contratar Plan</button>
+</div>
+<!-- Pro Card (Highlighted) -->
+<div class="bg-surface-container-high p-lg rounded-xl flex flex-col space-y-md border border-primary relative transform md:-translate-y-4 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
+<div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-on-primary font-label-sm text-label-sm px-sm py-1 rounded-full">RECOMENDADO</div>
+<h3 class="font-title-lg text-title-lg text-on-surface text-center">Pro</h3>
+<div class="flex items-baseline justify-center gap-xs">
+<span class="font-display-lg text-display-lg text-on-surface">$79</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/mes</span>
+</div>
+<ul class="space-y-sm flex-grow pt-sm">
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            50 horas de video al mes
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Modelos de contexto avanzado
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Soporte prioritario
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Herramientas de procesamiento por lotes
+                        </li>
+</ul>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md px-sm py-sm rounded-full glow-effect transition-all mt-lg">Contratar Plan</button>
+</div>
+<!-- Enterprise Card -->
+<div class="glass-card p-lg rounded-xl flex flex-col space-y-md">
+<h3 class="font-title-lg text-title-lg text-on-surface">Enterprise</h3>
+<div class="flex items-baseline gap-xs">
+<span class="font-headline-md text-headline-md text-on-surface">Personalizado</span>
+</div>
+<ul class="space-y-sm flex-grow pt-sm">
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Horas ilimitadas
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Ajuste fino de modelos personalizados
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Integración SSO
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">check_circle</span>
+                            Gestor de cuentas dedicado
+                        </li>
+</ul>
+<button class="w-full border border-outline text-on-surface font-label-md text-label-md px-sm py-sm rounded-full hover:bg-surface-variant transition-colors mt-lg">Contratar Plan</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-lowest w-full pt-xl pb-lg border-t border-white/5 transition-all duration-200">
+<div class="max-w-container-max mx-auto px-gutter grid grid-cols-1 md:grid-cols-4 gap-md">
+<div class="flex flex-col space-y-sm md:col-span-1">
+<div class="font-title-lg text-title-lg font-bold text-on-surface">AudescAI</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Automatizando la accesibilidad con precisión y cuidado.</p>
+<div class="font-label-sm text-label-sm text-on-surface-variant pt-sm">© 2024 AudescAI. Todos los derechos reservados.</div>
+</div>
+<div class="flex flex-col space-y-sm">
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Producto</h4>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="#features">Características</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="#pricing">Precios</a>
+</div>
+<div class="flex flex-col space-y-sm">
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Compañía</h4>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="#">Acerca de</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="#">Contacto</a>
+</div>
+<div class="flex flex-col space-y-sm">
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Legal</h4>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="#">Declaración de Accesibilidad</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="#">Términos de Servicio</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="#">Política de Privacidad</a>
+</div>
+</div>
+</footer>
+
+<!-- Firebase compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyALrJvcf7XiDwB_P4PoT4hJ5UFsiXQrngg",
+        authDomain: "audescai.firebaseapp.com",
+        projectId: "audescai",
+        storageBucket: "audescai.appspot.com",
+        messagingSenderId: "1054146325073",
+        appId: "1:1054146325073:web:0b65631f9251d90a916670"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+</script>
+
+<!-- Modal de Autenticación Firebase -->
+<div id="auth-modal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" id="auth-modal-backdrop"></div>
+    <div class="bg-surface-container w-full max-w-md rounded-xl border border-white/10 shadow-2xl p-lg relative z-10 flex flex-col gap-md">
+        <div class="flex justify-between items-center">
+            <h3 id="auth-title" class="font-title-lg text-title-lg text-on-surface">Iniciar Sesión</h3>
+            <button id="close-auth-btn" class="text-on-surface-variant hover:text-on-surface transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <form id="auth-form" class="flex flex-col gap-sm">
+            <div class="flex flex-col gap-xs">
+                <label class="font-label-sm text-label-sm text-on-surface-variant">Correo Electrónico</label>
+                <input id="auth-email" type="email" required class="w-full bg-surface-container-high border border-outline-variant rounded-md p-2 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all" placeholder="usuario@correo.com">
+            </div>
+            <div class="flex flex-col gap-xs">
+                <label class="font-label-sm text-label-sm text-on-surface-variant">Contraseña</label>
+                <input id="auth-password" type="password" required class="w-full bg-surface-container-high border border-outline-variant rounded-md p-2 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all" placeholder="••••••••">
+            </div>
+            
+            <div id="auth-error" class="hidden text-error font-label-sm text-label-sm bg-error-container/20 border border-error-container p-2 rounded-md"></div>
+            
+            <button type="submit" id="auth-submit-btn" class="w-full bg-primary text-on-primary font-label-md text-label-md py-2 rounded-full glow-effect transition-all mt-xs">
+                Ingresar
+            </button>
+        </form>
+
+        <div class="flex items-center my-2">
+            <div class="flex-grow border-t border-outline-variant/30"></div>
+            <span class="mx-3 text-xs text-on-surface-variant">o</span>
+            <div class="flex-grow border-t border-outline-variant/30"></div>
+        </div>
+
+        <button id="google-auth-btn" class="w-full bg-surface-variant hover:bg-surface-bright text-on-surface border border-outline-variant/50 font-label-md text-label-md py-2.5 px-4 rounded-full flex items-center justify-center gap-sm transition-all shadow-sm">
+            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Iniciar sesión con Google</span>
+        </button>
+        
+        <div class="text-center">
+            <button id="auth-toggle-btn" class="font-label-sm text-label-sm text-primary hover:underline transition-all">
+                ¿No tienes cuenta? Regístrate aquí
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Compra Simulado -->
+<div id="checkout-modal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
+    <div class="bg-surface-container w-full max-w-md rounded-xl border border-white/10 shadow-2xl p-lg relative z-10 text-center flex flex-col items-center justify-center gap-md">
+        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-bounce">
+            <span class="material-symbols-outlined text-[32px]">credit_card</span>
+        </div>
+        <h3 class="font-title-lg text-title-lg text-on-surface">Procesando Suscripción</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant">Simulando pasarela de pago segura... ¡Preparando tu cuenta de AudescAI!</p>
+        <div class="flex items-center justify-center gap-2">
+            <div class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+            <div class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            <div class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkoutModal = document.getElementById('checkout-modal');
+        const pricingButtons = document.querySelectorAll('#pricing button');
+        
+        pricingButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Si está autenticado muestra el checkout, si no, abre login
+                if (auth.currentUser) {
+                    checkoutModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        checkoutModal.classList.remove('opacity-0');
+                    }, 50);
+                    
+                    // Redirigir después de 2s
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                } else {
+                    openAuthModal();
+                }
+            });
+        });
+
+        // Lógica de Modal de Autenticación
+        const authModal = document.getElementById('auth-modal');
+        const authTitle = document.getElementById('auth-title');
+        const authForm = document.getElementById('auth-form');
+        const authEmail = document.getElementById('auth-email');
+        const authPassword = document.getElementById('auth-password');
+        const authError = document.getElementById('auth-error');
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
+        const authToggleBtn = document.getElementById('auth-toggle-btn');
+        const closeAuthBtn = document.getElementById('close-auth-btn');
+        const authModalBackdrop = document.getElementById('auth-modal-backdrop');
+
+        let isSignUp = false;
+
+        function openAuthModal() {
+            authError.classList.add('hidden');
+            authModal.classList.remove('hidden');
+            setTimeout(() => {
+                authModal.classList.remove('opacity-0');
+            }, 50);
+        }
+
+        function closeAuthModal() {
+            authModal.classList.add('opacity-0');
+            setTimeout(() => {
+                authModal.classList.add('hidden');
+            }, 300);
+        }
+
+        closeAuthBtn.addEventListener('click', closeAuthModal);
+        authModalBackdrop.addEventListener('click', closeAuthModal);
+
+        authToggleBtn.addEventListener('click', () => {
+            isSignUp = !isSignUp;
+            if (isSignUp) {
+                authTitle.textContent = "Registrarse";
+                authSubmitBtn.textContent = "Crear Cuenta";
+                authToggleBtn.textContent = "¿Ya tienes cuenta? Inicia sesión aquí";
+            } else {
+                authTitle.textContent = "Iniciar Sesión";
+                authSubmitBtn.textContent = "Ingresar";
+                authToggleBtn.textContent = "¿No tienes cuenta? Registrate aquí";
+            }
+        });
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            authError.classList.add('hidden');
+            const email = authEmail.value;
+            const password = authPassword.value;
+
+            try {
+                if (isSignUp) {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                }
+                closeAuthModal();
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                authError.textContent = err.message;
+                authError.classList.remove('hidden');
+            }
+        });
+
+        const googleAuthBtn = document.getElementById('google-auth-btn');
+        googleAuthBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            authError.classList.add('hidden');
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                await auth.signInWithPopup(provider);
+                closeAuthModal();
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                authError.textContent = err.message;
+                authError.classList.remove('hidden');
+            }
+        });
+
+        // Exponer función de abrir modal
+        window.openAuthModal = openAuthModal;
+
+        // Comprobar estado de login al iniciar
+        auth.onAuthStateChanged(user => {
+            const loginBtns = document.querySelectorAll('a[href="dashboard.html"], button[onclick*="dashboard.html"]');
+            loginBtns.forEach(btn => {
+                btn.removeAttribute('onclick');
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (user) {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        openAuthModal();
+                    }
+                });
+            });
+        });
+
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking any link inside it
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+    });
+</script>
+</body></html>

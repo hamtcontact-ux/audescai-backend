@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AudescAI - Panel de Control</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Firebase compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyALrJvcf7XiDwB_P4PoT4hJ5UFsiXQrngg",
+            authDomain: "audescai.firebaseapp.com",
+            projectId: "audescai",
+            storageBucket: "audescai.appspot.com",
+            messagingSenderId: "1054146325073",
+            appId: "1:1054146325073:web:0b65631f9251d90a916670"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#e9ddff",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "surface-container-lowest": "#060e20",
+                        "on-primary-container": "#00285d",
+                        "surface-bright": "#31394d",
+                        "on-primary": "#002e6a",
+                        "on-tertiary-container": "#002d43",
+                        "surface-tint": "#adc6ff",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "on-error": "#690005",
+                        "surface-container": "#171f33",
+                        "primary": "#adc6ff",
+                        "surface-container-low": "#131b2e",
+                        "secondary": "#d0bcff",
+                        "outline-variant": "#424754",
+                        "on-tertiary": "#00344d",
+                        "outline": "#8c909f",
+                        "on-background": "#dae2fd",
+                        "on-surface": "#dae2fd",
+                        "tertiary": "#89ceff",
+                        "inverse-on-surface": "#283044",
+                        "on-secondary-fixed": "#23005c",
+                        "inverse-primary": "#005ac2",
+                        "inverse-surface": "#dae2fd",
+                        "surface-variant": "#2d3449",
+                        "tertiary-fixed": "#c9e6ff",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "primary-container": "#4d8eff",
+                        "on-secondary": "#3c0091",
+                        "error-container": "#93000a",
+                        "background": "#0b1326",
+                        "surface-container-high": "#222a3d",
+                        "on-primary-fixed": "#001a42",
+                        "on-tertiary-fixed": "#001e2f",
+                        "secondary-container": "#571bc1",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-highest": "#2d3449",
+                        "tertiary-container": "#009ada",
+                        "surface": "#0b1326",
+                        "on-secondary-container": "#c4abff",
+                        "tertiary-fixed-dim": "#89ceff",
+                        "surface-dim": "#0b1326",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#004395",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "xs": "0.5rem",
+                        "xl": "4rem",
+                        "gutter": "24px",
+                        "md": "1.5rem",
+                        "lg": "2.5rem",
+                        "sm": "1rem",
+                        "container-max": "1280px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "title-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-md": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glow-btn {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+        }
+
+        .glow-btn:hover {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.25);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden selection:bg-primary/30 selection:text-primary-fixed">
+    <!-- Sidebar mobile overlay backdrop -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-background/60 backdrop-blur-sm z-35 hidden transition-opacity duration-300"></div>
+
+    <!-- SideNavBar -->
+    <nav id="sidebar"
+        class="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-white/10 shadow-sm flex flex-col py-md px-sm z-40 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 md:flex">
+        <div class="mb-xl flex items-center justify-between px-sm">
+            <div class="flex items-center gap-sm">
+                <div
+                    class="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+                </div>
+                <div>
+                    <h1 class="font-title-lg text-title-lg font-bold text-primary tracking-tight">AudescAI</h1>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Accesibilidad Premium</p>
+                </div>
+            </div>
+            <button id="mobile-sidebar-close" class="md:hidden text-on-surface-variant hover:text-on-surface p-1">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <ul class="flex-1 space-y-2">
+            <li>
+                <a class="flex items-center gap-sm px-sm py-3 rounded-lg text-primary font-bold border-r-2 border-primary bg-primary/5 transition-all duration-200 ease-in-out"
+                    href="#">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Panel de Control</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
+                    href="#">
+                    <span class="material-symbols-outlined">folder_copy</span>
+                    <span>Proyectos</span>
+                </a>
+            </li>
+            <li>
+                <a id="nav-settings-btn" class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
+                    href="#">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span>Configuración</span>
+                </a>
+            </li>
+            <li>
+                <a id="nav-logout-btn" class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
+                    href="#">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
+                    href="#">
+                    <span class="material-symbols-outlined">help</span>
+                    <span>Ayuda</span>
+                </a>
+            </li>
+        </ul>
+        <div class="mt-auto border-t border-white/10 pt-md">
+            <button
+                class="w-full flex items-center justify-center gap-xs py-3 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md hover:bg-primary-container/90 transition-all mb-4 glow-btn"
+                id="nav-upload-btn">
+                <span class="material-symbols-outlined">add</span>
+                Nuevo Proyecto
+            </button>
+            <div
+                id="user-profile-btn"
+                class="flex items-center gap-sm px-sm py-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
+                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                    <span class="material-symbols-outlined">person</span>
+                </div>
+                <div class="truncate">
+                    <p id="user-email-display" class="font-label-md text-label-md text-on-surface font-semibold truncate">Cargando...</p>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">Usuario</p>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Main Content -->
+    <main class="md:ml-64 min-h-screen pb-xl">
+        <!-- Header -->
+        <header
+            class="sticky top-0 z-30 glass-panel border-b-0 border-white/5 px-md md:px-lg h-20 flex justify-between items-center">
+            <div class="flex items-center">
+                <button id="mobile-sidebar-toggle" class="md:hidden text-on-surface hover:text-primary transition-colors p-2 mr-2">
+                    <span class="material-symbols-outlined text-[28px]">menu</span>
+                </button>
+                <h2 class="font-headline-md text-headline-md text-on-surface">Mis Proyectos</h2>
+            </div>
+            <div class="flex items-center gap-xs sm:gap-lg">
+                <div class="relative hidden sm:block">
+                    <span
+                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                    <input
+                        class="w-64 bg-surface-container-high border border-outline-variant rounded-full py-2 pl-10 pr-4 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-on-surface-variant font-label-md text-label-md"
+                        placeholder="Buscar proyectos..." type="text" />
+                </div>
+                <button
+                    class="hidden sm:flex items-center gap-xs px-6 py-2.5 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all glow-btn"
+                    id="main-upload-btn">
+                    <span class="material-symbols-outlined text-[20px]">cloud_upload</span>
+                    + Subir Nuevo Video
+                </button>
+                
+                <!-- Botón de Búsqueda Móvil -->
+                <button
+                    class="sm:hidden w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
+                    <span class="material-symbols-outlined text-[22px]">search</span>
+                </button>
+                <!-- Botón de Configuración Móvil -->
+                <button id="mobile-settings-btn"
+                    class="md:hidden w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
+                    <span class="material-symbols-outlined text-[22px]">settings</span>
+                </button>
+                <!-- Botón de Cerrar Sesión Móvil -->
+                <button id="mobile-logout-btn"
+                    class="md:hidden w-10 h-10 rounded-full bg-error-container/10 flex items-center justify-center text-error hover:bg-error-container/20 transition-all">
+                    <span class="material-symbols-outlined text-[22px]">logout</span>
+                </button>
+            </div>
+        </header>
+        <!-- Project Grid -->
+        <div class="p-lg max-w-container-max mx-auto">
+            <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+                <!-- Se cargará dinámicamente desde Firestore -->
+            </div>
+        </div>
+        
+        <!-- Mobile FAB (Floating Action Button) for upload -->
+        <button id="mobile-fab-upload" class="sm:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary text-on-primary shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all glow-btn border border-primary/20 ring-4 ring-primary/10 animate-bounce">
+            <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">add</span>
+        </button>
+    </main>
+    <!-- Upload Modal Overlay -->
+    <div class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out" id="upload-modal">
+        <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" id="modal-backdrop"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-surface-container w-full max-w-lg rounded-xl border border-white/10 shadow-2xl pointer-events-auto transform scale-95 transition-transform duration-300 ease-out flex flex-col"
+                id="modal-content">
+                <div class="flex justify-between items-center p-md border-b border-white/10">
+                    <h2 class="font-title-lg text-title-lg text-on-surface">Subir Video</h2>
+                    <button
+                        class="text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded-full hover:bg-white/5"
+                        id="close-modal-btn">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="p-lg">
+                    <!-- Drop Zone -->
+                    <div class="border-2 border-dashed border-outline-variant hover:border-primary/50 rounded-xl p-xl flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-surface-container-low group relative overflow-hidden"
+                        id="drop-zone">
+                        <input accept=".mp4,.mkv,.mov" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            id="file-input" type="file" />
+                        <div
+                            class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-[32px]">cloud_upload</span>
+                        </div>
+                        <p class="font-label-md text-label-md text-on-surface mb-2">Arrastra y suelta tu video aquí</p>
+                        <p class="font-label-sm text-label-sm text-on-surface-variant">o haz clic para explorar</p>
+                        <p class="font-label-sm text-label-sm text-on-surface-variant/50 mt-4 text-[10px]">Formatos
+                            soportados: .mp4, .mkv, .mov (Max 2GB)</p>
+                    </div>
+                    <!-- Alerts -->
+                    <div class="hidden mt-4 bg-error-container/20 border border-error-container text-error px-4 py-3 rounded-lg flex items-start gap-3"
+                        id="error-alert">
+                        <span class="material-symbols-outlined text-[20px] mt-0.5">error</span>
+                        <p class="font-label-md text-label-md">Error: Solo se admiten formatos de video (.mp4, .mkv,
+                            .mov)</p>
+                    </div>
+                    <div class="hidden mt-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg flex items-start gap-3"
+                        id="success-alert">
+                        <span class="material-symbols-outlined text-[20px] mt-0.5">check_circle</span>
+                        <p class="font-label-md text-label-md">Archivo listo para procesar</p>
+                    </div>
+                </div>
+                <div
+                    class="p-md border-t border-white/10 flex justify-end gap-3 bg-surface-container-low/50 rounded-b-xl">
+                    <button
+                        class="px-5 py-2 rounded-lg text-on-surface font-label-md hover:bg-white/5 transition-colors border border-outline-variant/30"
+                        id="cancel-upload-btn">Cancelar</button>
+                    <button
+                        class="px-5 py-2 rounded-lg bg-primary text-on-primary font-label-md hover:bg-primary/90 transition-colors opacity-50 cursor-not-allowed"
+                        id="process-btn">Procesar Video</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Settings Modal Overlay -->
+    <div class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out" id="settings-modal">
+        <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" id="settings-backdrop"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-surface-container w-full max-w-md rounded-xl border border-white/10 shadow-2xl pointer-events-auto transform scale-95 transition-transform duration-300 ease-out flex flex-col"
+                id="settings-content">
+                <div class="flex justify-between items-center p-md border-b border-white/10">
+                    <h2 class="font-title-lg text-title-lg text-on-surface">Configuración de Usuario</h2>
+                    <button
+                        class="text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded-full hover:bg-white/5"
+                        id="close-settings-btn">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="p-lg flex flex-col gap-sm">
+                    <div class="flex flex-col gap-xs">
+                        <label class="font-label-sm text-label-sm text-on-surface-variant">OPENAI_API_KEY</label>
+                        <input id="settings-api-key" type="password" class="w-full bg-surface-container-high border border-outline-variant rounded-md p-2 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all" placeholder="sk-proj-...">
+                        <p class="text-[10px] text-on-surface-variant/50">Tu clave se guarda localmente en este navegador.</p>
+                    </div>
+                </div>
+                <div class="p-md border-t border-white/10 flex justify-end gap-3 bg-surface-container-low/50 rounded-b-xl">
+                    <button
+                        class="px-5 py-2 rounded-lg text-on-surface font-label-md hover:bg-white/5 transition-colors border border-outline-variant/30"
+                        id="cancel-settings-btn">Cancelar</button>
+                    <button
+                        class="px-5 py-2 rounded-lg bg-primary text-on-primary font-label-md hover:bg-primary/90 transition-colors"
+                        id="save-settings-btn">Guardar Clave</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast Container -->
+    <div id="toast-success"
+        class="fixed top-5 right-5 z-50 hidden transform translate-y-[-100px] opacity-0 transition-all duration-500 ease-out bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 backdrop-blur-md">
+        <span class="material-symbols-outlined text-[24px]">check_circle</span>
+        <div>
+            <p class="font-label-md text-label-md font-bold">¡Proyecto Renderizado!</p>
+            <p class="text-xs text-on-surface-variant">El audio y video se han consolidado y exportado con éxito.</p>
+        </div>
+    </div>
+
+    <!-- Processing Overlay with Simulated Loading Bar -->
+    <div id="processing-overlay"
+        class="fixed inset-0 z-50 hidden opacity-0 bg-background/90 backdrop-blur-md transition-all duration-300 flex flex-col items-center justify-center p-md text-center">
+        <div
+            class="w-80 bg-surface-container border border-white/10 rounded-xl p-6 shadow-2xl flex flex-col items-center">
+            <!-- Spinner / Circle Progress -->
+            <div class="w-24 h-24 relative mb-4">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle class="text-white/5 stroke-current" stroke-width="5" fill="transparent" r="40" cx="50"
+                        cy="50" />
+                    <circle id="processing-progress-circle" class="text-primary stroke-current" stroke-width="5"
+                        stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round" fill="transparent"
+                        r="40" cx="50" cy="50" />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center font-mono font-bold text-on-surface text-xl"
+                    id="processing-progress-text">0%</div>
+            </div>
+            <h3 class="font-title-lg text-title-lg text-on-surface mb-1">Procesando Video</h3>
+            <p class="font-label-sm text-label-sm text-on-surface-variant mb-4 text-center">La Inteligencia Artificial
+                está analizando los diálogos y generando las audiodescripciones...</p>
+            <!-- Horizontal progress bar fallback -->
+            <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                <div id="processing-progress-bar" class="bg-primary h-full rounded-full transition-all duration-300"
+                    style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const FLASK_API = 'http://127.0.0.1:5000';
+
+            // DOM Elements
+            const modal = document.getElementById('upload-modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalBackdrop = document.getElementById('modal-backdrop');
+            const openBtns = [document.getElementById('main-upload-btn'), document.getElementById('nav-upload-btn'), document.getElementById('mobile-fab-upload')];
+            const closeBtns = [document.getElementById('close-modal-btn'), document.getElementById('cancel-upload-btn')];
+
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+            const errorAlert = document.getElementById('error-alert');
+            const successAlert = document.getElementById('success-alert');
+            const processBtn = document.getElementById('process-btn');
+
+            const settingsModal = document.getElementById('settings-modal');
+            const settingsContent = document.getElementById('settings-content');
+            const settingsBackdrop = document.getElementById('settings-backdrop');
+            const openSettingsBtn = document.getElementById('nav-settings-btn');
+            const closeSettingsBtns = [document.getElementById('close-settings-btn'), document.getElementById('cancel-settings-btn')];
+            const saveSettingsBtn = document.getElementById('save-settings-btn');
+            const apiKeyInput = document.getElementById('settings-api-key');
+
+            const logoutBtn = document.getElementById('nav-logout-btn');
+            const userEmailDisplay = document.getElementById('user-email-display');
+            const projectGrid = document.getElementById('project-grid');
+
+            const validExtensions = ['.mp4', '.mkv', '.mov'];
+            let videoArchivoReal = null;
+
+            // Auth check
+            auth.onAuthStateChanged(user => {
+                if (!user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                userEmailDisplay.textContent = user.email;
+                loadProjects(user.uid);
+            });
+
+            // Logout
+            logoutBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    window.location.href = 'index.html';
+                });
+            });
+
+            const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+            mobileLogoutBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    window.location.href = 'index.html';
+                });
+            });
+
+            // Settings Modal
+            function openSettings() {
+                apiKeyInput.value = localStorage.getItem('openai_api_key') || '';
+                settingsModal.classList.remove('hidden');
+                setTimeout(() => {
+                    settingsModal.classList.remove('opacity-0');
+                    settingsContent.classList.remove('scale-95');
+                    settingsContent.classList.add('scale-100');
+                }, 50);
+            }
+
+            function closeSettings() {
+                settingsModal.classList.add('opacity-0');
+                settingsContent.classList.remove('scale-100');
+                settingsContent.classList.add('scale-95');
+                setTimeout(() => {
+                    settingsModal.classList.add('hidden');
+                }, 300);
+            }
+
+            const mobileSettingsBtn = document.getElementById('mobile-settings-btn');
+            mobileSettingsBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                openSettings();
+            });
+
+            openSettingsBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                openSettings();
+            });
+            closeSettingsBtns.forEach(btn => btn?.addEventListener('click', closeSettings));
+            settingsBackdrop?.addEventListener('click', closeSettings);
+
+            saveSettingsBtn?.addEventListener('click', () => {
+                const key = apiKeyInput.value.trim();
+                localStorage.setItem('openai_api_key', key);
+                closeSettings();
+                alert('Clave de API guardada exitosamente.');
+            });
+
+            // Modal Logic
+            function openModal() {
+                // Verificar si tiene la API Key
+                if (!localStorage.getItem('openai_api_key')) {
+                    alert('Debes configurar tu OpenAI API Key en la sección de Configuración antes de continuar.');
+                    openSettings();
+                    return;
+                }
+                modal.classList.remove('hidden');
+                void modal.offsetWidth;
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }
+
+            function closeModal() {
+                modal.classList.add('opacity-0');
+                modalContent.classList.remove('scale-100');
+                modalContent.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    resetUploadState();
+                }, 300);
+            }
+
+            openBtns.forEach(btn => btn?.addEventListener('click', openModal));
+            closeBtns.forEach(btn => btn?.addEventListener('click', closeModal));
+            modalBackdrop.addEventListener('click', closeModal);
+
+            // Drag and Drop Logic
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('border-primary', 'bg-primary/5');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('border-primary', 'bg-primary/5');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', handleDrop, false);
+            fileInput.addEventListener('change', handleFileSelect, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+
+            function handleFileSelect(e) {
+                const files = e.target.files;
+                handleFiles(files);
+            }
+
+            function handleFiles(files) {
+                if (files.length === 0) return;
+
+                const file = files[0];
+                const fileName = file.name.toLowerCase();
+                const isValid = validExtensions.some(ext => fileName.endsWith(ext));
+
+                resetUploadState();
+
+                if (isValid) {
+                    videoArchivoReal = file;
+                    successAlert.classList.remove('hidden');
+                    processBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    dropZone.classList.add('border-emerald-500/50');
+                    dropZone.querySelector('p').textContent = file.name;
+                } else {
+                    errorAlert.classList.remove('hidden');
+                    dropZone.classList.add('border-error-container');
+                }
+            }
+
+            function resetUploadState() {
+                errorAlert.classList.add('hidden');
+                successAlert.classList.add('hidden');
+                processBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                dropZone.classList.remove('border-error-container', 'border-emerald-500/50');
+                dropZone.querySelector('p').textContent = 'Arrastra y suelta tu video aquí';
+                fileInput.value = '';
+                videoArchivoReal = null;
+            }
+
+            // Real-time Projects loader
+            function loadProjects(uid) {
+                db.collection('usuarios').doc(uid).collection('proyectos')
+                    .orderBy('createdAt', 'desc')
+                    .onSnapshot(snapshot => {
+                        projectGrid.innerHTML = '';
+                        if (snapshot.empty) {
+                            projectGrid.innerHTML = `
+                                <div class="col-span-full flex flex-col items-center justify-center p-8 rounded-2xl border border-white/10 text-center max-w-lg mx-auto mt-12 animate-fade-in shadow-2xl bg-surface-container-high/40 backdrop-blur-md">
+                                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 text-primary ring-4 ring-primary/5">
+                                        <span class="material-symbols-outlined text-[36px]">video_library</span>
+                                    </div>
+                                    <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Comienza tu viaje cinematográfico</h3>
+                                    <p class="font-body-md text-body-md text-on-surface-variant mb-6">Aún no has creado ningún proyecto. Sube tu primer video y deja que nuestra IA genere audiodescripciones profesionales en segundos.</p>
+                                    <button onclick="document.getElementById('mobile-fab-upload').click() || document.getElementById('main-upload-btn').click()" class="px-6 py-3 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all glow-btn flex items-center justify-center gap-xs mx-auto">
+                                        <span class="material-symbols-outlined text-[20px]">cloud_upload</span>
+                                        Subir Nuevo Video
+                                    </button>
+                                </div>
+                            `;
+                            return;
+                        }
+                        snapshot.forEach(doc => {
+                            const proj = doc.data();
+                            const card = document.createElement('article');
+                            card.className = 'cursor-pointer group bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col';
+                            card.addEventListener('click', () => {
+                                window.location.href = `editor.html?project=${doc.id}`;
+                            });
+
+                            let statusClass = 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
+                            let dotClass = 'bg-orange-400 animate-pulse';
+                            if (proj.status === 'Listo para editar') {
+                                statusClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                                dotClass = 'bg-emerald-400';
+                            } else if (proj.status === 'Renderizado') {
+                                statusClass = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+                                dotClass = 'bg-blue-400';
+                            }
+
+                            card.innerHTML = `
+                                <div class="aspect-video w-full bg-gradient-to-br from-indigo-900/40 to-slate-900 relative overflow-hidden flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-4xl text-primary/40 group-hover:scale-110 transition-transform duration-500">movie</span>
+                                </div>
+                                <div class="p-md flex flex-col flex-1">
+                                    <h3 class="font-title-lg text-title-lg text-on-surface mb-2 truncate">${proj.name || 'Proyecto sin nombre'}</h3>
+                                    <div class="flex items-center justify-between mt-auto pt-4">
+                                        <span class="font-label-md text-label-md text-on-surface-variant">${new Date(proj.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                            <span class="w-1.5 h-1.5 rounded-full ${dotClass} mr-1.5"></span>
+                                            ${proj.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            `;
+                            projectGrid.appendChild(card);
+                        });
+                    });
+            }
+
+            // Upload and processing
+            processBtn.addEventListener('click', async () => {
+                const file = fileInput.files[0] || videoArchivoReal;
+                if (!file) {
+                    alert('Por favor, selecciona un archivo de video.');
+                    return;
+                }
+
+                const uid = auth.currentUser.uid;
+                const apiKey = localStorage.getItem('openai_api_key');
+                if (!apiKey) {
+                    alert('Por favor configura tu API Key primero.');
+                    return;
+                }
+
+                closeModal();
+
+                // Show processing overlay
+                const procOverlay = document.getElementById('processing-overlay');
+                const progressCircle = document.getElementById('processing-progress-circle');
+                const progressText = document.getElementById('processing-progress-text');
+                const progressBar = document.getElementById('processing-progress-bar');
+
+                procOverlay.classList.remove('hidden');
+                procOverlay.classList.remove('opacity-0');
+                procOverlay.classList.add('opacity-100');
+
+                const updateProgressUI = (pct, customText) => {
+                    const offset = 251.2 - (pct / 100) * 251.2;
+                    progressCircle.style.strokeDashoffset = offset;
+                    progressText.textContent = customText || `${Math.round(pct)}%`;
+                    progressBar.style.width = `${pct}%`;
+                };
+
+                updateProgressUI(0, 'Iniciando...');
+
+                try {
+                    // Create project doc in Firestore to get a project ID
+                    const projectRef = db.collection('usuarios').doc(uid).collection('proyectos').doc();
+                    const projectId = projectRef.id;
+
+                    // Upload video directly to Cloudinary using Unsigned Upload
+                    const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dm9uhr1be/video/upload';
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('upload_preset', 'audescai_preset');
+
+                    const uploadToCloudinary = () => {
+                        return new Promise((resolve, reject) => {
+                            const xhr = new XMLHttpRequest();
+                            xhr.open('POST', cloudinaryUrl, true);
+                            
+                            xhr.upload.onprogress = (e) => {
+                                if (e.lengthComputable) {
+                                    const uploadProgress = (e.loaded / e.total) * 70; // Map 0-100% to 10-80% progress
+                                    updateProgressUI(10 + uploadProgress, 'Subiendo video...');
+                                }
+                            };
+                            
+                            xhr.onload = () => {
+                                if (xhr.status >= 200 && xhr.status < 300) {
+                                    try {
+                                        const response = JSON.parse(xhr.responseText);
+                                        resolve(response.secure_url);
+                                    } catch (err) {
+                                        reject(new Error('Error al parsear respuesta de Cloudinary'));
+                                    }
+                                } else {
+                                    reject(new Error('Fallo la subida a Cloudinary: ' + xhr.statusText));
+                                }
+                            };
+                            
+                            xhr.onerror = () => reject(new Error('Error de red en la subida a Cloudinary'));
+                            xhr.send(formData);
+                        });
+                    };
+
+                    const videoUrl = await uploadToCloudinary();
+                    updateProgressUI(80, 'Procesando IA...');
+
+                    // Save project meta
+                    await projectRef.set({
+                        id: projectId,
+                        name: file.name.substring(0, file.name.lastIndexOf('.')) || file.name,
+                        status: 'Procesando',
+                        video_url: videoUrl,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                            // Request Flask phase 1 processing
+                            const res = await fetch(`${FLASK_API}/procesar-fase1`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${apiKey}`
+                                },
+                                body: JSON.stringify({
+                                    video_url: videoUrl,
+                                    api_key: apiKey,
+                                    proyecto_id: projectId
+                                })
+                            });
+
+                            if (!res.ok) {
+                                const errorText = await res.text();
+                                throw new Error(errorText);
+                            }
+
+                            const result = await res.json();
+                            updateProgressUI(95, 'Guardando guión...');
+
+                            // Save generated blocks to Firestore
+                            const blocksBatch = db.batch();
+                            result.bloques.forEach(b => {
+                                const blockDoc = projectRef.collection('bloques').doc(String(b.id));
+                                blocksBatch.set(blockDoc, b);
+                            });
+                            await blocksBatch.commit();
+
+                            // Update project status
+                            await projectRef.update({ status: 'Listo para editar' });
+
+                            updateProgressUI(100, '¡Completado!');
+                            setTimeout(() => {
+                                procOverlay.classList.add('opacity-0');
+                                setTimeout(() => {
+                                    procOverlay.classList.add('hidden');
+                                    window.location.href = `editor.html?project=${projectId}`;
+                                }, 300);
+                            }, 1000);
+                        }
+                    );
+                } catch (err) {
+                    console.error(err);
+                    alert(`Error en el procesamiento: ${err.message}`);
+                    procOverlay.classList.add('opacity-0');
+                    setTimeout(() => procOverlay.classList.add('hidden'), 300);
+                }
+            });
+
+            // Mobile Sidebar Toggle
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            const sidebarToggle = document.getElementById('mobile-sidebar-toggle');
+            const sidebarClose = document.getElementById('mobile-sidebar-close');
+
+            function openSidebar() {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+            }
+
+            function closeSidebar() {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            }
+
+            sidebarToggle?.addEventListener('click', openSidebar);
+            sidebarClose?.addEventListener('click', closeSidebar);
+            sidebarOverlay?.addEventListener('click', closeSidebar);
+
+            // Close sidebar when clicking any navigation link (useful on mobile)
+            sidebar.querySelectorAll('a, button').forEach(el => {
+                if (el.id !== 'nav-upload-btn' && el.id !== 'user-profile-btn') {
+                    el.addEventListener('click', closeSidebar);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "Dockerfile",
+      "docker-compose.yml",
+      "requirements.txt",
+      "tu_script.py",
+      "guion.json",
+      "CARPETA_VIDEO",
+      "RESULTADOS_AD",
+      "TEMP_PROCESAMIENTO",
+      "handoff.md",
+      "key.txt",
+      "storage.rules"
+    ]
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}
