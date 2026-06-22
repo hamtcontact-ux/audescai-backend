@@ -4,4 +4,7 @@ openai==1.14.1
 moviepy==1.0.3
 edge-tts==6.1.9
 silero-vad==5.1.2
-torch==2.2.1 --index-url https://download.pytorch.org/whl/cpu
+numpy<2.0.0
+--index-url https://download.pytorch.org/whl/cpu
+torch==2.2.1
+torchaudio==2.2.1
