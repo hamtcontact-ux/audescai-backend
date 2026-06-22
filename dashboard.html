@@ -757,8 +757,8 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                            // Request Flask phase 1 processing
-                            const res = await fetch(`${FLASK_API}/procesar-fase1`, {
+                            // Request processing via n8n webhook
+                            const res = await fetch(`http://n8n-itsqful57xby634nt9mr2a6g.187.77.255.196.sslip.io/webhook/procesar-video`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
