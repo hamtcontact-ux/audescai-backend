@@ -85,7 +85,7 @@ def obtener_huecos_silencio(video_path, min_gap=2.2, max_intervalo=6.0):
     audio_temp = os.path.join(TEMP_DIR, f"temp_vad_{int(time.time())}.wav")
     video.audio.write_audiofile(audio_temp, fps=16000, nbytes=2, codec='pcm_s16le', verbose=False, logger=None)
     
-    wav = read_audio(audio_temp)
+    wav = read_audio(audio_temp, sampling_rate=16000)
     speech_ts = get_speech_timestamps(wav, vad_model, sampling_rate=16000)
     
     duracion_total = video.duration
