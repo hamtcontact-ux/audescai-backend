@@ -29,7 +29,9 @@ install_dep("edge-tts")
 install_dep("flask-cors")
 install_dep("openai")
 install_dep("httpx")
+install_dep("soundfile")
 install_dep("silero-vad")
+
 
 
 import edge_tts
