@@ -671,13 +671,12 @@
             // Upload and processing
             processBtn.addEventListener('click', async () => {
                 const file = fileInput.files[0] || videoArchivoReal;
+                const uid = auth.currentUser.uid;
+                const apiKey = localStorage.getItem('openai_api_key');
                 if (!file) {
                     alert('Por favor, selecciona un archivo de video.');
                     return;
                 }
-
-                const uid = auth.currentUser.uid;
-                const apiKey = localStorage.getItem('openai_api_key');
                 if (!apiKey) {
                     alert('Por favor configura tu API Key primero.');
                     return;
@@ -685,14 +684,13 @@
 
                 closeModal();
 
-                // Show processing overlay
+                // Mostrar el overlay de procesamiento
                 const procOverlay = document.getElementById('processing-overlay');
                 const progressCircle = document.getElementById('processing-progress-circle');
                 const progressText = document.getElementById('processing-progress-text');
                 const progressBar = document.getElementById('processing-progress-bar');
 
-                procOverlay.classList.remove('hidden');
-                procOverlay.classList.remove('opacity-0');
+                procOverlay.classList.remove('hidden', 'opacity-0');
                 procOverlay.classList.add('opacity-100');
 
                 const updateProgressUI = (pct, customText) => {
@@ -705,11 +703,11 @@
                 updateProgressUI(0, 'Iniciando...');
 
                 try {
-                    // Create project doc in Firestore to get a project ID
+                    // 1. Crear documento del proyecto en Firestore
                     const projectRef = db.collection('usuarios').doc(uid).collection('proyectos').doc();
                     const projectId = projectRef.id;
 
-                    // Upload video directly to Cloudinary using Unsigned Upload
+                    // 2. Subir video a Cloudinary
                     const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dm9uhr1be/video/upload';
                     const formData = new FormData();
                     formData.append('file', file);
@@ -722,7 +720,7 @@
                             
                             xhr.upload.onprogress = (e) => {
                                 if (e.lengthComputable) {
-                                    const uploadProgress = (e.loaded / e.total) * 70; // Map 0-100% to 10-80% progress
+                                    const uploadProgress = (e.loaded / e.total) * 70; // Escala a 10-80%
                                     updateProgressUI(10 + uploadProgress, 'Subiendo video...');
                                 }
                             };
@@ -746,9 +744,9 @@
                     };
 
                     const videoUrl = await uploadToCloudinary();
-                    updateProgressUI(80, 'Procesando IA...');
+                    updateProgressUI(80, 'Enviando a n8n...');
 
-                    // Save project meta
+                    // 3. Guardar metadata inicial en Firestore
                     await projectRef.set({
                         id: projectId,
                         name: file.name.substring(0, file.name.lastIndexOf('.')) || file.name,
@@ -757,49 +755,53 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                            // Request processing via n8n webhook
-                            const res = await fetch(`http://n8n-itsqful57xby634nt9mr2a6g.187.77.255.196.sslip.io/webhook/procesar-video`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${apiKey}`
-                                },
-                                body: JSON.stringify({
-                                    video_url: videoUrl,
-                                    api_key: apiKey,
-                                    proyecto_id: projectId
-                                })
-                            });
+                    // 4. Petición HTTP POST hacia n8n en Coolify
+                    const n8nUrl = 'http://n8n-itsqful57xby634nt9mr2a6g.187.77.255.196.sslip.io/webhook/procesar-video';
+                    
+                    const res = await fetch(n8nUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            video_url: videoUrl,
+                            api_key: apiKey,
+                            proyecto_id: projectId
+                        })
+                    });
 
-                            if (!res.ok) {
-                                const errorText = await res.text();
-                                throw new Error(errorText);
-                            }
+                    if (!res.ok) {
+                        const errorText = await res.text();
+                        throw new Error(`n8n respondió con error: ${res.status} - ${errorText}`);
+                    }
 
-                            const result = await res.json();
-                            updateProgressUI(95, 'Guardando guión...');
+                    const result = await res.json();
+                    updateProgressUI(95, 'Guardando guión...');
 
-                            // Save generated blocks to Firestore
-                            const blocksBatch = db.batch();
-                            result.bloques.forEach(b => {
-                                const blockDoc = projectRef.collection('bloques').doc(String(b.id));
-                                blocksBatch.set(blockDoc, b);
-                            });
-                            await blocksBatch.commit();
+                    // 5. Guardar los bloques generados por la IA en Firestore
+                    if (result && result.bloques && Array.isArray(result.bloques)) {
+                        const blocksBatch = db.batch();
+                        result.bloques.forEach(b => {
+                            const blockDoc = projectRef.collection('bloques').doc(String(b.id));
+                            blocksBatch.set(blockDoc, b);
+                        });
+                        await blocksBatch.commit();
+                    }
 
-                            // Update project status
-                            await projectRef.update({ status: 'Listo para editar' });
+                    // 6. Actualizar estado final
+                    await projectRef.update({ status: 'Listo para editar' });
 
-                            updateProgressUI(100, '¡Completado!');
-                            setTimeout(() => {
-                                procOverlay.classList.add('opacity-0');
-                                setTimeout(() => {
-                                    procOverlay.classList.add('hidden');
-                                    window.location.href = `editor.html?project=${projectId}`;
-                                }, 300);
-                            }, 1000);
-                        } catch (err) {
-                    console.error(err);
+                    updateProgressUI(100, '¡Completado!');
+                    setTimeout(() => {
+                        procOverlay.classList.add('opacity-0');
+                        setTimeout(() => {
+                            procOverlay.classList.add('hidden');
+                            window.location.href = `editor.html?project=${projectId}`;
+                        }, 300);
+                    }, 1000);
+
+                } catch (err) {
+                    console.error("Error detallado:", err);
                     alert(`Error en el procesamiento: ${err.message}`);
                     procOverlay.classList.add('opacity-0');
                     setTimeout(() => procOverlay.classList.add('hidden'), 300);

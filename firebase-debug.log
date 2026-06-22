@@ -1,17 +1,17 @@
-[debug] [2026-06-22T06:56:25.686Z] ----------------------------------------------------------------------
-[debug] [2026-06-22T06:56:25.689Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Hamt\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
-[debug] [2026-06-22T06:56:25.689Z] CLI Version:   15.22.0
-[debug] [2026-06-22T06:56:25.689Z] Platform:      win32
-[debug] [2026-06-22T06:56:25.689Z] Node Version:  v24.16.0
-[debug] [2026-06-22T06:56:25.689Z] Detected Agent: unknown
-[debug] [2026-06-22T06:56:25.690Z] Time:          Mon Jun 22 2026 03:56:25 GMT-0300 (hora estándar de Argentina)
-[debug] [2026-06-22T06:56:25.690Z] ----------------------------------------------------------------------
+[debug] [2026-06-22T07:12:36.891Z] ----------------------------------------------------------------------
+[debug] [2026-06-22T07:12:36.894Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Hamt\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-06-22T07:12:36.894Z] CLI Version:   15.22.0
+[debug] [2026-06-22T07:12:36.894Z] Platform:      win32
+[debug] [2026-06-22T07:12:36.894Z] Node Version:  v24.16.0
+[debug] [2026-06-22T07:12:36.894Z] Detected Agent: unknown
+[debug] [2026-06-22T07:12:36.894Z] Time:          Mon Jun 22 2026 04:12:36 GMT-0300 (hora estándar de Argentina)
+[debug] [2026-06-22T07:12:36.895Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2026-06-22T06:56:27.609Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2026-06-22T06:56:27.609Z] > authorizing via signed-in user (hamtcontact@gmail.com)
-[debug] [2026-06-22T06:56:27.610Z] [iam] checking project audescai for permissions ["firebase.projects.get","firebasehosting.sites.update"]
-[debug] [2026-06-22T06:56:27.611Z] Checked if tokens are valid: true, expires at: 1782114427244
-[debug] [2026-06-22T06:56:27.611Z] Checked if tokens are valid: true, expires at: 1782114427244
-[debug] [2026-06-22T06:56:27.612Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions [none]
-[debug] [2026-06-22T06:56:27.612Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions  x-goog-user-project=audescai
-[debug] [2026-06-22T06:56:27.612Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-06-22T07:12:38.820Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-06-22T07:12:38.820Z] > authorizing via signed-in user (hamtcontact@gmail.com)
+[debug] [2026-06-22T07:12:38.820Z] [iam] checking project audescai for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-06-22T07:12:38.822Z] Checked if tokens are valid: true, expires at: 1782114427244
+[debug] [2026-06-22T07:12:38.822Z] Checked if tokens are valid: true, expires at: 1782114427244
+[debug] [2026-06-22T07:12:38.823Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions [none]
+[debug] [2026-06-22T07:12:38.823Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions  x-goog-user-project=audescai
+[debug] [2026-06-22T07:12:38.823Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/audescai:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
