@@ -425,6 +425,6 @@ def descargar_audio():
         return jsonify({"status": "error", "message": "No hay mezcla de audio disponible para este proyecto. Renderiza primero."}), 404
     return send_file(ruta_mp3, as_attachment=True, download_name="audiodescripcion_final.mp3", mimetype="audio/mpeg")
 
-if __name__ == "__main__":
-    print("Servidor Blind AudescAI escuchando en http://localhost:5000")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+if __name__ == '__main__':
+    # Esto obliga a Flask a escuchar al proxy de Coolify en el puerto 5000
+    app.run(host='0.0.0.0', port=5000, debug=False)
