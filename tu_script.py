@@ -10,6 +10,7 @@ import urllib.request
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from openai import OpenAI
+import httpx
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
 
 # Configuración del entorno
@@ -27,7 +28,9 @@ def install_dep(package):
 install_dep("edge-tts")
 install_dep("flask-cors")
 install_dep("openai")
+install_dep("httpx")
 install_dep("silero-vad")
+
 
 import edge_tts
 from silero_vad import load_silero_vad, get_speech_timestamps, read_audio
@@ -247,7 +250,9 @@ def api_fase1():
         descargar_video(video_url, video_path)
         
         # Inicializar cliente OpenAI dinámicamente con la clave del usuario
-        openai_client = OpenAI(api_key=api_key)
+        http_client = httpx.Client(trust_env=False)
+        openai_client = OpenAI(api_key=api_key, http_client=http_client)
+
         
         # Ejecutar Silero VAD
         huecos = obtener_huecos_silencio(video_path)
