@@ -15,13 +15,9 @@ from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
 
 # Configuración del entorno
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMP_DIR = os.path.join(BASE_DIR, "TEMP_PROCESAMIENTO")
-
-# Asegurar que la carpeta se cree automáticamente si no existe
-if not os.path.exists(TEMP_DIR):
-    os.makedirs(TEMP_DIR, exist_ok=True)
-
-CARPETA_AUDIOS = TEMP_DIR
+CARPETA_AUDIOS = os.path.join(BASE_DIR, "TEMP_PROCESAMIENTO")
+os.makedirs(CARPETA_AUDIOS, exist_ok=True)
+TEMP_DIR = CARPETA_AUDIOS
 
 # Autoinstalación de dependencias críticas
 def install_dep(package):
@@ -201,7 +197,7 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
 def obtener_ruta_cache_tts(texto, voz):
     import hashlib
     filename = f"tts_{hashlib.md5((texto + voz).encode('utf-8')).hexdigest()}.mp3"
-    return os.path.join(TEMP_DIR, filename)
+    return os.path.join(CARPETA_AUDIOS, filename)
 
 # --- GENERACIÓN DE AUDIO (EDGE TTS) ---
 def generar_audio_pro(texto, i, voz_id):
