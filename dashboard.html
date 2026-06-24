@@ -781,21 +781,43 @@
                     });
 
                     if (!res.ok) {
-                        const errorText = await res.text();
-                        throw new Error(`n8n respondió con error: ${res.status} - ${errorText}`);
+                        throw new Error(`Error de estado HTTP: ${res.status}`);
                     }
 
-                    const result = await res.json();
-                    updateProgressUI(95, 'Guardando guión...');
+                    let result = null;
+                    const textResponse = await res.text();
+                    console.log("Respuesta cruda de n8n:", textResponse);
+
+                    if (!textResponse || !textResponse.trim()) {
+                        alert("Error: El servidor respondió correctamente pero sin datos (respuesta vacía).");
+                        procOverlay.classList.add('opacity-0');
+                        setTimeout(() => procOverlay.classList.add('hidden'), 300);
+                        return;
+                    }
+
+                    try {
+                        result = JSON.parse(textResponse);
+                    } catch (e) {
+                        alert("Error: La respuesta del servidor no tiene un formato JSON válido.");
+                        procOverlay.classList.add('opacity-0');
+                        setTimeout(() => procOverlay.classList.add('hidden'), 300);
+                        return;
+                    }
 
                     // 5. Guardar los bloques generados por la IA en Firestore
                     if (result && result.bloques && Array.isArray(result.bloques)) {
+                        updateProgressUI(95, 'Guardando guión...');
                         const blocksBatch = db.batch();
                         result.bloques.forEach(b => {
                             const blockDoc = projectRef.collection('bloques').doc(String(b.id));
                             blocksBatch.set(blockDoc, b);
                         });
                         await blocksBatch.commit();
+                    } else {
+                        alert("Error: No se encontraron bloques de audiodescripción en la respuesta.");
+                        procOverlay.classList.add('opacity-0');
+                        setTimeout(() => procOverlay.classList.add('hidden'), 300);
+                        return;
                     }
 
                     // 6. Actualizar estado final

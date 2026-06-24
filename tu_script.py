@@ -317,6 +317,12 @@ def api_tts():
     
     path_audio = obtener_ruta_cache_tts(texto, voz)
     
+    if os.path.exists(path_audio) and os.path.getsize(path_audio) == 0:
+        try:
+            os.remove(path_audio)
+        except:
+            pass
+
     if not os.path.exists(path_audio):
         async def amain():
             communicate = edge_tts.Communicate(texto, voz)
