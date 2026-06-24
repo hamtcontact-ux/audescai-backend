@@ -205,10 +205,11 @@ def generar_tts_robusto(texto, voz, path_salida):
     import edge_tts
     import subprocess
     import os
+    import sys
 
     # Si por alguna razón el archivo ya existe y tiene contenido, retornamos True
     if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
-        return True
+        return True, ""
 
     # Asegurar que el directorio contenedor exista
     os.makedirs(os.path.dirname(path_salida), exist_ok=True)
@@ -217,6 +218,8 @@ def generar_tts_robusto(texto, voz, path_salida):
         communicate = edge_tts.Communicate(texto, voz)
         await communicate.save(path_salida)
 
+    errores = []
+
     # Intento 1: Loop de eventos local (ideal para hilos de Flask)
     try:
         loop = asyncio.new_event_loop()
@@ -224,28 +227,38 @@ def generar_tts_robusto(texto, voz, path_salida):
         loop.run_until_complete(amain())
         loop.close()
         if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
-            return True
+            return True, ""
     except Exception as e:
-        print(f"[Warning robust-tts] Intento 1 (new_event_loop) falló: {e}")
+        err_msg = f"new_event_loop: {type(e).__name__}: {str(e)}"
+        print(f"[Warning robust-tts] {err_msg}")
+        errores.append(err_msg)
 
     # Intento 2: asyncio.run estándar
     try:
         asyncio.run(amain())
         if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
-            return True
+            return True, ""
     except Exception as e:
-        print(f"[Warning robust-tts] Intento 2 (asyncio.run) falló: {e}")
+        err_msg = f"asyncio.run: {type(e).__name__}: {str(e)}"
+        print(f"[Warning robust-tts] {err_msg}")
+        errores.append(err_msg)
 
-    # Intento 3: CLI Subprocess
+    # Intento 3: CLI Subprocess usando python -m edge_tts (para ser totalmente portable en hilos)
     try:
-        cmd = ["edge-tts", "--voice", voz, "--text", texto, "--write-media", path_salida]
-        subprocess.run(cmd, capture_output=True, timeout=15, check=True)
-        if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
-            return True
+        cmd = [sys.executable, "-m", "edge_tts", "--voice", voz, "--text", texto, "--write-media", path_salida]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        if res.returncode == 0 and os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+            return True, ""
+        else:
+            err_msg = f"CLI (returncode={res.returncode}): stdout={res.stdout.strip()}, stderr={res.stderr.strip()}"
+            print(f"[Warning robust-tts] {err_msg}")
+            errores.append(err_msg)
     except Exception as e:
-        print(f"[Warning robust-tts] Intento 3 (CLI) falló: {e}")
+        err_msg = f"CLI_exception: {type(e).__name__}: {str(e)}"
+        print(f"[Warning robust-tts] {err_msg}")
+        errores.append(err_msg)
 
-    return False
+    return False, " | ".join(errores)
 
 def generar_audio_pro(texto, i, voz_id):
     path_audio = os.path.join(TEMP_DIR, f"ad_{i}_{int(time.time())}.mp3")
@@ -261,7 +274,7 @@ def generar_audio_pro(texto, i, voz_id):
         except Exception as e:
             print(f"[Warning] No se pudo copiar desde caché: {e}")
 
-    exito = generar_tts_robusto(texto, voice, path_audio)
+    exito, _ = generar_tts_robusto(texto, voice, path_audio)
     if exito:
         # Guardamos en la caché también
         try:
@@ -361,9 +374,9 @@ def api_tts():
             pass
 
     if not os.path.exists(path_audio) or os.path.getsize(path_audio) == 0:
-        exito = generar_tts_robusto(texto, voz, path_audio)
+        exito, errores = generar_tts_robusto(texto, voz, path_audio)
         if not exito:
-            return "Error al generar síntesis de voz edge-tts", 500
+            return f"Error al generar síntesis de voz edge-tts: {errores}", 500
             
     return send_file(path_audio, mimetype="audio/mpeg", conditional=True)
 
