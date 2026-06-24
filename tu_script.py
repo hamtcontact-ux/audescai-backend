@@ -7,6 +7,13 @@ import asyncio
 import subprocess
 import sys
 import urllib.request
+# Forzar actualización de edge-tts en el arranque para evitar error 403 de Microsoft
+try:
+    print("[Startup] Intentando forzar actualización de edge-tts a >=6.1.12...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "edge-tts>=6.1.12"])
+    print("[Startup] Actualización de edge-tts completada exitosamente.")
+except Exception as e:
+    print(f"[Startup Warning] No se pudo forzar la actualización de edge-tts: {e}")
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from openai import OpenAI
@@ -23,8 +30,6 @@ TEMP_DIR = CARPETA_AUDIOS
 def install_dep(package):
     try:
         __import__(package.replace("-", "_"))
-        if package == "edge-tts":
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "edge-tts>=6.1.12"])
     except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
