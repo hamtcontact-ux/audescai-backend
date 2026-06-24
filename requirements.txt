@@ -2,7 +2,7 @@ flask==3.0.2
 flask-cors==4.0.0
 openai==1.14.1
 moviepy==1.0.3
-edge-tts==6.1.9
+edge-tts>=6.1.12
 silero-vad==5.1.2
 numpy<2.0.0
 torch==2.2.1 --extra-index-url https://download.pytorch.org/whl/cpu

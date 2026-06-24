@@ -23,6 +23,8 @@ TEMP_DIR = CARPETA_AUDIOS
 def install_dep(package):
     try:
         __import__(package.replace("-", "_"))
+        if package == "edge-tts":
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "edge-tts>=6.1.12"])
     except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
