@@ -200,13 +200,60 @@ def obtener_ruta_cache_tts(texto, voz):
     return os.path.join(CARPETA_AUDIOS, filename)
 
 # --- GENERACIÓN DE AUDIO (EDGE TTS) ---
+def generar_tts_robusto(texto, voz, path_salida):
+    import asyncio
+    import edge_tts
+    import subprocess
+    import os
+
+    # Si por alguna razón el archivo ya existe y tiene contenido, retornamos True
+    if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+        return True
+
+    # Asegurar que el directorio contenedor exista
+    os.makedirs(os.path.dirname(path_salida), exist_ok=True)
+
+    async def amain():
+        communicate = edge_tts.Communicate(texto, voz)
+        await communicate.save(path_salida)
+
+    # Intento 1: Loop de eventos local (ideal para hilos de Flask)
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(amain())
+        loop.close()
+        if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+            return True
+    except Exception as e:
+        print(f"[Warning robust-tts] Intento 1 (new_event_loop) falló: {e}")
+
+    # Intento 2: asyncio.run estándar
+    try:
+        asyncio.run(amain())
+        if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+            return True
+    except Exception as e:
+        print(f"[Warning robust-tts] Intento 2 (asyncio.run) falló: {e}")
+
+    # Intento 3: CLI Subprocess
+    try:
+        cmd = ["edge-tts", "--voice", voz, "--text", texto, "--write-media", path_salida]
+        subprocess.run(cmd, capture_output=True, timeout=15, check=True)
+        if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+            return True
+    except Exception as e:
+        print(f"[Warning robust-tts] Intento 3 (CLI) falló: {e}")
+
+    return False
+
 def generar_audio_pro(texto, i, voz_id):
     path_audio = os.path.join(TEMP_DIR, f"ad_{i}_{int(time.time())}.mp3")
     voice = voz_id if voz_id else "es-ES-AlvaroNeural" 
     
     # Optimización: si ya existe en la caché, lo copiamos directamente
     ruta_cache = obtener_ruta_cache_tts(texto, voice)
-    if os.path.exists(ruta_cache):
+    if os.path.exists(ruta_cache) and os.path.getsize(ruta_cache) > 0:
         try:
             import shutil
             shutil.copyfile(ruta_cache, path_audio)
@@ -214,12 +261,8 @@ def generar_audio_pro(texto, i, voz_id):
         except Exception as e:
             print(f"[Warning] No se pudo copiar desde caché: {e}")
 
-    async def amain():
-        communicate = edge_tts.Communicate(texto, voice)
-        await communicate.save(path_audio)
-        
-    try:
-        asyncio.run(amain())
+    exito = generar_tts_robusto(texto, voice, path_audio)
+    if exito:
         # Guardamos en la caché también
         try:
             import shutil
@@ -227,8 +270,8 @@ def generar_audio_pro(texto, i, voz_id):
         except:
             pass
         return path_audio
-    except Exception as e:
-        print(f"[Error] Error en TTS Edge: {e}")
+    else:
+        print(f"[Error] Error en TTS Edge al generar audio pro.")
         return None
 
 @app.route('/procesar-fase1', methods=['POST'])
@@ -272,14 +315,7 @@ def api_fase1():
             voz_default = "es-ES-AlvaroNeural"
             if texto:
                 ruta_cache = obtener_ruta_cache_tts(texto, voz_default)
-                if not os.path.exists(ruta_cache):
-                    async def generate_init_tts():
-                        communicate = edge_tts.Communicate(texto, voz_default)
-                        await communicate.save(ruta_cache)
-                    try:
-                        asyncio.run(generate_init_tts())
-                    except Exception as e:
-                        print(f"   [Warning] No se pudo pre-generar TTS: {e}")
+                generar_tts_robusto(texto, voz_default, ruta_cache)
 
             bloques_guion.append({
                 "id": i + 1,
@@ -324,14 +360,10 @@ def api_tts():
         except:
             pass
 
-    if not os.path.exists(path_audio):
-        async def amain():
-            communicate = edge_tts.Communicate(texto, voz)
-            await communicate.save(path_audio)
-        try:
-            asyncio.run(amain())
-        except Exception as e:
-            return str(e), 500
+    if not os.path.exists(path_audio) or os.path.getsize(path_audio) == 0:
+        exito = generar_tts_robusto(texto, voz, path_audio)
+        if not exito:
+            return "Error al generar síntesis de voz edge-tts", 500
             
     return send_file(path_audio, mimetype="audio/mpeg", conditional=True)
 
