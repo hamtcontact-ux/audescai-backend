@@ -336,6 +336,18 @@ def api_fase1():
             if texto:
                 ruta_cache = obtener_ruta_cache_tts(texto, voz_default)
                 generar_tts_robusto(texto, voz_default, ruta_cache)
+                
+                try:
+                    clip_audio = AudioFileClip(ruta_cache)
+                    duracion_audio = clip_audio.duration
+                    clip_audio.close()
+                except Exception as e:
+                    print(f"[Warning] No se pudo obtener la duración de audio real: {e}")
+                    duracion_audio = len(texto) / 15.0
+                
+                fin_limite = inicio + duracion_audio + 0.5
+                if fin_limite < fin:
+                    fin = float(f"{fin_limite:.2f}")
 
             bloques_guion.append({
                 "id": i + 1,

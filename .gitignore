@@ -1,0 +1,21 @@
+# --- Credenciales y Seguridad (CRÍTICO) ---
+.env
+*.json
+!firebase.json
+# (Nota: La línea anterior permite firebase.json que solo tiene configuración de hosting, pero ignora las llaves privadas de Firebase Admin)
+
+# --- Archivos del Frontend (Evita plagio visual) ---
+*.html
+*.css
+*.js
+
+# --- Temporales y Caché de Python ---
+__pycache__/
+*.pyc
+TEMP_PROCESAMIENTO/
+*.mp3
+
+# --- Entornos Virtuales ---
+venv/
+.venv/
+env/
