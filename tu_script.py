@@ -16,7 +16,12 @@ from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
 # Configuración del entorno
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMP_DIR = os.path.join(BASE_DIR, "TEMP_PROCESAMIENTO")
-os.makedirs(TEMP_DIR, exist_ok=True)
+
+# Asegurar que la carpeta se cree automáticamente si no existe
+if not os.path.exists(TEMP_DIR):
+    os.makedirs(TEMP_DIR, exist_ok=True)
+
+CARPETA_AUDIOS = TEMP_DIR
 
 # Autoinstalación de dependencias críticas
 def install_dep(package):
