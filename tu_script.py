@@ -7,6 +7,7 @@ import asyncio
 import subprocess
 import sys
 import urllib.request
+import uuid
 # Forzar actualización de edge-tts en el arranque para evitar error 403 de Microsoft
 try:
     print("[Startup] Intentando forzar actualización de edge-tts a >=6.1.12...")
@@ -45,8 +46,8 @@ install_dep("silero-vad")
 import edge_tts
 from silero_vad import load_silero_vad, get_speech_timestamps, read_audio
 
-# Estado de procesamiento de Fase 1 (simplificado)
-fase1_status = "idle"
+# Estado de procesamiento de Fase 1 (simplificado por proyecto_id)
+fase1_status = {}
 
 # Reglas profesionales de RAG
 REGLAS_PROFESIONALES = """
@@ -90,7 +91,7 @@ def obtener_huecos_silencio(video_path, min_gap=2.2, max_intervalo=6.0):
     vad_model = load_silero_vad()
     video = VideoFileClip(video_path)
     
-    audio_temp = os.path.join(TEMP_DIR, f"temp_vad_{int(time.time())}.wav")
+    audio_temp = os.path.join(TEMP_DIR, f"temp_vad_{uuid.uuid4().hex}.wav")
     video.audio.write_audiofile(audio_temp, fps=16000, nbytes=2, codec='pcm_s16le', verbose=False, logger=None)
     
     wav = read_audio(audio_temp, sampling_rate=16000)
@@ -131,7 +132,7 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
     duracion_max = fin - inicio
     print(f"   [Info] Analizando escena {indice_escena}: {inicio:.1f}s a {fin:.1f}s")
     
-    frame_path = os.path.join(TEMP_DIR, f"frame_desc_{int(time.time())}.jpg")
+    frame_path = os.path.join(TEMP_DIR, f"frame_desc_{uuid.uuid4().hex}.jpg")
     with VideoFileClip(video_path) as video:
         t_frame = max(0.1, inicio + 0.5)
         video.save_frame(frame_path, t=min(t_frame, video.duration - 0.1))
@@ -201,13 +202,13 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
     return resultado
 
 # --- UTILERÍA DE CACHÉ DE AUDIO TTS ---
-def obtener_ruta_cache_tts(texto, voz):
+def obtener_ruta_cache_tts(texto, voz, rate="+0%"):
     import hashlib
-    filename = f"tts_{hashlib.md5((texto + voz).encode('utf-8')).hexdigest()}.mp3"
+    filename = f"tts_{hashlib.md5((texto + voz + rate).encode('utf-8')).hexdigest()}.mp3"
     return os.path.join(CARPETA_AUDIOS, filename)
 
 # --- GENERACIÓN DE AUDIO (EDGE TTS) ---
-def generar_tts_robusto(texto, voz, path_salida):
+def generar_tts_robusto(texto, voz, path_salida, rate="+0%"):
     import asyncio
     import edge_tts
     import subprocess
@@ -222,7 +223,7 @@ def generar_tts_robusto(texto, voz, path_salida):
     os.makedirs(os.path.dirname(path_salida), exist_ok=True)
 
     async def amain():
-        communicate = edge_tts.Communicate(texto, voz)
+        communicate = edge_tts.Communicate(texto, voz, rate=rate)
         await communicate.save(path_salida)
 
     errores = []
@@ -252,7 +253,7 @@ def generar_tts_robusto(texto, voz, path_salida):
 
     # Intento 3: CLI Subprocess usando python -m edge_tts (para ser totalmente portable en hilos)
     try:
-        cmd = [sys.executable, "-m", "edge_tts", "--voice", voz, "--text", texto, "--write-media", path_salida]
+        cmd = [sys.executable, "-m", "edge_tts", "--voice", voz, "--text", texto, "--write-media", path_salida, "--rate", rate]
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
         if res.returncode == 0 and os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
             return True, ""
@@ -267,12 +268,13 @@ def generar_tts_robusto(texto, voz, path_salida):
 
     return False, " | ".join(errores)
 
-def generar_audio_pro(texto, i, voz_id):
-    path_audio = os.path.join(TEMP_DIR, f"ad_{i}_{int(time.time())}.mp3")
+def generar_audio_pro(texto, i, voz_id, proyecto_id=None, rate="+0%"):
+    proj_prefix = f"{proyecto_id}_" if proyecto_id else ""
+    path_audio = os.path.join(TEMP_DIR, f"ad_{proj_prefix}{i}_{uuid.uuid4().hex}.mp3")
     voice = voz_id if voz_id else "es-ES-AlvaroNeural" 
     
     # Optimización: si ya existe en la caché, lo copiamos directamente
-    ruta_cache = obtener_ruta_cache_tts(texto, voice)
+    ruta_cache = obtener_ruta_cache_tts(texto, voice, rate)
     if os.path.exists(ruta_cache) and os.path.getsize(ruta_cache) > 0:
         try:
             import shutil
@@ -281,7 +283,7 @@ def generar_audio_pro(texto, i, voz_id):
         except Exception as e:
             print(f"[Warning] No se pudo copiar desde caché: {e}")
 
-    exito, _ = generar_tts_robusto(texto, voice, path_audio)
+    exito, _ = generar_tts_robusto(texto, voice, path_audio, rate)
     if exito:
         # Guardamos en la caché también
         try:
@@ -306,7 +308,7 @@ def api_fase1():
         return jsonify({"status": "error", "message": "Faltan parámetros obligatorios: video_url, api_key, proyecto_id"}), 400
 
     print(f"[Info] Iniciando procesamiento de audiodescripción Fase 1 para proyecto: {proyecto_id}")
-    fase1_status = "processing"
+    fase1_status[proyecto_id] = "processing"
     
     # Rutas locales relativas de procesamiento
     video_path = os.path.join(TEMP_DIR, f"{proyecto_id}_original.mp4")
@@ -358,33 +360,46 @@ def api_fase1():
                 "audio_url": None
             })
 
-        fase1_status = "idle"
+        fase1_status[proyecto_id] = "idle"
         return jsonify({"status": "success", "bloques": bloques_guion}), 200
 
     except Exception as e:
-        fase1_status = "idle"
+        fase1_status[proyecto_id] = "idle"
         print(f"[Error] Error en Fase 1 para {proyecto_id}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/fase1-status', methods=['GET'])
 def api_fase1_status():
     global fase1_status
-    return jsonify({"status": fase1_status}), 200
+    proyecto_id = request.args.get("proyecto_id")
+    if proyecto_id:
+        status = fase1_status.get(proyecto_id, "idle")
+    else:
+        # Fallback si no viene proyecto_id: si hay alguno procesando, devolvemos "processing"
+        if any(v == "processing" for v in fase1_status.values()):
+            status = "processing"
+        else:
+            status = "idle"
+    return jsonify({"status": status}), 200
 
 @app.route('/fase1-start', methods=['POST'])
 def api_fase1_start():
     global fase1_status
-    fase1_status = "processing"
+    data = request.json or {}
+    proyecto_id = data.get("proyecto_id")
+    if proyecto_id:
+        fase1_status[proyecto_id] = "processing"
     return jsonify({"status": "success"}), 200
 
 @app.route('/api/tts', methods=['GET'])
 def api_tts():
     texto = request.args.get("text", "").strip()
     voz = request.args.get("voice", "es-ES-AlvaroNeural")
+    rate = request.args.get("rate", "+0%").strip()
     if not texto:
         return "Falta texto para sintetizar", 400
     
-    path_audio = obtener_ruta_cache_tts(texto, voz)
+    path_audio = obtener_ruta_cache_tts(texto, voz, rate)
     
     if os.path.exists(path_audio) and os.path.getsize(path_audio) == 0:
         try:
@@ -393,7 +408,7 @@ def api_tts():
             pass
 
     if not os.path.exists(path_audio) or os.path.getsize(path_audio) == 0:
-        exito, errores = generar_tts_robusto(texto, voz, path_audio)
+        exito, errores = generar_tts_robusto(texto, voz, path_audio, rate)
         if not exito:
             return f"Error al generar síntesis de voz edge-tts: {errores}", 500
             
@@ -419,20 +434,23 @@ def api_fase2():
         video_original = VideoFileClip(video_path)
         audio_original = video_original.audio
         pistas_ad = []
+        rutas_archivos_ad = []
         ruta_mezcla_mp3 = os.path.join(TEMP_DIR, f"{proyecto_id}_mezcla_ad_final.mp3")
 
         for i, bloque in enumerate(bloques_editados):
             texto = bloque.get("text", "").strip()
             inicio_clip = float(bloque.get("start", 0))
             voz_id = bloque.get("voice", "es-ES-AlvaroNeural")
+            rate = bloque.get("rate", "+0%").strip()
 
             if not texto:
                 continue
 
-            path_audio = generar_audio_pro(texto, i, voz_id)
+            path_audio = generar_audio_pro(texto, i, voz_id, proyecto_id=proyecto_id, rate=rate)
             if not path_audio:
                 continue
 
+            rutas_archivos_ad.append(path_audio)
             ad_clip = AudioFileClip(path_audio)
             ad_clip = ad_clip.set_start(inicio_clip)
             pistas_ad.append(ad_clip)
@@ -480,6 +498,14 @@ def api_fase2():
                 a.close()
             except:
                 pass
+
+        # Limpiar archivos temporales de audio generados para el renderizado
+        for path_a in rutas_archivos_ad:
+            try:
+                if os.path.exists(path_a):
+                    os.remove(path_a)
+            except Exception as e_del:
+                print(f"[Warning] No se pudo eliminar audio temporal {path_a}: {e_del}")
 
         return jsonify({
             "status": "success",
