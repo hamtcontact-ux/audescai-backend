@@ -242,6 +242,27 @@ def obtener_ruta_cache_tts(texto, voz, rate="+0%"):
     filename = f"tts_{hashlib.md5((texto + voz + rate).encode('utf-8')).hexdigest()}.mp3"
     return os.path.join(CARPETA_AUDIOS, filename)
 
+# --- OPTIMIZACIÓN DE AUDIO PARA COMPATIBILIDAD NATIVA (FIREFOX) ---
+def optimizar_mp3_firefox(path_audio):
+    import subprocess
+    import os
+    temp_ffmpeg = path_audio + ".temp.mp3"
+    try:
+        # Re-codificar a MP3 lame estándar a 44.1kHz (ultra rápido, ~0.05 segundos)
+        cmd_ffmpeg = ["ffmpeg", "-y", "-i", path_audio, "-codec:a", "libmp3lame", "-ar", "44100", temp_ffmpeg]
+        res_ffmpeg = subprocess.run(cmd_ffmpeg, capture_output=True, text=True, timeout=8)
+        if res_ffmpeg.returncode == 0 and os.path.exists(temp_ffmpeg) and os.path.getsize(temp_ffmpeg) > 0:
+            os.replace(temp_ffmpeg, path_audio)
+            print(f"[FFmpeg] Audio optimizado correctamente para Firefox: {os.path.basename(path_audio)}")
+        else:
+            print(f"[FFmpeg Warning] Falló optimización de audio, usando original. stderr: {res_ffmpeg.stderr}")
+    except Exception as e_ffmpeg:
+        print(f"[FFmpeg Warning] No se pudo ejecutar optimización de audio: {e_ffmpeg}")
+    finally:
+        if os.path.exists(temp_ffmpeg):
+            try: os.remove(temp_ffmpeg)
+            except: pass
+
 # --- GENERACIÓN DE AUDIO (EDGE TTS) ---
 def generar_tts_robusto(texto, voz, path_salida, rate="+0%"):
     import asyncio
@@ -270,6 +291,7 @@ def generar_tts_robusto(texto, voz, path_salida, rate="+0%"):
         loop.run_until_complete(amain())
         loop.close()
         if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+            optimizar_mp3_firefox(path_salida)
             return True, ""
     except Exception as e:
         err_msg = f"new_event_loop: {type(e).__name__}: {str(e)}"
@@ -280,6 +302,7 @@ def generar_tts_robusto(texto, voz, path_salida, rate="+0%"):
     try:
         asyncio.run(amain())
         if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+            optimizar_mp3_firefox(path_salida)
             return True, ""
     except Exception as e:
         err_msg = f"asyncio.run: {type(e).__name__}: {str(e)}"
@@ -291,6 +314,7 @@ def generar_tts_robusto(texto, voz, path_salida, rate="+0%"):
         cmd = [sys.executable, "-m", "edge_tts", "--voice", voz, "--text", texto, "--write-media", path_salida, f"--rate={rate}"]
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
         if res.returncode == 0 and os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+            optimizar_mp3_firefox(path_salida)
             return True, ""
         else:
             err_msg = f"CLI (returncode={res.returncode}): stdout={res.stdout.strip()}, stderr={res.stderr.strip()}"
