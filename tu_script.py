@@ -413,6 +413,9 @@ def api_fase1():
 
     print(f"[Info] Encolando procesamiento de audiodescripción Fase 1 para proyecto: {proyecto_id}")
     
+    # Escribir estado inicial inmediatamente para evitar condiciones de carrera en el sondeo
+    guardar_fase1_status(proyecto_id, "processing")
+    
     # Encolar la tarea asíncronamente
     procesar_video_task.delay(video_url, api_key, proyecto_id)
     
