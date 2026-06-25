@@ -253,7 +253,7 @@ def generar_tts_robusto(texto, voz, path_salida, rate="+0%"):
 
     # Intento 3: CLI Subprocess usando python -m edge_tts (para ser totalmente portable en hilos)
     try:
-        cmd = [sys.executable, "-m", "edge_tts", "--voice", voz, "--text", texto, "--write-media", path_salida, "--rate", rate]
+        cmd = [sys.executable, "-m", "edge_tts", "--voice", voz, "--text", texto, "--write-media", path_salida, f"--rate={rate}"]
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
         if res.returncode == 0 and os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
             return True, ""
