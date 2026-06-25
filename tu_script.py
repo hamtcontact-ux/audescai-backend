@@ -49,26 +49,28 @@ install_dep("redis")
 import edge_tts
 from silero_vad import load_silero_vad, get_speech_timestamps, read_audio
 
-# Auxiliares de lectura y guardado de status en disco para comunicar procesos/contenedores
+# Inicialización de Redis para comunicación entre contenedores
+import redis
+broker_url = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+redis_client = redis.Redis.from_url(broker_url)
+
+# Auxiliares de lectura y guardado de status en Redis
 def guardar_fase1_status(proyecto_id, status, error_message=None):
-    status_path = os.path.join(TEMP_DIR, f"{proyecto_id}_status.json")
     try:
-        with open(status_path, "w", encoding="utf-8") as f:
-            json.dump({"status": status, "error": error_message}, f, ensure_ascii=False, indent=2)
+        data = {"status": status, "error": error_message}
+        redis_client.set(f"fase1_status:{proyecto_id}", json.dumps(data), ex=86400)  # Expira en 24h
     except Exception as e:
-        print(f"[Error] No se pudo escribir status para {proyecto_id}: {e}")
+        print(f"[Redis Error] No se pudo escribir status para {proyecto_id}: {e}")
 
 def obtener_fase1_status(proyecto_id):
-    status_path = os.path.join(TEMP_DIR, f"{proyecto_id}_status.json")
-    if not os.path.exists(status_path):
-        return "idle", None
     try:
-        with open(status_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        val = redis_client.get(f"fase1_status:{proyecto_id}")
+        if val:
+            data = json.loads(val.decode('utf-8'))
             return data.get("status", "idle"), data.get("error")
     except Exception as e:
-        print(f"[Error] No se pudo leer status para {proyecto_id}: {e}")
-        return "idle", None
+        print(f"[Redis Error] No se pudo leer status para {proyecto_id}: {e}")
+    return "idle", None
 
 # Reglas profesionales de RAG
 REGLAS_PROFESIONALES = """
@@ -383,10 +385,11 @@ def procesar_video_task(video_url, api_key, proyecto_id):
                 "audio_url": None
             })
 
-        # Guardar bloques resultantes en archivo JSON
-        bloques_path = os.path.join(TEMP_DIR, f"{proyecto_id}_bloques.json")
-        with open(bloques_path, "w", encoding="utf-8") as f:
-            json.dump({"bloques": bloques_guion}, f, ensure_ascii=False, indent=2)
+        # Guardar bloques resultantes en Redis
+        try:
+            redis_client.set(f"fase1_resultado:{proyecto_id}", json.dumps({"bloques": bloques_guion}, ensure_ascii=False), ex=86400)
+        except Exception as e_red:
+            print(f"[Redis Error] No se pudo guardar el resultado de bloques para {proyecto_id}: {e_red}")
 
         # Actualizar status a "idle" (completado)
         guardar_fase1_status(proyecto_id, "idle")
@@ -436,16 +439,14 @@ def api_fase1_resultado():
     if not proyecto_id:
         return jsonify({"status": "error", "message": "Falta el parámetro proyecto_id"}), 400
 
-    bloques_path = os.path.join(TEMP_DIR, f"{proyecto_id}_bloques.json")
-    if not os.path.exists(bloques_path):
-        return jsonify({"status": "error", "message": "Resultado no disponible o aún en proceso."}), 404
-
     try:
-        with open(bloques_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return jsonify(data), 200
+        val = redis_client.get(f"fase1_resultado:{proyecto_id}")
+        if not val:
+            return jsonify({"status": "error", "message": "Resultado no disponible o aún en proceso."}), 404
+        data = json.loads(val.decode('utf-8'))
+        return jsonify(data), 200
     except Exception as e:
-        return jsonify({"status": "error", "message": f"Error al leer resultado: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": f"Error al leer resultado de Redis: {str(e)}"}), 500
 
 @app.route('/fase1-start', methods=['POST'])
 def api_fase1_start():
