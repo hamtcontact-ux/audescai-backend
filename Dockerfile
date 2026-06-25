@@ -23,4 +23,4 @@ RUN mkdir -p TEMP_PROCESAMIENTO
 
 EXPOSE 5000
 
-CMD ["python", "tu_script.py"]
+CMD ["sh", "-c", "${CONTAINER_CMD:-python tu_script.py}"]
