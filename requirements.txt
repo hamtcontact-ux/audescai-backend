@@ -9,4 +9,6 @@ torch==2.2.1 --extra-index-url https://download.pytorch.org/whl/cpu
 torchaudio==2.2.1 --extra-index-url https://download.pytorch.org/whl/cpu
 httpx
 soundfile
+celery==5.3.6
+redis==5.0.1
 

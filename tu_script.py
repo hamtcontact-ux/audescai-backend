@@ -20,6 +20,7 @@ from flask_cors import CORS
 from openai import OpenAI
 import httpx
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
+from celery import Celery
 
 # Configuración del entorno
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -40,14 +41,34 @@ install_dep("openai")
 install_dep("httpx")
 install_dep("soundfile")
 install_dep("silero-vad")
+install_dep("celery")
+install_dep("redis")
 
 
 
 import edge_tts
 from silero_vad import load_silero_vad, get_speech_timestamps, read_audio
 
-# Estado de procesamiento de Fase 1 (simplificado por proyecto_id)
-fase1_status = {}
+# Auxiliares de lectura y guardado de status en disco para comunicar procesos/contenedores
+def guardar_fase1_status(proyecto_id, status, error_message=None):
+    status_path = os.path.join(TEMP_DIR, f"{proyecto_id}_status.json")
+    try:
+        with open(status_path, "w", encoding="utf-8") as f:
+            json.dump({"status": status, "error": error_message}, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[Error] No se pudo escribir status para {proyecto_id}: {e}")
+
+def obtener_fase1_status(proyecto_id):
+    status_path = os.path.join(TEMP_DIR, f"{proyecto_id}_status.json")
+    if not os.path.exists(status_path):
+        return "idle", None
+    try:
+        with open(status_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data.get("status", "idle"), data.get("error")
+    except Exception as e:
+        print(f"[Error] No se pudo leer status para {proyecto_id}: {e}")
+        return "idle", None
 
 # Reglas profesionales de RAG
 REGLAS_PROFESIONALES = """
@@ -74,6 +95,18 @@ Mal: 'Un tipo esta triste.'
 
 app = Flask(__name__)
 CORS(app)
+
+# Configuración de Celery
+broker_url = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+celery_app = Celery(
+    'tu_script',
+    broker=broker_url,
+    backend=broker_url
+)
+celery_app.conf.update(
+    task_track_started=True,
+    task_time_limit=1800,  # 30 minutos de límite
+)
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -296,19 +329,10 @@ def generar_audio_pro(texto, i, voz_id, proyecto_id=None, rate="+0%"):
         print(f"[Error] Error en TTS Edge al generar audio pro.")
         return None
 
-@app.route('/procesar-fase1', methods=['POST'])
-def api_fase1():
-    global fase1_status
-    data = request.json or {}
-    video_url = data.get("video_url")
-    api_key = data.get("api_key")
-    proyecto_id = data.get("proyecto_id")
-
-    if not video_url or not api_key or not proyecto_id:
-        return jsonify({"status": "error", "message": "Faltan parámetros obligatorios: video_url, api_key, proyecto_id"}), 400
-
-    print(f"[Info] Iniciando procesamiento de audiodescripción Fase 1 para proyecto: {proyecto_id}")
-    fase1_status[proyecto_id] = "processing"
+@celery_app.task(name='tu_script.procesar_video_task')
+def procesar_video_task(video_url, api_key, proyecto_id):
+    print(f"[Celery] Iniciando tarea Fase 1 para proyecto: {proyecto_id}")
+    guardar_fase1_status(proyecto_id, "processing")
     
     # Rutas locales relativas de procesamiento
     video_path = os.path.join(TEMP_DIR, f"{proyecto_id}_original.mp4")
@@ -321,7 +345,6 @@ def api_fase1():
         http_client = httpx.Client(trust_env=False)
         openai_client = OpenAI(api_key=api_key, http_client=http_client)
 
-        
         # Ejecutar Silero VAD
         huecos = obtener_huecos_silencio(video_path)
         historial_ad = []
@@ -360,35 +383,73 @@ def api_fase1():
                 "audio_url": None
             })
 
-        fase1_status[proyecto_id] = "idle"
-        return jsonify({"status": "success", "bloques": bloques_guion}), 200
+        # Guardar bloques resultantes en archivo JSON
+        bloques_path = os.path.join(TEMP_DIR, f"{proyecto_id}_bloques.json")
+        with open(bloques_path, "w", encoding="utf-8") as f:
+            json.dump({"bloques": bloques_guion}, f, ensure_ascii=False, indent=2)
+
+        # Actualizar status a "idle" (completado)
+        guardar_fase1_status(proyecto_id, "idle")
+        print(f"[Celery] Tarea Fase 1 completada con éxito para {proyecto_id}")
+        return {"status": "success", "bloques_count": len(bloques_guion)}
 
     except Exception as e:
-        fase1_status[proyecto_id] = "idle"
-        print(f"[Error] Error en Fase 1 para {proyecto_id}: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        import traceback
+        err_msg = str(e)
+        traceback.print_exc()
+        guardar_fase1_status(proyecto_id, "error", err_msg)
+        print(f"[Celery Error] Falló Fase 1 para {proyecto_id}: {err_msg}")
+        return {"status": "error", "message": err_msg}
+
+@app.route('/procesar-fase1', methods=['POST'])
+def api_fase1():
+    data = request.json or {}
+    video_url = data.get("video_url")
+    api_key = data.get("api_key")
+    proyecto_id = data.get("proyecto_id")
+
+    if not video_url or not api_key or not proyecto_id:
+        return jsonify({"status": "error", "message": "Faltan parámetros obligatorios: video_url, api_key, proyecto_id"}), 400
+
+    print(f"[Info] Encolando procesamiento de audiodescripción Fase 1 para proyecto: {proyecto_id}")
+    
+    # Encolar la tarea asíncronamente
+    procesar_video_task.delay(video_url, api_key, proyecto_id)
+    
+    return jsonify({"status": "processing", "message": "El análisis ha comenzado de fondo."}), 202
 
 @app.route('/fase1-status', methods=['GET'])
 def api_fase1_status():
-    global fase1_status
     proyecto_id = request.args.get("proyecto_id")
-    if proyecto_id:
-        status = fase1_status.get(proyecto_id, "idle")
-    else:
-        # Fallback si no viene proyecto_id: si hay alguno procesando, devolvemos "processing"
-        if any(v == "processing" for v in fase1_status.values()):
-            status = "processing"
-        else:
-            status = "idle"
-    return jsonify({"status": status}), 200
+    if not proyecto_id:
+        return jsonify({"status": "error", "message": "Falta el parámetro proyecto_id"}), 400
+    
+    status, error_msg = obtener_fase1_status(proyecto_id)
+    return jsonify({"status": status, "error": error_msg}), 200
+
+@app.route('/fase1-resultado', methods=['GET'])
+def api_fase1_resultado():
+    proyecto_id = request.args.get("proyecto_id")
+    if not proyecto_id:
+        return jsonify({"status": "error", "message": "Falta el parámetro proyecto_id"}), 400
+
+    bloques_path = os.path.join(TEMP_DIR, f"{proyecto_id}_bloques.json")
+    if not os.path.exists(bloques_path):
+        return jsonify({"status": "error", "message": "Resultado no disponible o aún en proceso."}), 404
+
+    try:
+        with open(bloques_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error al leer resultado: {str(e)}"}), 500
 
 @app.route('/fase1-start', methods=['POST'])
 def api_fase1_start():
-    global fase1_status
     data = request.json or {}
     proyecto_id = data.get("proyecto_id")
     if proyecto_id:
-        fase1_status[proyecto_id] = "processing"
+        guardar_fase1_status(proyecto_id, "processing")
     return jsonify({"status": "success"}), 200
 
 @app.route('/api/tts', methods=['GET'])
