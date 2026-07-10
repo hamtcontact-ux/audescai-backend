@@ -271,8 +271,9 @@ def generar_tts_robusto(texto, voz, path_salida, rate="+0%"):
     import os
     import sys
 
-    # Si por alguna razón el archivo ya existe y tiene contenido, retornamos True
+    # Si por alguna razon el archivo ya existe y tiene contenido, retornamos True
     if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
+        optimizar_mp3_firefox(path_salida)
         return True, ""
 
     # Asegurar que el directorio contenedor exista
