@@ -501,7 +501,7 @@ def api_tts():
     if not exito:
         return f"Error al generar síntesis de voz edge-tts: {errores}", 500
             
-    return send_file(path_audio, mimetype="audio/mpeg", conditional=True)
+    return send_file(path_audio, mimetype="audio/mpeg")
 
 @app.route('/renderizar-fase2', methods=['POST'])
 def api_fase2():
