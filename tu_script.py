@@ -497,10 +497,9 @@ def api_tts():
         except:
             pass
 
-    if not os.path.exists(path_audio) or os.path.getsize(path_audio) == 0:
-        exito, errores = generar_tts_robusto(texto, voz, path_audio, rate)
-        if not exito:
-            return f"Error al generar síntesis de voz edge-tts: {errores}", 500
+    exito, errores = generar_tts_robusto(texto, voz, path_audio, rate)
+    if not exito:
+        return f"Error al generar síntesis de voz edge-tts: {errores}", 500
             
     return send_file(path_audio, mimetype="audio/mpeg", conditional=True)
 
