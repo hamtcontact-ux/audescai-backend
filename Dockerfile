@@ -1,17 +1,17 @@
 FROM python:3.10-slim
 
-# Instalar dependencias del sistema operativo (ffmpeg es requerido por MoviePy, libsndfile1 es requerido por soundfile)
+# Instalar dependencias del sistema operativo mínimas y necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libsndfile1 \
-    git \
-    build-essential \
     && rm -rf /var/lib/apt/lists/*
-
 
 WORKDIR /app
 
-# Copiar e instalar requerimientos
+# 1. Instalar PyTorch y TorchAudio versión CPU pura (ahorra más de 5GB de CUDA/NVIDIA que saturaban el disco del VPS)
+RUN pip install --no-cache-dir torch==2.2.1 torchaudio==2.2.1 --index-url https://download.pytorch.org/whl/cpu
+
+# 2. Copiar e instalar el resto de dependencias
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

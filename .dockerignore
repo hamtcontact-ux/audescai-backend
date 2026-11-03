@@ -1,0 +1,11 @@
+.git
+.firebase
+.gemini
+CARPETA_VIDEO
+TEMP_PROCESAMIENTO
+node_modules
+*.mp4
+*.m4a
+*.wav
+*.mp3
+*.log
