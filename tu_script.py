@@ -10,13 +10,29 @@ import urllib.request
 import uuid
 from functools import wraps
 
-# Forzar actualización de edge-tts en el arranque para evitar error 403 de Microsoft
+# Forzar actualización de dependencias críticas en el arranque
 try:
     print("[Startup] Intentando forzar actualización de edge-tts a >=6.1.12...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "edge-tts>=6.1.12"])
     print("[Startup] Actualización de edge-tts completada exitosamente.")
 except Exception as e:
     print(f"[Startup Warning] No se pudo forzar la actualización de edge-tts: {e}")
+
+# Forzar actualización de redis a >=6.1.0 requerido por Celery/Kombu 5.3+
+try:
+    import redis
+    parts = [int(p) for p in redis.__version__.split(".")[:2] if p.isdigit()]
+    if not parts or parts[0] < 6 or (parts[0] == 6 and parts[1] < 1):
+        print(f"[Startup] Redis actual ({redis.__version__}) es menor a 6.1.0. Actualizando a >=6.1.0...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "redis>=6.1.0"])
+        import importlib
+        importlib.reload(redis)
+        print("[Startup] Redis actualizado exitosamente a >=6.1.0.")
+except Exception as e_red:
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "redis>=6.1.0"])
+    except Exception:
+        pass
 
 # Configuración del entorno base
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1175,11 +1191,37 @@ def api_fase1():
         print(f"[Info] Encolando Fase 1: proyecto={proyecto_id}, email={user_email}, role={role}")
         guardar_fase1_status(proyecto_id, "processing")
 
-        try:
-            procesar_video_task.delay(video_url, api_key, proyecto_id, user_email, uid, role, tokens_used, tokens_total)
-        except Exception as e_cel:
-            print(f"[Celery Warning] Error al enviar argumentos completos ({e_cel}). Usando llamada simplificada...")
-            procesar_video_task.delay(video_url, api_key, proyecto_id)
+        # Encolar en Celery con auto-recuperación en caso de VersionMismatch de redis
+        enqueued = False
+        for attempt in range(2):
+            try:
+                procesar_video_task.delay(video_url, api_key, proyecto_id, user_email, uid, role, tokens_used, tokens_total)
+                enqueued = True
+                break
+            except Exception as e_cel:
+                err_text = str(e_cel).lower()
+                print(f"[Celery Enqueue Warning] Intento {attempt + 1}: {e_cel}")
+                if "versionmismatch" in err_text or "redis" in err_text:
+                    print("[Celery Fix] Actualizando redis a >=6.1.0 en caliente...")
+                    try:
+                        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "redis>=6.1.0"])
+                        import redis
+                        import importlib
+                        importlib.reload(redis)
+                    except Exception as e_up:
+                        print(f"[Hot Update Error] {e_up}")
+                    continue
+                else:
+                    try:
+                        procesar_video_task.delay(video_url, api_key, proyecto_id)
+                        enqueued = True
+                        break
+                    except Exception as e_simp:
+                        print(f"[Celery Simple Call Error] {e_simp}")
+                        break
+
+        if not enqueued:
+            raise RuntimeError("No se pudo encolar la tarea en Celery (desajuste de versiones en el worker). El contenedor se está actualizando automáticamente.")
 
         return jsonify({
             "status": "processing",
