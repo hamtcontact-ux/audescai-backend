@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.email.lower() == "editor.online.latam@gmail.com";
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    match /usuarios/{uid} {
+      // Cualquier usuario autenticado puede leer su propio perfil; el Superadmin puede leer todos
+      allow read: if isOwner(uid) || isSuperAdmin();
+
+      // Registro inicial:
+      // Si es el Superadmin, puede tener role 'admin'.
+      // Para cualquier otro usuario, se exige estrictamente role 'free'.
+      allow create: if isOwner(uid) && (
+        (request.auth.token.email.lower() == "editor.online.latam@gmail.com" && request.resource.data.role == "admin") ||
+        (request.auth.token.email.lower() != "editor.online.latam@gmail.com" && request.resource.data.role == "free"
+          && (!('tokens_total' in request.resource.data) || request.resource.data.tokens_total == 50000)
+          && (!('has_api_key' in request.resource.data) || request.resource.data.has_api_key == false))
+      );
+
+      // Actualizaciones:
+      // El Superadmin puede actualizar cualquier cuenta (pero se prohíbe ascender a 'admin' a otros correos)
+      // El usuario común solo puede modificar sus datos personales. NUNCA puede cambiar su rol,
+      // su cuota total, el estado de su API key ni reducir su consumo de tokens.
+      allow update: if isSuperAdmin() && (
+        request.resource.data.role != "admin" || request.auth.token.email.lower() == "editor.online.latam@gmail.com"
+      ) || (
+        isOwner(uid) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'tokens_total', 'has_api_key']) &&
+        (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens_used']) ||
+          request.resource.data.tokens_used >= resource.data.tokens_used
+        )
+      );
+
+      allow delete: if isSuperAdmin();
+
+      // Credenciales privadas: SOLO el Superadmin puede leerlas o escribirlas.
+      // La API key de OpenAI nunca se guarda en el documento público del usuario.
+      match /privado/{documento} {
+        allow read, write: if isSuperAdmin();
+      }
+
+      // Proyectos del usuario
+      match /proyectos/{proyectoId} {
+        allow read, write: if isOwner(uid) || isSuperAdmin();
+
+        match /bloques/{bloqueId} {
+          allow read, write: if isOwner(uid) || isSuperAdmin();
+        }
+
+        match /copias_seguridad/{copiaId} {
+          allow read, write: if isOwner(uid) || isSuperAdmin();
+        }
+      }
+    }
+  }
+}
+

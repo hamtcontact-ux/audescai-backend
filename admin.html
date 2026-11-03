@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AudescAI - Panel de Superadministrador</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Firebase compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyALrJvcf7XiDwB_P4PoT4hJ5UFsiXQrngg",
+            authDomain: "audescai.firebaseapp.com",
+            projectId: "audescai",
+            storageBucket: "audescai.appspot.com",
+            messagingSenderId: "1054146325073",
+            appId: "1:1054146325073:web:0b65631f9251d90a916670"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#08090a",
+                        foreground: "#f8fafc",
+                        card: "#12141a",
+                        primary: "#c8373a",
+                        "primary-hover": "#a72c2f",
+                        accent: "#d4a843",
+                        "accent-hover": "#b88f32",
+                        muted: "#1e222d",
+                        "muted-foreground": "#94a3b8",
+                        border: "rgba(255,255,255,0.08)",
+                        "surface-container": "#0f1117",
+                        "surface-container-high": "#181b24",
+                        "surface-container-highest": "#222734"
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #08090a;
+            color: #f8fafc;
+        }
+        .glass-panel {
+            background: rgba(18, 20, 26, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-red {
+            box-shadow: 0 0 25px -5px rgba(200, 55, 58, 0.4);
+        }
+        .glow-gold {
+            box-shadow: 0 0 25px -5px rgba(212, 168, 67, 0.35);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0f14;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232836;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #333a4d;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-background text-foreground antialiased selection:bg-primary/30">
+
+    <!-- OVERLAY DE BLOQUEO DE SEGURIDAD (Se quita solo tras verificar superadmin) -->
+    <div id="auth-shield" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background p-6">
+        <div class="flex flex-col items-center text-center max-w-md">
+            <div class="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary mb-6 animate-pulse">
+                <span class="material-symbols-outlined text-[36px]">shield</span>
+            </div>
+            <h2 id="auth-status-title" class="text-xl font-bold text-foreground mb-2">Verificando Privilegios de Superadministrador...</h2>
+            <p id="auth-status-desc" class="text-sm text-muted-foreground mb-6">Conectando de forma segura con Firebase Authentication y validando rol supremo.</p>
+            <div id="auth-spinner" class="w-8 h-8 border-3 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+            <div id="auth-actions" class="hidden flex flex-col gap-2.5 w-full mt-2">
+                <button id="admin-google-btn" class="w-full flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-white text-zinc-900 text-xs font-bold hover:bg-zinc-100 transition-all shadow-xl hover:scale-[1.01] active:scale-[0.99]">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>Iniciar Sesión con Google</span>
+                </button>
+                <button id="auth-redirect-btn" class="w-full px-5 py-2.5 rounded-xl bg-surface-container-high border border-white/10 text-zinc-300 text-xs font-semibold hover:text-white transition-colors">
+                    Ir al Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ADMIN INTERFACE -->
+    <div id="admin-app" class="hidden min-h-screen flex flex-col">
+        
+        <!-- TOP NAVBAR -->
+        <header class="glass-panel sticky top-0 z-40 border-b border-white/10 px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="dashboard.html" class="flex items-center gap-3 group">
+                    <div class="h-10 w-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-lg font-bold tracking-tight text-white">AudescAI</h1>
+                            <span class="px-2 py-0.5 text-[10px] font-extrabold tracking-wider uppercase rounded-full bg-primary/20 text-primary border border-primary/30">
+                                SUPERADMIN
+                            </span>
+                        </div>
+                        <p class="text-xs text-muted-foreground">Panel de Control de Roles, Tokens y Planes</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high border border-white/5">
+                    <span class="material-symbols-outlined text-accent text-[18px]">verified_user</span>
+                    <span id="current-admin-email" class="text-xs font-mono text-zinc-300">editor.online.latam@gmail.com</span>
+                </div>
+                <a href="dashboard.html" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-zinc-300 hover:text-white text-xs font-semibold border border-white/5 transition-all">
+                    <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                    <span>Dashboard</span>
+                </a>
+                <button id="admin-logout-btn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-red-300 text-xs font-semibold border border-red-800/30 transition-all">
+                    <span class="material-symbols-outlined text-[16px]">logout</span>
+                    <span>Salir</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
+
+            <!-- STATS OVERVIEW CARDS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-panel p-5 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Usuarios</p>
+                        <h3 id="stat-total-users" class="text-2xl font-bold text-white mt-1">0</h3>
+                        <p class="text-[11px] text-zinc-500 mt-1">Registrados en la plataforma</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                        <span class="material-symbols-outlined text-[26px]">group</span>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Usuarios Free</p>
+                        <h3 id="stat-free-users" class="text-2xl font-bold text-zinc-300 mt-1">0</h3>
+                        <p class="text-[11px] text-zinc-500 mt-1">Modelos OpenRouter Free</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-zinc-500/10 border border-zinc-500/20 flex items-center justify-center text-zinc-400">
+                        <span class="material-symbols-outlined text-[26px]">public</span>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl flex items-center justify-between border-accent/20">
+                    <div>
+                        <p class="text-xs font-medium text-accent uppercase tracking-wider">Usuarios Pro</p>
+                        <h3 id="stat-premium-users" class="text-2xl font-bold text-accent mt-1">0</h3>
+                        <p class="text-[11px] text-zinc-500 mt-1">Con cuota / API Keys dedicadas</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent">
+                        <span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl flex items-center justify-between border-primary/20">
+                    <div>
+                        <p class="text-xs font-medium text-primary uppercase tracking-wider">Tokens Consumidos</p>
+                        <h3 id="stat-tokens-consumed" class="text-2xl font-bold text-white mt-1">0</h3>
+                        <p id="stat-tokens-total" class="text-[11px] text-zinc-500 mt-1">de 0 tokens asignados</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[26px]">data_usage</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CALCULADORA DE RENTABILIDAD & MINUTOS VS TOKENS -->
+            <section class="glass-panel rounded-2xl p-6 border-white/10 relative overflow-hidden">
+                <div class="absolute -right-16 -top-16 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent text-[22px]">calculate</span>
+                            <h2 class="text-lg font-bold text-white">Algoritmo de Rentabilidad: Minutos de Video vs. Tokens IA</h2>
+                        </div>
+                        <p class="text-xs text-muted-foreground mt-1">
+                            Calcula la asignación exacta de tokens y el precio mínimo para garantizar un <strong>margen bruto del 50%</strong>.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-lg bg-accent/10 text-accent border border-accent/20">
+                            Regla: Costo API &le; 50% del precio
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <!-- CONTROLES DE LA CALCULADORA -->
+                    <div class="md:col-span-7 space-y-4">
+                        <div>
+                            <div class="flex justify-between text-xs font-medium mb-1">
+                                <span class="text-zinc-300">Minutos de Video del Plan</span>
+                                <span id="calc-min-display" class="font-bold text-accent">180 minutos</span>
+                            </div>
+                            <input id="calc-min-input" type="range" min="10" max="1000" step="10" value="180"
+                                class="w-full h-2 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-accent" />
+                            <div class="flex justify-between text-[10px] text-zinc-500 mt-1">
+                                <span>10 min (Corto)</span>
+                                <span>100 min (Estándar)</span>
+                                <span>500 min (Productora)</span>
+                                <span>1000 min (Estudio)</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                            <div class="bg-surface-container-high/60 border border-white/5 rounded-xl p-3">
+                                <label class="block text-[11px] text-muted-foreground mb-1">Tokens Visión / min</label>
+                                <input id="calc-vision-tokens" type="number" value="30000" step="1000"
+                                    class="w-full bg-surface-container border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent" />
+                                <span class="text-[9px] text-zinc-500">Rango: 15k a 45k</span>
+                            </div>
+
+                            <div class="bg-surface-container-high/60 border border-white/5 rounded-xl p-3">
+                                <label class="block text-[11px] text-muted-foreground mb-1">Tokens Texto / min</label>
+                                <input id="calc-text-tokens" type="number" value="200" step="50"
+                                    class="w-full bg-surface-container border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent" />
+                                <span class="text-[9px] text-zinc-500">~150 palabras narradas</span>
+                            </div>
+
+                            <div class="bg-surface-container-high/60 border border-white/5 rounded-xl p-3">
+                                <label class="block text-[11px] text-muted-foreground mb-1">Costo API / 1M Tokens</label>
+                                <div class="relative">
+                                    <span class="absolute left-2.5 top-1.5 text-xs text-zinc-500">$</span>
+                                    <input id="calc-cost-million" type="number" value="2.50" step="0.10"
+                                        class="w-full bg-surface-container border border-white/10 rounded-lg pl-6 pr-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent" />
+                                </div>
+                                <span class="text-[9px] text-zinc-500">USD por 1 Millón</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RESULTADO DEL CÁLCULO -->
+                    <div class="md:col-span-5 bg-surface-container-high/90 border border-accent/20 rounded-xl p-5 flex flex-col justify-between">
+                        <div class="space-y-2.5">
+                            <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                                <span class="text-xs text-zinc-400">Tokens Totales Asignados:</span>
+                                <span id="calc-result-tokens" class="text-sm font-bold text-accent font-mono">5,436,000 tokens</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                                <span class="text-xs text-zinc-400">Costo Directo API (≤50%):</span>
+                                <span id="calc-result-cost" class="text-sm font-semibold text-zinc-300 font-mono">$13.59 USD</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                                <span class="text-xs text-zinc-400">Costo por minuto:</span>
+                                <span id="calc-result-cost-min" class="text-xs font-semibold text-zinc-300 font-mono">$0.0755/min</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                                <span class="text-xs text-zinc-400">Precio mínimo (50% margen):</span>
+                                <span id="calc-result-price" class="text-sm font-extrabold text-emerald-400 font-mono">$27.18 USD/mes</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                                <span class="text-xs text-zinc-400">Ganancia bruta mínima:</span>
+                                <span id="calc-result-profit" class="text-xs font-bold text-emerald-400 font-mono">$13.59 USD</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-zinc-400">Margen Bruto Obtenido:</span>
+                                <span id="calc-result-margin" class="text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded">
+                                    50.0% Margen
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mt-3 text-[10px] text-zinc-500 leading-relaxed">
+                            Precio Pro recomendado: <strong class="text-accent">$29/mes</strong> por 180 min
+                            (margen 53.1%). Custom: desde <strong class="text-accent">$99/mes</strong> por 600 min
+                            (margen 54.2%).
+                        </p>
+
+                        <div class="mt-4 pt-3 border-t border-white/5 flex gap-2">
+                            <button id="calc-apply-btn" class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-xs font-semibold border border-accent/30 transition-colors">
+                                <span class="material-symbols-outlined text-[16px]">content_paste_go</span>
+                                <span>Cargar en Usuario</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GESTOR DE USUARIOS -->
+            <section class="glass-panel rounded-2xl p-6 border-white/10 space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[22px]">manage_accounts</span>
+                            <span>Directorio de Usuarios Registrados</span>
+                        </h2>
+                        <p class="text-xs text-muted-foreground mt-0.5">
+                            Búsqueda, asignación de planes, límites de tokens y API keys personalizadas.
+                        </p>
+                    </div>
+
+                    <!-- BUSCADOR Y FILTROS -->
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-2.5 text-zinc-500 text-[18px]">search</span>
+                            <input id="user-search-input" type="text" placeholder="Buscar por email o UID..."
+                                class="w-64 bg-surface-container-high border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-primary transition-colors" />
+                        </div>
+                        <select id="role-filter"
+                            class="bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-primary">
+                            <option value="all">Todos los roles</option>
+                            <option value="free">Solo Free</option>
+                            <option value="premium">Solo Pro</option>
+                            <option value="admin">Solo Admin</option>
+                        </select>
+                        <button id="refresh-users-btn" class="p-2 rounded-xl bg-surface-container-high border border-white/10 hover:bg-surface-container-highest text-zinc-300 hover:text-white transition-colors" title="Actualizar lista">
+                            <span class="material-symbols-outlined text-[18px]">sync</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TABLA DE USUARIOS -->
+                <div class="overflow-x-auto rounded-xl border border-white/5">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-surface-container-high/80 text-zinc-400 uppercase tracking-wider text-[10px] border-b border-white/5">
+                                <th class="py-3 px-4">Usuario</th>
+                                <th class="py-3 px-4">Rol</th>
+                                <th class="py-3 px-4">Consumo de Tokens</th>
+                                <th class="py-3 px-4">API Key Pro (privada)</th>
+                                <th class="py-3 px-4">Registro</th>
+                                <th class="py-3 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="divide-y divide-white/5">
+                            <tr>
+                                <td colspan="6" class="py-12 text-center text-zinc-500">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div class="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-2"></div>
+                                        <span>Cargando usuarios desde Firestore...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- RESPALDOS DEL EDITOR (solo Superadmin) -->
+            <section class="glass-panel rounded-2xl p-6 border-white/10 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-amber-400 text-[22px]">history</span>
+                            <span>Respaldos del editor</span>
+                        </h2>
+                        <p class="text-xs text-muted-foreground mt-0.5">
+                            Versiones anteriores conservadas para comparar o recuperar funciones. No están enlazadas a la navegación pública.
+                        </p>
+                    </div>
+                    <span class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                        Solo administrador
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <a href="editor_original.html" target="_blank" rel="noopener"
+                        class="group flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-container-high/60 border border-white/5 hover:border-amber-400/40 hover:bg-surface-container-highest transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-300">
+                                <span class="material-symbols-outlined text-[20px]">description</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-white">editor_original.html</p>
+                                <p class="text-[11px] text-zinc-500">Versión original del editor</p>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-zinc-500 group-hover:text-amber-300 transition-colors">open_in_new</span>
+                    </a>
+                    <a href="recovered_c6888afd640c460a5c87a6dfd99668d2dac6c8.html" target="_blank" rel="noopener"
+                        class="group flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-container-high/60 border border-white/5 hover:border-amber-400/40 hover:bg-surface-container-highest transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-300">
+                                <span class="material-symbols-outlined text-[20px]">restore</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-white">Recuperado (git)</p>
+                                <p class="text-[11px] text-zinc-500">Copia recuperada del historial</p>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-zinc-500 group-hover:text-amber-300 transition-colors">open_in_new</span>
+                    </a>
+                </div>
+                <div class="flex items-start gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-[11px] text-amber-200/90">
+                    <span class="material-symbols-outlined text-[16px] mt-0.5">warning</span>
+                    <span>
+                        Estos respaldos son legado y todavía incluyen el campo de API key en el navegador.
+                        No los uses para producción ni introduzcas claves reales en ellos; la versión segura es
+                        <a href="editor.html" class="underline font-semibold hover:text-amber-100">editor.html</a>.
+                    </span>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL DE EDICIÓN Y GESTIÓN DE USUARIO -->
+    <div id="user-modal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
+        <div class="glass-panel w-full max-w-lg rounded-2xl border border-white/15 p-6 relative shadow-2xl space-y-6">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[20px]">person_edit</span>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Gestionar Cuenta de Usuario</h3>
+                        <p id="modal-user-email" class="text-xs text-muted-foreground font-mono">usuario@ejemplo.com</p>
+                    </div>
+                </div>
+                <button id="modal-close-btn" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="user-edit-form" class="space-y-4">
+                <input type="hidden" id="modal-uid" />
+
+                <!-- CAMBIO DE ROL -->
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">
+                        Plan y Nivel de Cuenta (Rol)
+                    </label>
+                    <select id="modal-role" class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                        <option value="free">Free (Modelos Gratuitos OpenRouter)</option>
+                        <option value="premium">Pro (API key asignada + cuota de tokens)</option>
+                    </select>
+                    <p id="admin-role-hint" class="text-[11px] text-zinc-500 mt-1">
+                        Nota: Solo <code>editor.online.latam@gmail.com</code> puede ostentar el rol de Superadministrador.
+                    </p>
+                </div>
+
+                <!-- API KEY PERSONALIZADA -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-semibold text-zinc-300">
+                            API Key de OpenAI para el plan Pro (privada)
+                        </label>
+                        <button type="button" id="toggle-key-visibility" class="text-[11px] text-accent hover:underline">
+                            Mostrar / Ocultar
+                        </button>
+                    </div>
+                    <input id="modal-api-key" type="password" placeholder="sk-proj-... (solo administrador)"
+                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-primary" />
+                    <p class="text-[10px] text-zinc-500 mt-1">
+                        Se guarda en una subcolección privada (<code>usuarios/{uid}/privado/credenciales</code>)
+                        y solo el Superadmin puede leerla. El usuario nunca ve la clave.
+                    </p>
+                </div>
+
+                <!-- CUOTA DE TOKENS -->
+                <div class="p-4 rounded-xl bg-surface-container-high/60 border border-white/5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-semibold text-zinc-300">
+                            Límite / Cuota Mensual de Tokens
+                        </label>
+                        <span id="modal-token-percent" class="text-xs font-mono font-bold text-accent">0% Usado</span>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <input id="modal-tokens-total" type="number" step="10000" min="0"
+                            class="flex-1 bg-surface-container border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-primary" />
+                        <button type="button" id="modal-reset-tokens-btn" class="px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-red-300 border border-red-800/30 text-xs font-medium transition-colors" title="Poner tokens consumidos a 0 para un nuevo ciclo de facturación">
+                            Reiniciar Consumo a 0
+                        </button>
+                    </div>
+
+                    <!-- PRESETS RÁPIDOS DE TOKENS -->
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="50000">
+                            50K (Free ≈ 1.6 min)
+                        </button>
+                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="3020000">
+                            3.02M (100 min)
+                        </button>
+                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="5436000">
+                            5.44M (180 min · Pro)
+                        </button>
+                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="10872000">
+                            10.87M (360 min)
+                        </button>
+                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="18120000">
+                            18.12M (600 min · Custom)
+                        </button>
+                    </div>
+
+                    <!-- BARRA DE CONSUMO ACTUAL -->
+                    <div class="pt-2">
+                        <div class="flex justify-between text-[11px] text-zinc-400 mb-1">
+                            <span>Consumo Actual:</span>
+                            <span id="modal-consumption-text" class="font-mono text-zinc-300">0 / 0</span>
+                        </div>
+                        <div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
+                            <div id="modal-progress-bar" class="h-full bg-accent transition-all duration-300" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-white/10 flex justify-end gap-2">
+                    <button type="button" id="modal-cancel-btn" class="px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-zinc-300 text-xs font-semibold transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="modal-save-btn" class="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-semibold transition-colors flex items-center gap-1.5 glow-red">
+                        <span class="material-symbols-outlined text-[16px]">save</span>
+                        <span>Guardar Cambios</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-high border border-white/15 text-xs text-white shadow-2xl">
+        <span id="toast-icon" class="material-symbols-outlined text-accent text-[20px]">info</span>
+        <span id="toast-msg">Mensaje de notificación</span>
+    </div>
+
+    <!-- LOGICA JAVASCRIPT DEL PANEL ADMINISTRADOR -->
+    <script>
+        const SUPERADMIN_EMAIL = "editor.online.latam@gmail.com";
+        const FLASK_API = "https://api.cineparaciegos.com";
+
+        let allUsers = [];
+        let selectedUser = null;
+        let modalKeyLoaded = false;
+
+        // UI Helpers
+        const authShield = document.getElementById('auth-shield');
+        const authStatusTitle = document.getElementById('auth-status-title');
+        const authStatusDesc = document.getElementById('auth-status-desc');
+        const authSpinner = document.getElementById('auth-spinner');
+        const authRedirectBtn = document.getElementById('auth-redirect-btn');
+        const adminApp = document.getElementById('admin-app');
+
+        // Toast Helper
+        function showToast(msg, type = "success") {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const text = document.getElementById('toast-msg');
+
+            text.textContent = msg;
+            if (type === "success") {
+                icon.textContent = "check_circle";
+                icon.className = "material-symbols-outlined text-emerald-400 text-[20px]";
+            } else if (type === "error") {
+                icon.textContent = "error";
+                icon.className = "material-symbols-outlined text-red-400 text-[20px]";
+            } else {
+                icon.textContent = "info";
+                icon.className = "material-symbols-outlined text-accent text-[20px]";
+            }
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
+        }
+
+        // ==============================================================================
+        // 1. CONTROL DE ACCESO ESTRICTO: SUPERADMINISTRADOR ÚNICO
+        // ==============================================================================
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                authStatusTitle.textContent = "Acceso al Panel Superadministrador";
+                authStatusDesc.textContent = "Esta área está reservada exclusivamente para el Superadministrador (editor.online.latam@gmail.com).";
+                authSpinner.classList.add('hidden');
+                document.getElementById('auth-actions')?.classList.remove('hidden');
+                document.getElementById('admin-google-btn')?.classList.remove('hidden');
+                authRedirectBtn.textContent = "Ir al Dashboard";
+                authRedirectBtn.onclick = () => window.location.href = 'dashboard.html';
+                return;
+            }
+
+            const userEmail = (user.email || "").toLowerCase().trim();
+
+            if (userEmail !== SUPERADMIN_EMAIL.toLowerCase()) {
+                authStatusTitle.textContent = "Acceso Denegado (403 Forbidden)";
+                authStatusDesc.textContent = `La cuenta ${userEmail} no cuenta con privilegios de Superadministrador. Solo ${SUPERADMIN_EMAIL} tiene autorización.`;
+                authSpinner.classList.add('hidden');
+                document.getElementById('auth-actions')?.classList.remove('hidden');
+                document.getElementById('admin-google-btn')?.classList.add('hidden');
+                authRedirectBtn.textContent = "Regresar al Dashboard";
+                authRedirectBtn.onclick = () => window.location.href = 'dashboard.html';
+                return;
+            }
+
+            // Superadministrador validado exitosamente
+            authShield.classList.add('hidden');
+            adminApp.classList.remove('hidden');
+            document.getElementById('current-admin-email').textContent = user.email;
+
+            // Garantizar documento de superadmin en Firestore
+            try {
+                const adminRef = db.collection('usuarios').doc(user.uid);
+                const adminDoc = await adminRef.get();
+                if (!adminDoc.exists) {
+                    await adminRef.set({
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || 'Superadministrador Supremo',
+                        role: 'admin',
+                        tokens_total: 999999999,
+                        tokens_used: 0,
+                        has_api_key: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            } catch (e) {
+                console.warn("Nota de sincronización admin Firestore:", e);
+            }
+
+            // Cargar datos
+            initCalculator();
+            migrateLegacyApiKeys();
+            loadUsersRealtime();
+        });
+
+        // Botón Iniciar Sesión con Google directo en admin
+        document.getElementById('admin-google-btn')?.addEventListener('click', async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                authSpinner.classList.remove('hidden');
+                document.getElementById('auth-actions')?.classList.add('hidden');
+                authStatusTitle.textContent = "Autenticando con Google...";
+                authStatusDesc.textContent = "Selecciona tu cuenta editor.online.latam@gmail.com en la ventana emergente.";
+                await auth.signInWithPopup(provider);
+            } catch (err) {
+                authSpinner.classList.add('hidden');
+                document.getElementById('auth-actions')?.classList.remove('hidden');
+                authStatusTitle.textContent = "Error de Autenticación";
+                authStatusDesc.textContent = err.message;
+            }
+        });
+
+        // Logout
+        document.getElementById('admin-logout-btn')?.addEventListener('click', () => {
+            auth.signOut().then(() => window.location.href = 'index.html');
+        });
+
+        // ==============================================================================
+        // 2. MIGRACIÓN DE API KEYS ANTIGUAS + CARGA DE USUARIOS
+        // ==============================================================================
+        async function migrateLegacyApiKeys() {
+            try {
+                const snapshot = await db.collection('usuarios').get();
+                let migrated = 0;
+
+                for (const userDoc of snapshot.docs) {
+                    const data = userDoc.data();
+                    const legacyKey = typeof data.api_key === 'string' ? data.api_key.trim() : '';
+                    if (legacyKey.length <= 5) continue;
+
+                    const userRef = db.collection('usuarios').doc(userDoc.id);
+                    await userRef.collection('privado').doc('credenciales').set({
+                        api_key: legacyKey,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    await userRef.update({
+                        has_api_key: true,
+                        api_key: firebase.firestore.FieldValue.delete(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    migrated++;
+                }
+
+                if (migrated > 0) {
+                    showToast(`${migrated} API key(s) migradas a la subcolección privada.`, "success");
+                }
+            } catch (e) {
+                console.warn('No se pudieron migrar las API keys antiguas:', e);
+            }
+        }
+
+        function loadUsersRealtime() {
+            db.collection('usuarios').onSnapshot((snapshot) => {
+                allUsers = [];
+                let totalUsers = 0;
+                let freeUsers = 0;
+                let premiumUsers = 0;
+                let totalConsumed = 0;
+                let totalAssigned = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const user = {
+                        uid: doc.id,
+                        email: data.email || 'Sin correo',
+                        displayName: data.displayName || data.email || 'Usuario',
+                        role: data.role || 'free',
+                        tokens_total: Number(data.tokens_total || (data.role === 'admin' ? 999999999 : (data.role === 'premium' ? 5436000 : 50000))),
+                        tokens_used: Number(data.tokens_used || 0),
+                        has_api_key: data.has_api_key === true || (typeof data.api_key === 'string' && data.api_key.trim().length > 5),
+                        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date()
+                    };
+
+                    // Auto-garantizar restricción estricta en memoria
+                    if (user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) {
+                        user.role = 'admin';
+                    } else if (user.role === 'admin') {
+                        // Seguridad estricta: degradar cualquier otra cuenta que tenga admin
+                        user.role = 'free';
+                    }
+
+                    allUsers.push(user);
+                    totalUsers++;
+
+                    if (user.role === 'admin') {
+                        // Admin
+                    } else if (user.role === 'premium') {
+                        premiumUsers++;
+                    } else {
+                        freeUsers++;
+                    }
+
+                    totalConsumed += user.tokens_used;
+                    totalAssigned += user.tokens_total;
+                });
+
+                // Asegurar que el superadmin logueado siempre aparezca en la lista
+                const hasAdmin = allUsers.some(u => u.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase());
+                if (!hasAdmin && auth.currentUser) {
+                    allUsers.unshift({
+                        uid: auth.currentUser.uid,
+                        email: auth.currentUser.email,
+                        displayName: auth.currentUser.displayName || 'Superadministrador Supremo',
+                        role: 'admin',
+                        tokens_total: 999999999,
+                        tokens_used: 0,
+                        has_api_key: false,
+                        createdAt: new Date()
+                    });
+                    totalUsers++;
+                }
+
+                // Actualizar métricas generales
+                document.getElementById('stat-total-users').textContent = totalUsers;
+                document.getElementById('stat-free-users').textContent = freeUsers;
+                document.getElementById('stat-premium-users').textContent = premiumUsers;
+                document.getElementById('stat-tokens-consumed').textContent = totalConsumed.toLocaleString();
+                document.getElementById('stat-tokens-total').textContent = `de ${totalAssigned.toLocaleString()} tokens asignados`;
+
+                renderUsersTable();
+            }, (error) => {
+                console.error("Error al cargar usuarios de Firestore:", error);
+                if (auth.currentUser && allUsers.length === 0) {
+                    allUsers = [{
+                        uid: auth.currentUser.uid,
+                        email: auth.currentUser.email,
+                        displayName: auth.currentUser.displayName || 'Superadministrador Supremo',
+                        role: 'admin',
+                        tokens_total: 999999999,
+                        tokens_used: 0,
+                        has_api_key: false,
+                        createdAt: new Date()
+                    }];
+                    document.getElementById('stat-total-users').textContent = "1";
+                    document.getElementById('stat-free-users').textContent = "0";
+                    document.getElementById('stat-premium-users').textContent = "0";
+                    document.getElementById('stat-tokens-consumed').textContent = "0";
+                    document.getElementById('stat-tokens-total').textContent = "de 999,999,999 tokens";
+                    renderUsersTable();
+                }
+                showToast("Colección cargada en modo seguro.", "info");
+            });
+        }
+
+        // Renderizado de tabla con filtros
+        function renderUsersTable() {
+            const tbody = document.getElementById('users-table-body');
+            const searchVal = document.getElementById('user-search-input').value.toLowerCase().trim();
+            const roleFilter = document.getElementById('role-filter').value;
+
+            const filtered = allUsers.filter(u => {
+                const matchSearch = u.email.toLowerCase().includes(searchVal) || 
+                                    u.uid.toLowerCase().includes(searchVal) ||
+                                    u.displayName.toLowerCase().includes(searchVal);
+                const matchRole = roleFilter === 'all' || u.role === roleFilter;
+                return matchSearch && matchRole;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-zinc-500">
+                            No se encontraron usuarios que coincidan con la búsqueda.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(u => {
+                const percent = u.tokens_total > 0 ? Math.min(100, Math.round((u.tokens_used / u.tokens_total) * 100)) : 0;
+                
+                // Color barra
+                let barColor = "bg-emerald-500";
+                if (percent >= 90) barColor = "bg-red-500";
+                else if (percent >= 70) barColor = "bg-amber-500";
+
+                // Badge de rol
+                let roleBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">FREE</span>`;
+                if (u.role === 'premium') {
+                    roleBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-accent/20 text-accent border border-accent/40 flex items-center gap-1 w-max"><span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span> PRO</span>`;
+                } else if (u.role === 'admin') {
+                    roleBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary/20 text-primary border border-primary/40 flex items-center gap-1 w-max"><span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">shield</span> ADMIN</span>`;
+                }
+
+                const hasCustomKey = u.has_api_key === true;
+                const formattedDate = u.createdAt.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                return `
+                    <tr class="hover:bg-white/[0.02] transition-colors">
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-surface-container-highest border border-white/5 flex items-center justify-center text-zinc-300">
+                                    <span class="material-symbols-outlined text-[16px]">person</span>
+                                </div>
+                                <div class="truncate max-w-[200px]">
+                                    <p class="font-medium text-white truncate">${u.email}</p>
+                                    <p class="text-[10px] text-zinc-500 font-mono truncate">${u.uid}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            ${roleBadge}
+                        </td>
+                        <td class="py-3 px-4 min-w-[180px]">
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-[10px]">
+                                    <span class="text-zinc-400 font-mono">${u.tokens_used.toLocaleString()} / ${u.tokens_total.toLocaleString()}</span>
+                                    <span class="font-bold text-zinc-300 font-mono">${percent}%</span>
+                                </div>
+                                <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+                                    <div class="h-full ${barColor}" style="width: ${percent}%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            ${hasCustomKey 
+                                ? `<span class="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-mono"><span class="material-symbols-outlined text-[14px]">key</span> Configurada</span>`
+                                : `<span class="text-[11px] text-zinc-500">Por defecto</span>`}
+                        </td>
+                        <td class="py-3 px-4 text-zinc-400 text-[11px]">
+                            ${formattedDate}
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <button onclick="openUserModal('${u.uid}')" class="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-zinc-200 hover:text-white border border-white/10 text-xs font-semibold transition-all">
+                                Gestionar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Filtros y búsqueda
+        document.getElementById('user-search-input')?.addEventListener('input', renderUsersTable);
+        document.getElementById('role-filter')?.addEventListener('change', renderUsersTable);
+        document.getElementById('refresh-users-btn')?.addEventListener('click', () => {
+            showToast("Actualizando datos...", "info");
+            loadUsersRealtime();
+        });
+
+        // ==============================================================================
+        // 3. MODAL DE EDICIÓN Y GESTIÓN DE USUARIO
+        // ==============================================================================
+        const userModal = document.getElementById('user-modal');
+        const modalUid = document.getElementById('modal-uid');
+        const modalUserEmail = document.getElementById('modal-user-email');
+        const modalRole = document.getElementById('modal-role');
+        const modalApiKey = document.getElementById('modal-api-key');
+        const modalTokensTotal = document.getElementById('modal-tokens-total');
+        const modalTokenPercent = document.getElementById('modal-token-percent');
+        const modalConsumptionText = document.getElementById('modal-consumption-text');
+        const modalProgressBar = document.getElementById('modal-progress-bar');
+        const adminRoleHint = document.getElementById('admin-role-hint');
+
+        window.openUserModal = async function(uid) {
+            selectedUser = allUsers.find(u => u.uid === uid);
+            if (!selectedUser) return;
+
+            modalUid.value = selectedUser.uid;
+            modalUserEmail.textContent = selectedUser.email;
+            modalRole.value = selectedUser.role === 'admin' ? 'premium' : selectedUser.role;
+            modalTokensTotal.value = selectedUser.tokens_total || (selectedUser.role === 'premium' ? 5436000 : 50000);
+            modalApiKey.value = '';
+            modalKeyLoaded = false;
+
+            // La clave vive en una subcolección privada. Si aún existe en el
+            // documento público (datos antiguos), se usa como respaldo y se
+            // migrará automáticamente al guardar.
+            try {
+                const privRef = db.collection('usuarios').doc(selectedUser.uid).collection('privado').doc('credenciales');
+                const [privSnap, userSnap] = await Promise.all([
+                    privRef.get(),
+                    db.collection('usuarios').doc(selectedUser.uid).get()
+                ]);
+                const privateKey = privSnap.exists ? (privSnap.data().api_key || '') : '';
+                const legacyKey = userSnap.exists ? (userSnap.data().api_key || '') : '';
+                modalApiKey.value = privateKey || legacyKey;
+                modalKeyLoaded = true;
+            } catch (e) {
+                console.warn('No se pudo leer la API key privada:', e);
+            }
+
+            const isTargetSuperadmin = selectedUser.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
+
+            if (isTargetSuperadmin) {
+                modalRole.disabled = true;
+                adminRoleHint.textContent = "Superadministrador Supremo (Rol protegido e inmodificable).";
+                adminRoleHint.className = "text-[11px] text-primary font-semibold mt-1";
+            } else {
+                modalRole.disabled = false;
+                adminRoleHint.textContent = "Solo editor.online.latam@gmail.com puede poseer el rol admin. Aquí puedes alternar entre Free y Pro.";
+                adminRoleHint.className = "text-[11px] text-zinc-500 mt-1";
+            }
+
+            updateModalProgress();
+            userModal.classList.remove('hidden');
+            setTimeout(() => userModal.classList.remove('opacity-0'), 20);
+        };
+
+        function closeUserModal() {
+            userModal.classList.add('opacity-0');
+            setTimeout(() => userModal.classList.add('hidden'), 200);
+            selectedUser = null;
+        }
+
+        document.getElementById('modal-close-btn')?.addEventListener('click', closeUserModal);
+        document.getElementById('modal-cancel-btn')?.addEventListener('click', closeUserModal);
+
+        // Al cambiar de plan, ajustar los tokens al valor por defecto del plan
+        // solo si el campo sigue en un valor estándar (no sobrescribe ajustes manuales).
+        modalRole?.addEventListener('change', () => {
+            const current = Number(modalTokensTotal.value) || 0;
+            if (modalRole.value === 'premium' && current <= 50000) {
+                modalTokensTotal.value = 5436000;
+            } else if (modalRole.value === 'free' && current >= 5436000) {
+                modalTokensTotal.value = 50000;
+            }
+            updateModalProgress();
+        });
+
+        // Toggle visibilidad de API Key
+        document.getElementById('toggle-key-visibility')?.addEventListener('click', () => {
+            if (modalApiKey.type === 'password') {
+                modalApiKey.type = 'text';
+            } else {
+                modalApiKey.type = 'password';
+            }
+        });
+
+        // Actualizar barra de consumo en el modal
+        function updateModalProgress() {
+            if (!selectedUser) return;
+            const total = Number(modalTokensTotal.value) || 1;
+            const used = selectedUser.tokens_used || 0;
+            const percent = Math.min(100, Math.round((used / total) * 100));
+
+            modalTokenPercent.textContent = `${percent}% Usado`;
+            modalConsumptionText.textContent = `${used.toLocaleString()} / ${total.toLocaleString()} tokens`;
+            modalProgressBar.style.width = `${percent}%`;
+
+            if (percent >= 90) modalProgressBar.className = "h-full bg-red-500 transition-all duration-300";
+            else if (percent >= 70) modalProgressBar.className = "h-full bg-amber-500 transition-all duration-300";
+            else modalProgressBar.className = "h-full bg-accent transition-all duration-300";
+        }
+
+        modalTokensTotal?.addEventListener('input', updateModalProgress);
+
+        // Presets rápidos
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = btn.getAttribute('data-tokens');
+                modalTokensTotal.value = val;
+                updateModalProgress();
+            });
+        });
+
+        // Botón reiniciar consumo
+        document.getElementById('modal-reset-tokens-btn')?.addEventListener('click', async () => {
+            if (!selectedUser) return;
+            if (!confirm(`¿Deseas reiniciar el contador de tokens consumidos a 0 para ${selectedUser.email}? Esto iniciará un nuevo ciclo de facturación.`)) {
+                return;
+            }
+
+            try {
+                await db.collection('usuarios').doc(selectedUser.uid).update({
+                    tokens_used: 0,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                selectedUser.tokens_used = 0;
+                updateModalProgress();
+                showToast("Contador de tokens reiniciado a 0 exitosamente.", "success");
+            } catch (err) {
+                console.error("Error reiniciando tokens:", err);
+                showToast("Error al reiniciar tokens: " + err.message, "error");
+            }
+        });
+
+        // Guardar cambios del formulario de usuario
+        document.getElementById('user-edit-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!selectedUser) return;
+
+            const isTargetSuperadmin = selectedUser.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
+            let newRole = modalRole.value;
+
+            // Restricción estricta de seguridad: Prohibir promover a admin
+            if (newRole === 'admin' && !isTargetSuperadmin) {
+                alert("Acción prohibida: Únicamente editor.online.latam@gmail.com puede poseer el rol de Superadministrador.");
+                return;
+            }
+            if (isTargetSuperadmin) {
+                newRole = 'admin';
+            }
+
+            const newTokensTotal = Number(modalTokensTotal.value) || (newRole === 'premium' ? 5436000 : 50000);
+            const newApiKey = modalApiKey.value.trim();
+
+            const saveBtn = document.getElementById('modal-save-btn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Guardando...`;
+
+            try {
+                // 1. Guardar la API key en la subcolección privada.
+                // El documento público solo guarda un booleano has_api_key.
+                const userRef = db.collection('usuarios').doc(selectedUser.uid);
+                const privRef = userRef.collection('privado').doc('credenciales');
+
+                if (newApiKey) {
+                    await privRef.set({
+                        api_key: newApiKey,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } else if (modalKeyLoaded || newRole !== 'premium') {
+                    // Solo se borra si la clave existente se cargó correctamente.
+                    // Si la lectura falló, se conserva para no perder la asignación.
+                    await privRef.delete();
+                }
+
+                // 2. Actualizar el perfil público y eliminar cualquier clave
+                // antigua que hubiera quedado en el documento público.
+                const preserveKey = !newApiKey && !modalKeyLoaded && newRole === 'premium';
+                await userRef.update({
+                    role: newRole,
+                    tokens_total: newTokensTotal,
+                    has_api_key: preserveKey ? selectedUser.has_api_key === true : !!newApiKey,
+                    api_key: firebase.firestore.FieldValue.delete(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 3. Notificar al backend de Flask (sincroniza la key en Redis)
+                try {
+                    await fetch(`${FLASK_API}/api/admin/user/update`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-User-Email': SUPERADMIN_EMAIL
+                        },
+                        body: JSON.stringify({
+                            admin_email: SUPERADMIN_EMAIL,
+                            uid: selectedUser.uid,
+                            target_email: selectedUser.email,
+                            role: newRole,
+                            tokens_total: newTokensTotal,
+                            api_key: newApiKey
+                        })
+                    });
+                } catch (apiErr) {
+                    console.log("Nota: Sincronización backend secundaria completada localmente.", apiErr);
+                }
+
+                showToast(`Usuario ${selectedUser.email} actualizado correctamente.`, "success");
+                closeUserModal();
+            } catch (err) {
+                console.error("Error al actualizar usuario:", err);
+                showToast("Error al guardar: " + err.message, "error");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span> <span>Guardar Cambios</span>`;
+            }
+        });
+
+        // ==============================================================================
+        // 4. ALGORITMO DE CÁLCULO DE RENTABILIDAD (MINUTOS VS TOKENS)
+        // ==============================================================================
+        function initCalculator() {
+            const minInput = document.getElementById('calc-min-input');
+            const minDisplay = document.getElementById('calc-min-display');
+            const visionInput = document.getElementById('calc-vision-tokens');
+            const textInput = document.getElementById('calc-text-tokens');
+            const costInput = document.getElementById('calc-cost-million');
+
+            const resTokens = document.getElementById('calc-result-tokens');
+            const resCost = document.getElementById('calc-result-cost');
+            const resCostMin = document.getElementById('calc-result-cost-min');
+            const resPrice = document.getElementById('calc-result-price');
+            const resProfit = document.getElementById('calc-result-profit');
+            const resMargin = document.getElementById('calc-result-margin');
+
+            const TARGET_MARGIN = 0.50; // 50% de margen bruto sobre el precio de venta
+
+            function calculate() {
+                const minutes = Number(minInput.value) || 180;
+                const visionPerMin = Number(visionInput.value) || 30000;
+                const textPerMin = Number(textInput.value) || 200;
+                const costPerMillion = Number(costInput.value) || 2.50;
+
+                minDisplay.textContent = `${minutes} minutos`;
+
+                // Tokens totales requeridos
+                // 1 min texto ≈ 200 tokens. 1 min visión ≈ 30,000 tokens.
+                const tokensPerMin = visionPerMin + textPerMin;
+                const totalTokens = Math.round(minutes * tokensPerMin);
+
+                // Costo directo de la API en USD
+                const directCost = (totalTokens / 1000000.0) * costPerMillion;
+
+                // Margen Bruto Objetivo: 50% -> Costo Directo <= 50% del precio.
+                // Precio mínimo = directCost / (1 - 0.50) = directCost * 2.
+                const minSuggestedPrice = directCost / (1 - TARGET_MARGIN);
+                const profit = minSuggestedPrice - directCost;
+                const costPerMinute = minutes > 0 ? directCost / minutes : 0;
+                const pricePerMinute = minutes > 0 ? minSuggestedPrice / minutes : 0;
+
+                resTokens.textContent = `${totalTokens.toLocaleString()} tokens`;
+                resCost.textContent = `$${directCost.toFixed(2)} USD`;
+                resCostMin.textContent = `$${costPerMinute.toFixed(4)}/min`;
+                resPrice.textContent = `$${minSuggestedPrice.toFixed(2)} USD/mes`;
+                resProfit.textContent = `$${profit.toFixed(2)} USD`;
+                resMargin.textContent = `${(TARGET_MARGIN * 100).toFixed(1)}% Margen (precio mín.)`;
+
+                window.lastCalculatedTokens = totalTokens;
+                window.lastCalculatedPrice = minSuggestedPrice;
+                window.lastCalculatedPricePerMinute = pricePerMinute;
+            }
+
+            minInput.addEventListener('input', calculate);
+            visionInput.addEventListener('input', calculate);
+            textInput.addEventListener('input', calculate);
+            costInput.addEventListener('input', calculate);
+
+            calculate();
+
+            // Botón cargar en modal
+            document.getElementById('calc-apply-btn')?.addEventListener('click', () => {
+                if (window.lastCalculatedTokens) {
+                    if (selectedUser) {
+                        modalTokensTotal.value = window.lastCalculatedTokens;
+                        updateModalProgress();
+                        showToast(`Tokens aplicados al modal: ${window.lastCalculatedTokens.toLocaleString()}`, "success");
+                    } else {
+                        showToast("Abre un usuario para aplicar directamente la cuota calculada.", "info");
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

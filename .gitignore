@@ -8,6 +8,11 @@
 *.html
 *.css
 *.js
+# Archivos principales de la app: sí se versionan para mantener GitHub actualizado
+!index.html
+!dashboard.html
+!admin.html
+!editor.html
 
 # --- Temporales y Caché de Python ---
 __pycache__/

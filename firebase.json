@@ -1,6 +1,13 @@
 {
   "hosting": {
     "public": ".",
+    "cleanUrls": true,
+    "rewrites": [
+      {
+        "source": "/admin",
+        "destination": "/admin.html"
+      }
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -10,15 +17,19 @@
       "requirements.txt",
       "tu_script.py",
       "guion.json",
-      "CARPETA_VIDEO",
       "RESULTADOS_AD",
       "TEMP_PROCESAMIENTO",
       "handoff.md",
       "key.txt",
-      "storage.rules"
+      "storage.rules",
+      "firestore.rules",
+      ".env"
     ]
   },
   "storage": {
     "rules": "storage.rules"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }

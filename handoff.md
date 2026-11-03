@@ -91,8 +91,14 @@ Simplemente abre [`index.html`](file:///c:/Users/Hamt/Desktop/APP%20AUDIOCINE/in
 
 ## 6. Recomendaciones de Seguridad e Implementación Futura
 
-> [!WARNING]
-> **Clave API de OpenAI**: Actualmente, la clave de OpenAI está hardcodeada directamente en `tu_script.py` (Línea 41). Se recomienda encarecidamente mover esta clave a una variable de entorno (`.env`) antes de subir el proyecto a producción o repositorios públicos.
+> [!IMPORTANT]
+> **Clave API de OpenAI**: la clave vive únicamente en la variable de entorno
+> `OPENAI_API_KEY` del servidor y nunca se envía al frontend. Las claves de los
+> usuarios Pro se guardan en la subcolección privada
+> `usuarios/{uid}/privado/credenciales` y solo el Superadministrador puede
+> leerlas. Los usuarios Free usan los modelos gratuitos de OpenRouter. Consulta
+> [`PLANES_Y_RENTABILIDAD.md`](PLANES_Y_RENTABILIDAD.md) para el detalle de
+> planes, tokens y márgenes.
 
 > [!IMPORTANT]
 > **Integración Webhook n8n**: El dashboard intenta enviar el video a un webhook local de n8n (`http://localhost:5678/webhook/procesar-video`). Si n8n no está activo, el sistema continuará ejecutando el procesamiento directamente en el servidor Flask. Asegúrate de configurar este flujo en n8n si vas a utilizarlo para automatizar pipelines más complejos.
