@@ -749,7 +749,7 @@
 
                 if (userTokenText) {
                     if (role === 'admin') {
-                        userTokenText.textContent = 'Ilimitado';
+                        userTokenText.textContent = `${formatTokens(used)} tokens consumidos`;
                         if (userTokenProgress) userTokenProgress.style.width = '100%';
                     } else {
                         userTokenText.textContent = `${formatTokens(used)} / ${formatTokens(total)}`;
@@ -815,10 +815,14 @@
                 if (usageRemaining) usageRemaining.textContent = role === 'admin' ? '∞' : formatTokens(remaining);
                 if (usageMinutes) {
                     usageMinutes.textContent = role === 'admin'
-                        ? 'Sin límite de tokens'
-                        : `≈ ${formatMinutes(remainingMinutes)} de video disponibles este mes`;
+                        ? `${formatTokens(used)} tokens consumidos con tu OpenAI Key (≈ ${formatMinutes(usedMinutes)} de video)`
+                        : `≈ ${formatMinutes(remainingMinutes)} de video disponibles este mes (≈ ${formatMinutes(usedMinutes)} usados)`;
                 }
-                if (usagePercent) usagePercent.textContent = role === 'admin' ? 'Ilimitado' : `${pct}% usado`;
+                if (usagePercent) {
+                    usagePercent.textContent = role === 'admin'
+                        ? (used > 0 ? `${formatTokens(used)} tokens consumidos` : '0 tokens consumidos')
+                        : `${pct}% usado`;
+                }
                 if (usageProgress) {
                     usageProgress.style.width = role === 'admin' ? '100%' : `${pct}%`;
                     usageProgress.className = 'h-full transition-all duration-500 ' + (

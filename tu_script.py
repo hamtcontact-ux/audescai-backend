@@ -133,7 +133,13 @@ def recargar_claves_desde_redis():
     try:
         ck_openai = redis_client.get("config:openai_api_key")
         if ck_openai:
-            OPENAI_API_KEY = ck_openai.decode('utf-8').strip()
+            val_clean = ck_openai.decode('utf-8').strip()
+            if "test-key" in val_clean:
+                try: redis_client.delete("config:openai_api_key")
+                except: pass
+                OPENAI_API_KEY = ""
+            else:
+                OPENAI_API_KEY = val_clean
         ck_or = redis_client.get("config:openrouter_api_key")
         if ck_or:
             OPENROUTER_API_KEY = ck_or.decode('utf-8').strip()
@@ -499,6 +505,10 @@ Genera UNA SOLA oracion corta (max {palabras} palabras) sobre la imagen. Aplica 
                     time.sleep(delay)
                     continue
             print(f"   [Error] Error IA ({model_name}): {e}")
+            if any(k in error_str for k in ["authentication", "invalid_api_key", "401", "incorrect api key"]):
+                raise RuntimeError(f"Clave de API inválida o no autorizada para {model_name} (401). Ingresa tu clave real en el Panel Admin.")
+            if any(k in error_str for k in ["insufficient_quota", "quota", "billing"]):
+                raise RuntimeError(f"Saldo insuficiente o cuota agotada en tu cuenta de OpenAI/OpenRouter (429). Revisa tu saldo.")
             # Fallback si el modelo falla por formato de imagen o payload
             if base64_image and any(k in error_str for k in ["vision", "image", "unsupported", "payload", "400", "413", "422"]):
                 try:
@@ -1006,12 +1016,20 @@ def api_admin_keys():
         new_or = (data.get("openrouter_api_key") or "").strip()
         new_model = (data.get("free_model") or "").strip()
 
-        if new_openai:
-            OPENAI_API_KEY = new_openai
-            try:
-                redis_client.set("config:openai_api_key", new_openai)
-            except Exception as e:
-                print(f"[Redis Warning] {e}")
+        if "openai_api_key" in data:
+            new_openai = (data.get("openai_api_key") or "").strip()
+            if new_openai and "test-key" not in new_openai:
+                OPENAI_API_KEY = new_openai
+                try:
+                    redis_client.set("config:openai_api_key", new_openai)
+                except Exception as e:
+                    print(f"[Redis Warning] {e}")
+            else:
+                OPENAI_API_KEY = ""
+                try:
+                    redis_client.delete("config:openai_api_key")
+                except Exception as e:
+                    print(f"[Redis Warning] {e}")
 
         if new_or:
             OPENROUTER_API_KEY = new_or
