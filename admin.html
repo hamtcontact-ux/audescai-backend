@@ -1284,17 +1284,24 @@
             btn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Guardando...`;
 
             try {
+                // Guardar en localStorage del navegador
+                localStorage.setItem('openai_api_key', key);
+
                 // 1. Guardar en Firestore
                 await db.collection('configuracion').doc('plataforma').set({
                     openai_api_key: key,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                // 2. Enviar a Flask / Redis
+                // 2. Enviar a Flask / Redis con cabeceras de autorización
                 try {
                     await fetch(`${FLASK_API}/api/admin/keys`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Admin-Email': SUPERADMIN_EMAIL,
+                            'X-User-Email': SUPERADMIN_EMAIL
+                        },
                         body: JSON.stringify({
                             admin_email: SUPERADMIN_EMAIL,
                             openai_api_key: key

@@ -878,6 +878,16 @@
                     adminNavItem?.classList.remove('hidden');
                     settingsNavItem?.classList.remove('hidden');
                     mobileSettingsBtn?.classList.remove('hidden');
+
+                    // Cargar clave de OpenAI de Firestore si está configurada en la plataforma
+                    try {
+                        const cfgSnap = await db.collection('configuracion').doc('plataforma').get();
+                        if (cfgSnap.exists && cfgSnap.data().openai_api_key) {
+                            localStorage.setItem('openai_api_key', cfgSnap.data().openai_api_key);
+                        }
+                    } catch (e) {
+                        console.warn("No se pudo cargar clave de configuración de Firestore:", e);
+                    }
                 } else {
                     adminNavItem?.classList.add('hidden');
                     settingsNavItem?.classList.add('hidden');
@@ -1356,7 +1366,16 @@
                     // 4. Iniciar procesamiento con el Servidor Backend Oficial (Flask en Coolify)
                     updateProgressUI(80, 'Iniciando análisis con IA...');
 
-                    const localKey = (userRole === 'admin' ? localStorage.getItem('openai_api_key') : '') || '';
+                    let localKey = (userRole === 'admin' ? localStorage.getItem('openai_api_key') : '') || '';
+                    if (!localKey && userRole === 'admin') {
+                        try {
+                            const cfgSnap = await db.collection('configuracion').doc('plataforma').get();
+                            if (cfgSnap.exists && cfgSnap.data().openai_api_key) {
+                                localKey = cfgSnap.data().openai_api_key;
+                                localStorage.setItem('openai_api_key', localKey);
+                            }
+                        } catch (_) {}
+                    }
 
                     const payloadData = {
                         video_url: videoUrl,
@@ -1391,7 +1410,14 @@
                                 const errJson = await flaskRes.json();
                                 backendError = errJson.message || errJson.error;
                             } catch (_) {
-                                backendError = `Error HTTP ${flaskRes.status}`;
+                                try {
+                                    const errText = await flaskRes.text();
+                                    backendError = (errText && errText.length < 250 && !errText.includes('<!doctype'))
+                                        ? errText
+                                        : `Error del servidor (${flaskRes.status}). El administrador debe revisar la configuración.`;
+                                } catch (_) {
+                                    backendError = `Error HTTP ${flaskRes.status}`;
+                                }
                             }
                         }
                     } catch (e) {

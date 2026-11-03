@@ -157,6 +157,8 @@ def obtener_fase1_status(proyecto_id):
 def require_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return f(*args, **kwargs)
         caller_email = (
             request.headers.get("X-User-Email") or 
             request.headers.get("X-Admin-Email") or
@@ -612,7 +614,12 @@ def generar_audio_pro(texto, i, voz_id, proyecto_id=None, rate="+0%"):
 # TAREA CELERY: PROCESAMIENTO CON CONTROL DE CONSUMO Y MODELOS OPENROUTER/OPENAI
 # ==============================================================================
 @celery_app.task(name='tu_script.procesar_video_task')
-def procesar_video_task(video_url, api_key, proyecto_id, user_email=None, uid=None, role="free", user_tokens_used=0, user_tokens_total=50000):
+def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
+    user_email = kwargs.get("user_email") or (args[0] if len(args) > 0 else None)
+    uid = kwargs.get("uid") or (args[1] if len(args) > 1 else None)
+    role = kwargs.get("role") or (args[2] if len(args) > 2 else "free")
+    user_tokens_used = kwargs.get("user_tokens_used") or (args[3] if len(args) > 3 else 0)
+    user_tokens_total = kwargs.get("user_tokens_total") or (args[4] if len(args) > 4 else 50000)
     print(f"[Celery] Iniciando Fase 1: proyecto={proyecto_id}, user={user_email}, role={role}")
     guardar_fase1_status(proyecto_id, "processing")
     video_path = os.path.join(TEMP_DIR, f"{proyecto_id}_original.mp4")
@@ -1111,55 +1118,82 @@ def obtener_api_key_servidor(uid, role):
 
 @app.route('/procesar-fase1', methods=['POST'])
 def api_fase1():
-    data = request.json or {}
-    video_url = data.get("video_url")
-    proyecto_id = data.get("proyecto_id")
-    uid = data.get("uid")
-    user_email = data.get("user_email")
-    role = data.get("role", "free")
-    tokens_used = int(data.get("tokens_used", 0))
-    tokens_total = int(data.get("tokens_total", PLAN_FREE_TOKENS))
+    try:
+        data = request.json or {}
+        video_url = data.get("video_url")
+        proyecto_id = data.get("proyecto_id")
+        uid = data.get("uid")
+        user_email = data.get("user_email")
+        role = data.get("role", "free")
+        tokens_used = int(data.get("tokens_used", 0))
+        tokens_total = int(data.get("tokens_total", PLAN_FREE_TOKENS))
 
-    if not video_url or not proyecto_id:
-        return jsonify({"status": "error", "message": "Faltan parámetros obligatorios: video_url, proyecto_id"}), 400
+        if not video_url or not proyecto_id:
+            return jsonify({"status": "error", "message": "Faltan parámetros obligatorios: video_url, proyecto_id"}), 400
 
-    # Garantizar rol de superadministrador si coincide el correo
-    if user_email and user_email.strip().lower() == ADMIN_EMAIL:
-        role = "admin"
-    elif role == "admin":
-        role = "free"
+        # Garantizar rol de superadministrador si coincide el correo
+        if user_email and user_email.strip().lower() == ADMIN_EMAIL:
+            role = "admin"
+        elif role == "admin":
+            role = "free"
 
-    # Resolver clave del servidor, permitiendo clave del administrador si viene en la petición
-    client_key = (data.get("api_key") or "").strip()
-    api_key = client_key if (role == "admin" and client_key.startswith("sk-")) else obtener_api_key_servidor(uid, role)
-    if not api_key and client_key and client_key.startswith("sk-"):
-        api_key = client_key
+        # Resolver clave del servidor, permitiendo clave del administrador si viene en la petición
+        client_key = (data.get("api_key") or "").strip()
+        api_key = ""
+        if role == "admin":
+            if client_key and client_key.startswith("sk-"):
+                api_key = client_key
+                # Sincronizar de inmediato en Redis y memoria del servidor
+                try:
+                    redis_client.set("config:openai_api_key", client_key)
+                    global OPENAI_API_KEY
+                    OPENAI_API_KEY = client_key
+                    print("[API Key] Clave de Superadmin sincronizada en Redis.")
+                except Exception as e_red:
+                    print(f"[Redis Warning] {e_red}")
+            else:
+                api_key = obtener_api_key_servidor(uid, role)
+        else:
+            api_key = obtener_api_key_servidor(uid, role)
+            if not api_key and client_key and client_key.startswith("sk-"):
+                api_key = client_key
 
-    if role == "premium" and not api_key:
-        msg = ("Tu plan Pro aún no tiene una API key asignada. "
-               "El administrador debe asignarla desde el panel de administración antes de procesar videos.")
-        guardar_fase1_status(proyecto_id, "error", msg)
-        return jsonify({"status": "error", "message": msg}), 400
+        if role == "premium" and not api_key:
+            msg = ("Tu plan Pro aún no tiene una API key asignada. "
+                   "El administrador debe asignarla desde el panel de administración antes de procesar videos.")
+            guardar_fase1_status(proyecto_id, "error", msg)
+            return jsonify({"status": "error", "message": msg}), 400
 
-    if role == "admin" and not api_key:
-        msg = "El servidor no tiene configurada la OPENAI_API_KEY. Como Superadmin, puedes ingresarla directamente desde el Panel de Administrador (sección Configuración de IA)."
-        guardar_fase1_status(proyecto_id, "error", msg)
-        return jsonify({"status": "error", "message": msg}), 500
+        if role == "admin" and not api_key:
+            msg = "El servidor no tiene configurada la OPENAI_API_KEY. Como Superadmin, puedes ingresarla directamente desde el Panel de Administrador (sección Configuración de IA)."
+            guardar_fase1_status(proyecto_id, "error", msg)
+            return jsonify({"status": "error", "message": msg}), 400
 
-    if role == "free" and not api_key:
-        api_key = "free_user"
+        if role == "free" and not api_key:
+            api_key = "free_user"
 
-    print(f"[Info] Encolando Fase 1: proyecto={proyecto_id}, email={user_email}, role={role}")
-    guardar_fase1_status(proyecto_id, "processing")
-    
-    procesar_video_task.delay(video_url, api_key, proyecto_id, user_email, uid, role, tokens_used, tokens_total)
-    
-    return jsonify({
-        "status": "processing",
-        "message": "El análisis ha comenzado de fondo.",
-        "role": role,
-        "proyecto_id": proyecto_id
-    }), 202
+        print(f"[Info] Encolando Fase 1: proyecto={proyecto_id}, email={user_email}, role={role}")
+        guardar_fase1_status(proyecto_id, "processing")
+
+        try:
+            procesar_video_task.delay(video_url, api_key, proyecto_id, user_email, uid, role, tokens_used, tokens_total)
+        except Exception as e_cel:
+            print(f"[Celery Warning] Error al enviar argumentos completos ({e_cel}). Usando llamada simplificada...")
+            procesar_video_task.delay(video_url, api_key, proyecto_id)
+
+        return jsonify({
+            "status": "processing",
+            "message": "El análisis ha comenzado de fondo.",
+            "role": role,
+            "proyecto_id": proyecto_id
+        }), 202
+
+    except Exception as e:
+        import traceback
+        err_msg = f"{type(e).__name__}: {str(e)}"
+        print(f"[Error en /procesar-fase1] {err_msg}")
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": f"Error interno en el servidor: {err_msg}"}), 500
 
 @app.route('/fase1-status', methods=['GET'])
 def api_fase1_status():
