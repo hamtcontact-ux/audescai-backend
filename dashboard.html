@@ -177,101 +177,109 @@
 
     <!-- SideNavBar -->
     <nav id="sidebar"
-        class="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-white/10 shadow-sm flex flex-col py-md px-sm z-40 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 md:flex">
-        <div class="mb-xl flex items-center justify-between px-sm">
-            <div class="flex items-center gap-sm">
-                <div
-                    class="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+        class="h-screen w-64 fixed left-0 top-0 bg-[#0c0e14]/95 backdrop-blur-2xl border-r border-white/10 flex flex-col p-5 z-40 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 md:flex shadow-2xl">
+        
+        <!-- LOGO & CABECERA -->
+        <div class="mb-6 flex items-center justify-between pb-4 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/40 flex items-center justify-center text-primary shadow-[0_0_15px_rgba(200,55,58,0.3)]">
+                    <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
                 </div>
                 <div>
-                    <h1 class="font-title-lg text-title-lg font-bold text-primary tracking-tight">AudescAI</h1>
-                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-                        Accesibilidad Premium</p>
+                    <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-1.5">
+                        <span>AudescAI</span>
+                    </h1>
+                    <p class="text-[9px] font-bold text-accent uppercase tracking-[0.2em]">Cine Para Ciegos</p>
                 </div>
             </div>
-            <button id="mobile-sidebar-close" class="md:hidden text-on-surface-variant hover:text-on-surface p-1">
-                <span class="material-symbols-outlined">close</span>
+            <button id="mobile-sidebar-close" class="md:hidden text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
         </div>
-        <ul class="flex-1 space-y-2">
+
+        <!-- BOTÓN PRINCIPAL NUEVO PROYECTO -->
+        <div class="mb-6">
+            <button id="nav-upload-btn"
+                class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn shadow-lg">
+                <span class="material-symbols-outlined text-[18px]">cloud_upload</span>
+                <span>+ Nuevo Proyecto</span>
+            </button>
+        </div>
+
+        <!-- LISTA DE NAVEGACIÓN -->
+        <ul class="flex-1 space-y-1.5">
             <li>
-                <a class="flex items-center gap-sm px-sm py-3 rounded-lg text-primary font-bold border-r-2 border-primary bg-primary/5 transition-all duration-200 ease-in-out"
+                <a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-white font-semibold bg-white/5 border border-white/10 text-xs transition-all"
                     href="#">
-                    <span class="material-symbols-outlined">dashboard</span>
-                    <span>Panel de Control</span>
+                    <span class="material-symbols-outlined text-primary text-[20px]">folder_copy</span>
+                    <span>Mis Proyectos</span>
                 </a>
             </li>
+            
             <li>
-                <a class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
-                    href="#">
-                    <span class="material-symbols-outlined">folder_copy</span>
-                    <span>Proyectos</span>
+                <a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 text-xs font-medium transition-all"
+                    href="index.html#pricing">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-accent text-[20px]">workspace_premium</span>
+                        <span>Planes & Precios</span>
+                    </div>
+                    <span class="px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded bg-accent/10 text-accent border border-accent/20">PRO</span>
                 </a>
             </li>
-            <!-- Botón exclusivo para Superadministrador supremo -->
-            <li id="admin-nav-item" class="hidden">
+
+            <!-- BOTÓN EXCLUSIVO SUPERADMINISTRADOR (ADMIN PANEL) -->
+            <li id="admin-nav-item" class="hidden pt-2 border-t border-white/5">
                 <a id="nav-admin-btn"
-                    class="flex items-center gap-sm px-sm py-3 rounded-lg text-primary font-bold hover:bg-primary/10 transition-all duration-200 ease-in-out border border-primary/30 bg-primary/10"
+                    class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-primary font-bold hover:bg-primary/10 transition-all border border-primary/30 bg-primary/10 text-xs"
                     href="admin.html">
-                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">shield_person</span>
-                    <span>Panel Admin</span>
+                    <div class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">shield_person</span>
+                        <span>Panel Admin</span>
+                    </div>
+                    <span class="px-1.5 py-0.5 text-[8px] font-black uppercase rounded bg-primary/20 text-primary">SUPREMO</span>
                 </a>
             </li>
-            <li>
+
+            <!-- BOTÓN CONFIGURACIÓN (EXCLUSIVO SOLO PARA ADMIN) -->
+            <li id="settings-nav-item" class="hidden">
                 <a id="nav-settings-btn"
-                    class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
-                    href="#">
-                    <span class="material-symbols-outlined">settings</span>
-                    <span>Configuración</span>
-                </a>
-            </li>
-            <li>
-                <a id="nav-logout-btn"
-                    class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
-                    href="#">
-                    <span class="material-symbols-outlined">logout</span>
-                    <span>Cerrar Sesión</span>
-                </a>
-            </li>
-            <li>
-                <a class="flex items-center gap-sm px-sm py-3 rounded-lg text-on-surface-variant font-medium hover:bg-primary/5 hover:text-primary transition-colors transition-all duration-200 ease-in-out"
-                    href="#">
-                    <span class="material-symbols-outlined">help</span>
-                    <span>Ayuda</span>
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 text-xs font-medium transition-all"
+                    href="admin.html#config-section">
+                    <span class="material-symbols-outlined text-[20px]">tune</span>
+                    <span>Configuración IA</span>
                 </a>
             </li>
         </ul>
-        <div class="mt-auto border-t border-white/10 pt-md">
-            <button
-                class="w-full flex items-center justify-center gap-xs py-3 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md hover:bg-primary-container/90 transition-all mb-4 glow-btn"
-                id="nav-upload-btn">
-                <span class="material-symbols-outlined">add</span>
-                Nuevo Proyecto
-            </button>
+
+        <!-- ÁREA INFERIOR: PERFIL DE USUARIO Y CONSUMO -->
+        <div class="mt-auto pt-4 border-t border-white/5 space-y-3">
             <div id="user-profile-btn"
-                class="flex items-center gap-sm px-sm py-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
-                <div
-                    class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                    <span class="material-symbols-outlined">person</span>
+                class="flex items-center gap-3 p-2 rounded-xl bg-surface-container-high/60 border border-white/5 hover:border-white/10 transition-colors">
+                <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20 flex-shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">person</span>
                 </div>
-                <div class="truncate flex-1">
-                    <div class="flex items-center gap-1.5">
-                        <p id="user-email-display"
-                            class="font-label-md text-label-md text-on-surface font-semibold truncate">Cargando...</p>
-                        <span id="user-plan-badge" class="px-1.5 py-0.2 text-[9px] font-extrabold uppercase rounded bg-zinc-800 text-zinc-400 border border-zinc-700">FREE</span>
+                <div class="truncate flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-1">
+                        <p id="user-email-display" class="text-xs font-semibold text-white truncate">Cargando...</p>
+                        <span id="user-plan-badge" class="px-1.5 py-0.2 text-[9px] font-extrabold uppercase rounded bg-zinc-800 text-zinc-400 border border-zinc-700 flex-shrink-0">FREE</span>
                     </div>
                     <div id="user-token-mini-bar" class="mt-1 space-y-0.5">
-                        <div class="flex justify-between text-[10px] text-zinc-400 font-mono">
+                        <div class="flex justify-between text-[9px] text-zinc-400 font-mono">
                             <span>Tokens:</span>
-                            <span id="user-token-text">0 / 50K</span>
+                            <span id="user-token-text">0 / 300K</span>
                         </div>
                         <div class="w-full h-1 rounded-full bg-zinc-800 overflow-hidden">
-                            <div id="user-token-progress" class="h-full bg-primary" style="width: 0%;"></div>
+                            <div id="user-token-progress" class="h-full bg-accent transition-all duration-300" style="width: 0%;"></div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <button id="nav-logout-btn"
+                class="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all">
+                <span class="material-symbols-outlined text-[16px]">logout</span>
+                <span>Cerrar Sesión</span>
+            </button>
         </div>
     </nav>
     <!-- Main Content -->
@@ -308,7 +316,7 @@
                 </button>
                 <!-- Botón de Configuración Móvil -->
                 <button id="mobile-settings-btn"
-                    class="md:hidden w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
+                    class="hidden md:hidden w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
                     <span class="material-symbols-outlined text-[22px]">settings</span>
                 </button>
                 <!-- Botón de Cerrar Sesión Móvil -->
@@ -863,10 +871,17 @@
 
                 // 1. Validar si es el Superadministrador Supremo
                 const isSuperAdmin = (user.email || "").toLowerCase().trim() === SUPERADMIN_EMAIL.toLowerCase();
+                const settingsNavItem = document.getElementById('settings-nav-item');
+                const mobileSettingsBtn = document.getElementById('mobile-settings-btn');
+
                 if (isSuperAdmin) {
                     adminNavItem?.classList.remove('hidden');
+                    settingsNavItem?.classList.remove('hidden');
+                    mobileSettingsBtn?.classList.remove('hidden');
                 } else {
                     adminNavItem?.classList.add('hidden');
+                    settingsNavItem?.classList.add('hidden');
+                    mobileSettingsBtn?.classList.add('hidden');
                 }
 
                 // 2. Inicializar o verificar perfil de usuario en Firestore
@@ -911,6 +926,27 @@
                     console.error("Error al sincronizar perfil en Firestore:", e);
                 }
 
+                // Sincronización automática de llaves de Firestore hacia el backend Flask para el Superadmin
+                if (isSuperAdmin) {
+                    try {
+                        const platSnap = await db.collection('configuracion').doc('plataforma').get();
+                        if (platSnap.exists) {
+                            const pData = platSnap.data();
+                            if (pData.openai_api_key || pData.openrouter_api_key) {
+                                fetch(`${FLASK_API}/api/admin/keys`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        admin_email: SUPERADMIN_EMAIL,
+                                        openai_api_key: pData.openai_api_key || '',
+                                        openrouter_api_key: pData.openrouter_api_key || '',
+                                        free_model: pData.free_model || ''
+                                    })
+                                }).catch(() => {});
+                            }
+                        }
+                    } catch (_) {}
+                }
                 loadProjects(user.uid);
             });
 
@@ -1219,7 +1255,7 @@
                     };
 
                     const videoUrl = await uploadToCloudinary();
-                    updateProgressUI(80, 'Enviando a n8n...');
+                    updateProgressUI(80, 'Preparando análisis con IA...');
 
                     // 3. Guardar metadata inicial en Firestore
                     await projectRef.set({

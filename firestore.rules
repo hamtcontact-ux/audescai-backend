@@ -14,6 +14,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
+    // Configuración global de la plataforma (claves API de OpenAI y OpenRouter)
+    // Exclusivo para el Superadministrador Supremo
+    match /configuracion/{docId} {
+      allow read, write: if isSuperAdmin();
+    }
+
     match /usuarios/{uid} {
       // Cualquier usuario autenticado puede leer su propio perfil; el Superadmin puede leer todos
       allow read: if isOwner(uid) || isSuperAdmin();
@@ -24,7 +30,7 @@ service cloud.firestore {
       allow create: if isOwner(uid) && (
         (request.auth.token.email.lower() == "editor.online.latam@gmail.com" && request.resource.data.role == "admin") ||
         (request.auth.token.email.lower() != "editor.online.latam@gmail.com" && request.resource.data.role == "free"
-          && (!('tokens_total' in request.resource.data) || request.resource.data.tokens_total == 50000)
+          && (!('tokens_total' in request.resource.data) || request.resource.data.tokens_total <= 300000)
           && (!('has_api_key' in request.resource.data) || request.resource.data.has_api_key == false))
       );
 
@@ -66,4 +72,3 @@ service cloud.firestore {
     }
   }
 }
-

@@ -148,6 +148,10 @@
                     <span class="material-symbols-outlined text-accent text-[18px]">verified_user</span>
                     <span id="current-admin-email" class="text-xs font-mono text-zinc-300">editor.online.latam@gmail.com</span>
                 </div>
+                <a href="#config-section" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-accent hover:text-white text-xs font-semibold border border-accent/20 transition-all">
+                    <span class="material-symbols-outlined text-[16px]">tune</span>
+                    <span>Configuración IA</span>
+                </a>
                 <a href="dashboard.html" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-zinc-300 hover:text-white text-xs font-semibold border border-white/5 transition-all">
                     <span class="material-symbols-outlined text-[16px]">arrow_back</span>
                     <span>Dashboard</span>
@@ -657,6 +661,7 @@
             initCalculator();
             migrateLegacyApiKeys();
             loadUsersRealtime();
+            loadPlatformConfig();
         });
 
         // Botón Iniciar Sesión con Google directo en admin
@@ -904,6 +909,7 @@
         document.getElementById('refresh-users-btn')?.addEventListener('click', () => {
             showToast("Actualizando datos...", "info");
             loadUsersRealtime();
+            loadPlatformConfig();
         });
 
         // ==============================================================================
@@ -1201,7 +1207,164 @@
                 }
             });
         }
-    </script>
+    
+        // ==============================================================================
+        // GESTIÓN DE CONFIGURACIÓN GLOBAL DE IA Y API KEYS
+        // ==============================================================================
+        const inputOpenAI = document.getElementById('input-openai-key');
+        const inputOpenRouter = document.getElementById('input-openrouter-key');
+        const selectFreeModel = document.getElementById('select-free-model');
+        const badgeOpenAI = document.getElementById('badge-openai-status');
+        const badgeOpenRouter = document.getElementById('badge-openrouter-status');
+
+        // Toggle visibilidad
+        document.getElementById('toggle-openai-key-btn')?.addEventListener('click', () => {
+            inputOpenAI.type = inputOpenAI.type === 'password' ? 'text' : 'password';
+        });
+        document.getElementById('toggle-openrouter-key-btn')?.addEventListener('click', () => {
+            inputOpenRouter.type = inputOpenRouter.type === 'password' ? 'text' : 'password';
+        });
+
+        // Cargar claves desde Firestore y Backend Flask
+        async function loadPlatformConfig() {
+            try {
+                // 1. Cargar desde Firestore (/configuracion/plataforma)
+                const configRef = db.collection('configuracion').doc('plataforma');
+                const snap = await configRef.get();
+                if (snap.exists) {
+                    const data = snap.data();
+                    if (data.openai_api_key) {
+                        inputOpenAI.value = data.openai_api_key;
+                        badgeOpenAI.textContent = 'Configurada ✓';
+                        badgeOpenAI.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-accent/20 text-accent border border-accent/40';
+                    }
+                    if (data.openrouter_api_key) {
+                        inputOpenRouter.value = data.openrouter_api_key;
+                        badgeOpenRouter.textContent = 'Configurada ✓';
+                        badgeOpenRouter.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
+                    }
+                    if (data.free_model && selectFreeModel) {
+                        selectFreeModel.value = data.free_model;
+                    }
+                }
+
+                // 2. Sincronizar también con backend Flask si está activo
+                try {
+                    const res = await fetch(`${FLASK_API}/api/admin/keys?admin_email=${SUPERADMIN_EMAIL}`);
+                    if (res.ok) {
+                        const sData = await res.json();
+                        if (sData.has_openai_key) {
+                            badgeOpenAI.textContent = 'Activa en Servidor ✓';
+                            badgeOpenAI.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-accent/20 text-accent border border-accent/40';
+                        }
+                        if (sData.has_openrouter_key) {
+                            badgeOpenRouter.textContent = 'Activa en Servidor ✓';
+                            badgeOpenRouter.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
+                        }
+                        if (sData.free_model && selectFreeModel && !snap.exists) {
+                            selectFreeModel.value = sData.free_model;
+                        }
+                    }
+                } catch (_) {}
+            } catch (err) {
+                console.warn("No se pudo cargar la configuración de plataforma:", err);
+            }
+        }
+
+        // Guardar OpenAI Key
+        document.getElementById('save-openai-key-btn')?.addEventListener('click', async () => {
+            const key = inputOpenAI.value.trim();
+            if (!key) {
+                alert("Por favor ingresa una clave válida de OpenAI.");
+                return;
+            }
+
+            const btn = document.getElementById('save-openai-key-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Guardando...`;
+
+            try {
+                // 1. Guardar en Firestore
+                await db.collection('configuracion').doc('plataforma').set({
+                    openai_api_key: key,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                // 2. Enviar a Flask / Redis
+                try {
+                    await fetch(`${FLASK_API}/api/admin/keys`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            admin_email: SUPERADMIN_EMAIL,
+                            openai_api_key: key
+                        })
+                    });
+                } catch (e) {
+                    console.warn("Flask sincronización offline, guardado en Firestore:", e);
+                }
+
+                badgeOpenAI.textContent = 'Configurada ✓';
+                badgeOpenAI.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-accent/20 text-accent border border-accent/40';
+                showToast("Clave de OpenAI guardada y sincronizada con éxito.", "success");
+            } catch (err) {
+                console.error("Error guardando clave OpenAI:", err);
+                showToast("Error al guardar clave: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span><span>Guardar OpenAI Key</span>`;
+            }
+        });
+
+        // Guardar OpenRouter Key
+        document.getElementById('save-openrouter-key-btn')?.addEventListener('click', async () => {
+            const key = inputOpenRouter.value.trim();
+            const freeModel = selectFreeModel?.value || 'google/gemini-2.0-flash-exp:free';
+
+            if (!key) {
+                alert("Por favor ingresa una clave válida de OpenRouter.");
+                return;
+            }
+
+            const btn = document.getElementById('save-openrouter-key-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Guardando...`;
+
+            try {
+                // 1. Guardar en Firestore
+                await db.collection('configuracion').doc('plataforma').set({
+                    openrouter_api_key: key,
+                    free_model: freeModel,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                // 2. Enviar a Flask / Redis
+                try {
+                    await fetch(`${FLASK_API}/api/admin/keys`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            admin_email: SUPERADMIN_EMAIL,
+                            openrouter_api_key: key,
+                            free_model: freeModel
+                        })
+                    });
+                } catch (e) {
+                    console.warn("Flask sincronización offline, guardado en Firestore:", e);
+                }
+
+                badgeOpenRouter.textContent = 'Configurada ✓';
+                badgeOpenRouter.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
+                showToast("Clave de OpenRouter y modelo gratuito guardados con éxito.", "success");
+            } catch (err) {
+                console.error("Error guardando clave OpenRouter:", err);
+                showToast("Error al guardar clave: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span><span>Guardar OpenRouter Key</span>`;
+            }
+        });
+</script>
 </body>
 </html>
 

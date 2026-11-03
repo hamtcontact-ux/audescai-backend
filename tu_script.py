@@ -109,6 +109,28 @@ import redis
 broker_url = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 redis_client = redis.Redis.from_url(broker_url)
 
+def recargar_claves_desde_redis():
+    """Carga claves de API globales desde Redis si están disponibles."""
+    global OPENAI_API_KEY, OPENROUTER_API_KEY, OPENROUTER_FREE_MODEL
+    try:
+        ck_openai = redis_client.get("config:openai_api_key")
+        if ck_openai:
+            OPENAI_API_KEY = ck_openai.decode('utf-8').strip()
+        ck_or = redis_client.get("config:openrouter_api_key")
+        if ck_or:
+            OPENROUTER_API_KEY = ck_or.decode('utf-8').strip()
+        ck_model = redis_client.get("config:openrouter_free_model")
+        if ck_model:
+            OPENROUTER_FREE_MODEL = ck_model.decode('utf-8').strip()
+    except Exception as e:
+        print(f"[Redis Config Warning] No se pudieron leer claves globales de Redis: {e}")
+
+# Intento inicial al cargar módulo
+try:
+    recargar_claves_desde_redis()
+except Exception:
+    pass
+
 # Auxiliares de lectura y guardado de status en Redis
 def guardar_fase1_status(proyecto_id, status, error_message=None):
     try:
@@ -817,6 +839,62 @@ def construir_planes_publicos():
         }
     }
 
+
+@app.route('/api/admin/keys', methods=['GET', 'POST'])
+@require_admin
+def api_admin_keys():
+    """Permite al Superadministrador consultar y actualizar las API keys del servidor dinámicamente."""
+    global OPENAI_API_KEY, OPENROUTER_API_KEY, OPENROUTER_FREE_MODEL
+
+    if request.method == 'POST':
+        data = request.json or {}
+        new_openai = (data.get("openai_api_key") or "").strip()
+        new_or = (data.get("openrouter_api_key") or "").strip()
+        new_model = (data.get("free_model") or "").strip()
+
+        if new_openai:
+            OPENAI_API_KEY = new_openai
+            try:
+                redis_client.set("config:openai_api_key", new_openai)
+            except Exception as e:
+                print(f"[Redis Warning] {e}")
+
+        if new_or:
+            OPENROUTER_API_KEY = new_or
+            try:
+                redis_client.set("config:openrouter_api_key", new_or)
+            except Exception as e:
+                print(f"[Redis Warning] {e}")
+
+        if new_model:
+            OPENROUTER_FREE_MODEL = new_model
+            try:
+                redis_client.set("config:openrouter_free_model", new_model)
+            except Exception as e:
+                print(f"[Redis Warning] {e}")
+
+        return jsonify({
+            "status": "success",
+            "message": "Claves de IA guardadas y activadas con éxito en el servidor.",
+            "has_openai_key": bool(OPENAI_API_KEY),
+            "has_openrouter_key": bool(OPENROUTER_API_KEY),
+            "free_model": OPENROUTER_FREE_MODEL
+        }), 200
+
+    # GET
+    recargar_claves_desde_redis()
+    openai_preview = f"sk-...{OPENAI_API_KEY[-4:]}" if len(OPENAI_API_KEY) > 8 else ("Configurada" if OPENAI_API_KEY else "")
+    or_preview = f"sk-or-...{OPENROUTER_API_KEY[-4:]}" if len(OPENROUTER_API_KEY) > 8 else ("Configurada" if OPENROUTER_API_KEY else "")
+
+    return jsonify({
+        "status": "success",
+        "has_openai_key": bool(OPENAI_API_KEY),
+        "openai_preview": openai_preview,
+        "has_openrouter_key": bool(OPENROUTER_API_KEY),
+        "openrouter_preview": or_preview,
+        "free_model": OPENROUTER_FREE_MODEL
+    }), 200
+
 @app.route('/api/plans', methods=['GET'])
 def api_planes_publicos():
     """Planes públicos con tokens, minutos y margen. Sin datos sensibles."""
@@ -845,16 +923,45 @@ def api_admin_config():
 
 def obtener_api_key_servidor(uid, role):
     """
-    Resuelve la API key en el servidor. El navegador NUNCA debe enviar la
-    clave de OpenAI: para Pro se lee la clave que el administrador asignó
-    y sincronizó en Redis; para admin se usa la clave del .env.
+    Resuelve la API key en el servidor con respaldo en Redis.
+    - Superadmin: OPENAI_API_KEY del servidor (o de Redis config:openai_api_key).
+    - Free: OPENROUTER_API_KEY del servidor (o de Redis config:openrouter_api_key).
+    - Pro: Clave individual del usuario; si no tiene, usa la OPENAI_API_KEY del servidor.
     """
+    global OPENAI_API_KEY, OPENROUTER_API_KEY
+    recargar_claves_desde_redis()
+
     if role == "free":
-        return OPENROUTER_API_KEY
+        if OPENROUTER_API_KEY:
+            return OPENROUTER_API_KEY
+        if uid:
+            try:
+                raw_u = redis_client.get(f"user_data:{uid}")
+                if raw_u:
+                    u_data = json.loads(raw_u.decode("utf-8"))
+                    key = (u_data.get("api_key") or "").strip()
+                    if key and key.startswith("sk-or-"):
+                        return key
+            except Exception:
+                pass
+        return ""
 
-    if role == "admin" and OPENAI_API_KEY:
-        return OPENAI_API_KEY
+    if role == "admin":
+        if OPENAI_API_KEY:
+            return OPENAI_API_KEY
+        if uid:
+            try:
+                raw_u = redis_client.get(f"user_data:{uid}")
+                if raw_u:
+                    u_data = json.loads(raw_u.decode("utf-8"))
+                    key = (u_data.get("api_key") or "").strip()
+                    if key:
+                        return key
+            except Exception:
+                pass
+        return ""
 
+    # Rol Pro (premium)
     if uid:
         try:
             raw_u = redis_client.get(f"user_data:{uid}")
@@ -865,6 +972,9 @@ def obtener_api_key_servidor(uid, role):
                     return key
         except Exception as e:
             print(f"[API Key Warning] No se pudo leer la clave de {uid}: {e}")
+
+    if OPENAI_API_KEY:
+        return OPENAI_API_KEY
 
     return ""
 
@@ -899,7 +1009,7 @@ def api_fase1():
         return jsonify({"status": "error", "message": msg}), 400
 
     if role == "admin" and not api_key:
-        msg = "El servidor no tiene configurada OPENAI_API_KEY. Agrégala en el archivo .env del backend."
+        msg = "El servidor no tiene configurada la OPENAI_API_KEY. Como Superadmin, puedes ingresarla directamente desde el Panel de Administrador (sección Configuración de IA)."
         guardar_fase1_status(proyecto_id, "error", msg)
         return jsonify({"status": "error", "message": msg}), 500
 
