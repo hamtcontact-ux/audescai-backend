@@ -100,6 +100,8 @@ install_dep("soundfile")
 install_dep("silero-vad")
 install_dep("celery")
 install_dep("redis")
+install_dep("Pillow")
+from PIL import Image
 
 import edge_tts
 from silero_vad import load_silero_vad, get_speech_timestamps, read_audio
@@ -252,51 +254,161 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-# Función para descargar un archivo de internet
+# Función para descargar un archivo de internet con User-Agent y soporte de streaming
 def descargar_video(url, dest_path):
     print(f"[Info] Descargando video desde {url} hacia {dest_path}")
-    urllib.request.urlretrieve(url, dest_path)
-    print("[Info] Descarga completada.")
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+    )
+    with urllib.request.urlopen(req, timeout=120) as resp, open(dest_path, "wb") as f_out:
+        while True:
+            chunk = resp.read(1024 * 1024)
+            if not chunk:
+                break
+            f_out.write(chunk)
+    print(f"[Info] Descarga completada: {os.path.getsize(dest_path)} bytes.")
 
-# --- 1. DETECCIÓN DE HUECOS (VAD) ---
-def obtener_huecos_silencio(video_path, min_gap=2.2, max_intervalo=6.0):
-    print(f"[Info] Analizando diálogos en: {os.path.basename(video_path)}")
-    vad_model = load_silero_vad()
-    video = VideoFileClip(video_path)
-    
-    audio_temp = os.path.join(TEMP_DIR, f"temp_vad_{uuid.uuid4().hex}.wav")
-    video.audio.write_audiofile(audio_temp, fps=16000, nbytes=2, codec='pcm_s16le', verbose=False, logger=None)
-    
-    wav = read_audio(audio_temp, sampling_rate=16000)
-    speech_ts = get_speech_timestamps(wav, vad_model, sampling_rate=16000)
-    
-    duracion_total = video.duration
-    silencios = []
-    cursor = 0.0
-    
-    for ts in speech_ts:
-        inicio_voz = ts['start'] / 16000
-        if inicio_voz - cursor >= min_gap:
-            silencios.append((cursor, inicio_voz))
-        cursor = ts['end'] / 16000
-        
-    if duracion_total - cursor >= min_gap:
-        silencios.append((cursor, duracion_total))
-        
-    video.close()
-    
+# --- EXTRACCIÓN DE FOTOGRAMA ROBUSTA Y ADAPTATIVA (SOPORTE VERTICAL / HORIZONTAL) ---
+def extraer_frame_robusto(video_path, t, output_path, max_dim=1024):
+    """
+    Extrae un fotograma optimizado en el segundo t con rotación corregida (-autorotate)
+    y tamaño adaptativo (máximo max_dim px), asegurando modo RGB sin fallos en videos verticales u horizontales.
+    """
+    # 1. Extracción directa con FFmpeg (rápida, corrige orientación de celulares automáticamente)
     try:
-        os.remove(audio_temp)
-    except:
-        pass
+        cmd = [
+            "ffmpeg", "-y",
+            "-ss", f"{max(0.0, float(t)):.3f}",
+            "-i", video_path,
+            "-frames:v", "1",
+            "-vf", f"scale='min({max_dim},iw)':-2",
+            "-q:v", "3",
+            output_path
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=12)
+        if res.returncode == 0 and os.path.exists(output_path) and os.path.getsize(output_path) > 500:
+            return True
+    except Exception as e_ff:
+        print(f"[Frame FFmpeg Warning] {e_ff}")
+
+    # 2. Respaldo MoviePy + PIL (resuelve canales RGBA a RGB y redimensiona)
+    try:
+        with VideoFileClip(video_path) as clip:
+            dur = float(clip.duration or 1.0)
+            safe_t = max(0.0, min(float(t), dur - 0.05))
+            raw_frame = clip.get_frame(safe_t)
+            im = Image.fromarray(raw_frame)
+            if im.mode in ("RGBA", "P", "LA"):
+                im = im.convert("RGB")
+            im.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+            im.save(output_path, "JPEG", quality=82, optimize=True)
+            return True
+    except Exception as e_mv:
+        print(f"[Frame MoviePy Warning] {e_mv}")
+
+    # 3. Fallback dummy si el video no tiene fotograma legible en esa posición
+    try:
+        img_dummy = Image.new("RGB", (640, 360), color=(25, 25, 25))
+        img_dummy.save(output_path, "JPEG", quality=80)
+        return True
+    except Exception:
+        return False
+
+# --- 1. DETECCIÓN DE HUECOS (VAD) CON TOLERANCIA TOTAL A VIDEOS SIN AUDIO / VERTICALES ---
+def obtener_huecos_silencio(video_path, min_gap=2.2, max_intervalo=6.0):
+    print(f"[Info] Analizando silencios y estructura de: {os.path.basename(video_path)}")
+    duracion_total = 0.0
+    try:
+        with VideoFileClip(video_path) as v_clip:
+            duracion_total = float(v_clip.duration or 0.0)
+    except Exception as e_dur:
+        print(f"[Warning] No se pudo leer duración con MoviePy: {e_dur}")
+        try:
+            cmd_probe = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", video_path]
+            res_p = subprocess.run(cmd_probe, capture_output=True, text=True, timeout=5)
+            if res_p.returncode == 0 and res_p.stdout.strip():
+                duracion_total = float(res_p.stdout.strip())
+        except Exception:
+            pass
+
+    if duracion_total <= 0:
+        duracion_total = 5.0
+
+    audio_temp = os.path.join(TEMP_DIR, f"temp_vad_{uuid.uuid4().hex}.wav")
+    audio_extraido = False
+
+    # 1. Intentar extracción directa con FFmpeg (más tolerante a códecs de celulares que MoviePy)
+    try:
+        cmd_ff = ["ffmpeg", "-y", "-i", video_path, "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", audio_temp]
+        res_ff = subprocess.run(cmd_ff, capture_output=True, text=True, timeout=30)
+        if res_ff.returncode == 0 and os.path.exists(audio_temp) and os.path.getsize(audio_temp) > 1000:
+            audio_extraido = True
+    except Exception as e_ff:
+        print(f"[VAD FFmpeg Warning]: {e_ff}")
+
+    # 2. Respaldo con MoviePy si FFmpeg no completó
+    if not audio_extraido:
+        try:
+            with VideoFileClip(video_path) as video:
+                if video.audio is not None:
+                    video.audio.write_audiofile(audio_temp, fps=16000, nbytes=2, codec='pcm_s16le', verbose=False, logger=None)
+                    if os.path.exists(audio_temp) and os.path.getsize(audio_temp) > 1000:
+                        audio_extraido = True
+        except Exception as e_mv:
+            print(f"[VAD MoviePy Warning]: {e_mv}")
+
+    silencios = []
+
+    # 3. Si hay pista de audio, aplicar Silero VAD
+    if audio_extraido:
+        try:
+            vad_model = load_silero_vad()
+            wav = read_audio(audio_temp, sampling_rate=16000)
+            speech_ts = get_speech_timestamps(wav, vad_model, sampling_rate=16000)
+            
+            cursor = 0.0
+            for ts in speech_ts:
+                inicio_voz = ts['start'] / 16000
+                if inicio_voz - cursor >= min_gap:
+                    silencios.append((cursor, inicio_voz))
+                cursor = ts['end'] / 16000
+                
+            if duracion_total - cursor >= min_gap:
+                silencios.append((cursor, duracion_total))
+        except Exception as e_vad:
+            print(f"[Silero VAD Error]: {e_vad}")
+        finally:
+            try:
+                if os.path.exists(audio_temp): os.remove(audio_temp)
+            except:
+                pass
+
+    # 4. Si el video es mudo, o no tiene audio, o no hubo huecos >= min_gap:
+    # Generar intervalos automáticos basados en la duración para garantizar audiodescripción completa
+    if not silencios:
+        print("[VAD Info] Video sin pista de voz detectable o mudo. Generando intervalos visuales automáticos.")
+        paso = min(max_intervalo, max(3.0, duracion_total / max(1, math.ceil(duracion_total / 5.0))))
+        curr = 0.0
+        while curr < duracion_total:
+            sig = min(curr + paso, duracion_total)
+            silencios.append((curr, sig))
+            curr = sig
 
     huecos_subdivididos = []
     for inicio, fin in silencios:
-        cursor_trozo = inicio
-        while fin - cursor_trozo > max_intervalo * 1.3:
-            huecos_subdivididos.append((cursor_trozo, cursor_trozo + max_intervalo))
-            cursor_trozo += max_intervalo
-        huecos_subdivididos.append((cursor_trozo, fin))
+        duracion = fin - inicio
+        if duracion > max_intervalo * 1.3:
+            cursor_trozo = inicio
+            while fin - cursor_trozo > max_intervalo * 1.3:
+                huecos_subdivididos.append((round(cursor_trozo, 2), round(cursor_trozo + max_intervalo, 2)))
+                cursor_trozo += max_intervalo
+            huecos_subdivididos.append((round(cursor_trozo, 2), round(fin, 2)))
+        else:
+            huecos_subdivididos.append((round(inicio, 2), round(fin, 2)))
+
+    if not huecos_subdivididos:
+        huecos_subdivididos.append((0.0, round(duracion_total, 2)))
 
     return huecos_subdivididos
 
@@ -306,11 +418,12 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
     print(f"   [Info] Analizando escena {indice_escena} ({model_name}): {inicio:.1f}s a {fin:.1f}s")
     
     frame_path = os.path.join(TEMP_DIR, f"frame_desc_{uuid.uuid4().hex}.jpg")
-    with VideoFileClip(video_path) as video:
-        t_frame = max(0.1, inicio + 0.5)
-        video.save_frame(frame_path, t=min(t_frame, video.duration - 0.1))
+    t_frame = max(0.05, inicio + 0.5)
+    
+    # Extraer fotograma robusto adaptativo (máx 1024px, autorotate, RGB asegurado)
+    frame_ok = extraer_frame_robusto(video_path, t_frame, frame_path, max_dim=1024)
+    base64_image = encode_image(frame_path) if (frame_ok and os.path.exists(frame_path)) else None
 
-    base64_image = encode_image(frame_path)
     palabras = max(15, int(duracion_max * 2.2))
     
     instruccion_escena = (
@@ -320,27 +433,28 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
     )
     historial_str = " | ".join(historial[-3:]) if historial else "Ninguno"
     
-    prompt_sistema = (
-        f"Eres un audiodescriptor profesional experto en sintesis.\n"
-        f"MANUAL DE REGLAS:\n{REGLAS_PROFESIONALES}\n"
-        f"CONTEXTO DE ESCENA: {instruccion_escena}\n"
-    )
-    
-    prompt_usuario = (
-        f"EJEMPLOS:\n{EJEMPLOS_ESTILO}\n"
-        f"HISTORIAL RECIENTE: {historial_str}\n"
-        f"Genera UNA SOLA oracion corta (max {palabras} palabras) sobre la imagen. "
-        f"Aplica las reglas. IMPORTANTE: ¡NO repitas el lugar ni la hora si el historial dice que ya estamos ahí! Termina con punto."
-    )
-    
+    prompt_sistema = f"""Eres un audiodescriptor profesional experto en sintesis.
+MANUAL DE REGLAS:
+{REGLAS_PROFESIONALES}
+CONTEXTO DE ESCENA: {instruccion_escena}"""
+    prompt_usuario = f"""EJEMPLOS:
+{EJEMPLOS_ESTILO}
+HISTORIAL RECIENTE: {historial_str}
+Genera UNA SOLA oracion corta (max {palabras} palabras) sobre la imagen. Aplica las reglas. IMPORTANTE: ¡NO repitas el lugar ni la hora si el historial dice que ya estamos ahí! Termina con punto."""
     p_sistema_utf8 = prompt_sistema.encode('utf-8').decode('utf-8')
     p_usuario_utf8 = prompt_usuario.encode('utf-8').decode('utf-8')
 
-    max_retries = 6
-    base_delay = 3.0
-    resultado = "Accion en pantalla."
+    max_retries = 5
+    base_delay = 2.0
+    resultado = "Acción en pantalla."
     tokens_spent = 0
     
+    user_content = [
+        {"type": "text", "text": p_usuario_utf8}
+    ]
+    if base64_image:
+        user_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
+
     for attempt in range(max_retries):
         try:
             response = openai_client.chat.completions.create(
@@ -349,17 +463,14 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
                 temperature=0.3,
                 messages=[
                     {"role": "system", "content": p_sistema_utf8},
-                    {"role": "user", "content": [
-                        {"type": "text", "text": p_usuario_utf8},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                    ]}
+                    {"role": "user", "content": user_content}
                 ]
             )
             resultado = response.choices[0].message.content.strip()
             if hasattr(response, 'usage') and response.usage:
                 tokens_spent = getattr(response.usage, 'total_tokens', 0)
             if not tokens_spent:
-                tokens_spent = len(p_sistema_utf8.split()) + len(p_usuario_utf8.split()) + len(resultado.split()) + 1000
+                tokens_spent = len(p_sistema_utf8.split()) + len(p_usuario_utf8.split()) + len(resultado.split()) + 600
             break
         except Exception as e:
             error_str = str(e).lower()
@@ -370,10 +481,10 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
                     time.sleep(delay)
                     continue
             print(f"   [Error] Error IA ({model_name}): {e}")
-            # Fallback en caso de que el modelo free falle con visión
-            if "vision" in error_str or "image" in error_str or "unsupported" in error_str:
+            # Fallback si el modelo falla por formato de imagen o payload
+            if base64_image and any(k in error_str for k in ["vision", "image", "unsupported", "payload", "400", "413", "422"]):
                 try:
-                    print("   [Fallback] Reintentando sin imagen directa como fallback...")
+                    print("   [Fallback] Reintentando con texto como fallback...")
                     fb_response = openai_client.chat.completions.create(
                         model=model_name,
                         max_tokens=50,
@@ -390,7 +501,8 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
             break
 
     try:
-        os.remove(frame_path)
+        if os.path.exists(frame_path):
+            os.remove(frame_path)
     except:
         pass
 
@@ -572,29 +684,48 @@ def procesar_video_task(video_url, api_key, proyecto_id, user_email=None, uid=No
             guardar_fase1_status(proyecto_id, "error", err_msg)
             return {"status": "error", "message": err_msg}
 
+        # Recargar claves de Redis dinámicamente para cada tarea en el worker
+        recargar_claves_desde_redis()
+
         # 3. Inicialización dinámica del cliente de IA (OpenRouter Free vs OpenAI Premium)
         http_client = httpx.Client(trust_env=False)
 
         if role == "free":
             # Usar OpenRouter con modelos gratuitos de forma transparente
-            or_key = OPENROUTER_API_KEY or (api_key if api_key and api_key.startswith("sk-or-") else "free_openrouter_key")
-            openai_client = OpenAI(
-                base_url=OPENROUTER_BASE_URL,
-                api_key=or_key,
-                default_headers={
-                    "HTTP-Referer": OPENROUTER_REFERER,
-                    "X-Title": OPENROUTER_TITLE
-                },
-                http_client=http_client
-            )
-            model_to_use = OPENROUTER_FREE_MODEL
-            print(f"[OpenRouter Free] Usando modelo {model_to_use} con cabeceras requeridas.")
-        else:
-            # Rol Premium o Superadmin
-            if api_key and api_key.startswith("sk-or-"):
+            or_key = OPENROUTER_API_KEY or (api_key if api_key and api_key.startswith("sk-or-") else "")
+            if not or_key and OPENAI_API_KEY:
+                # Si el administrador configuró OPENAI_API_KEY pero aún no OpenRouter, usar OpenAI con gpt-4o-mini
+                print("[OpenRouter Free] Sin OpenRouter configurado. Usando OpenAI con gpt-4o-mini como fallback universal.")
+                openai_client = OpenAI(api_key=OPENAI_API_KEY, http_client=http_client)
+                model_to_use = "gpt-4o-mini"
+            elif or_key:
                 openai_client = OpenAI(
                     base_url=OPENROUTER_BASE_URL,
-                    api_key=api_key,
+                    api_key=or_key,
+                    default_headers={
+                        "HTTP-Referer": OPENROUTER_REFERER,
+                        "X-Title": OPENROUTER_TITLE
+                    },
+                    http_client=http_client
+                )
+                model_to_use = OPENROUTER_FREE_MODEL
+                print(f"[OpenRouter Free] Usando modelo {model_to_use} con cabeceras requeridas.")
+            else:
+                err_msg = "El servidor no tiene configurada ninguna API key para procesar videos gratuitos. El administrador debe configurarla en el Panel Admin."
+                guardar_fase1_status(proyecto_id, "error", err_msg)
+                return {"status": "error", "message": err_msg}
+        else:
+            # Rol Premium o Superadmin
+            effective_key = api_key or OPENAI_API_KEY
+            if not effective_key:
+                err_msg = "No se encontró una API key válida configurada para procesar el video."
+                guardar_fase1_status(proyecto_id, "error", err_msg)
+                return {"status": "error", "message": err_msg}
+
+            if effective_key.startswith("sk-or-"):
+                openai_client = OpenAI(
+                    base_url=OPENROUTER_BASE_URL,
+                    api_key=effective_key,
                     default_headers={
                         "HTTP-Referer": OPENROUTER_REFERER,
                         "X-Title": OPENROUTER_TITLE
@@ -603,7 +734,7 @@ def procesar_video_task(video_url, api_key, proyecto_id, user_email=None, uid=No
                 )
                 model_to_use = "openai/gpt-4o-mini"
             else:
-                openai_client = OpenAI(api_key=api_key, http_client=http_client)
+                openai_client = OpenAI(api_key=effective_key, http_client=http_client)
                 model_to_use = "gpt-4o-mini"
 
         # 4. Detección de silencios Silero VAD
@@ -998,9 +1129,11 @@ def api_fase1():
     elif role == "admin":
         role = "free"
 
-    # La clave se resuelve SIEMPRE en el servidor. Se ignora cualquier
-    # api_key que venga del navegador para evitar filtraciones.
-    api_key = obtener_api_key_servidor(uid, role)
+    # Resolver clave del servidor, permitiendo clave del administrador si viene en la petición
+    client_key = (data.get("api_key") or "").strip()
+    api_key = client_key if (role == "admin" and client_key.startswith("sk-")) else obtener_api_key_servidor(uid, role)
+    if not api_key and client_key and client_key.startswith("sk-"):
+        api_key = client_key
 
     if role == "premium" and not api_key:
         msg = ("Tu plan Pro aún no tiene una API key asignada. "
@@ -1124,13 +1257,18 @@ def api_fase2():
         if not pistas_ad:
             audio_final = audio_original
         else:
-            audio_final = CompositeAudioClip([
-                audio_original.volumex(0.6),
-                *[a.volumex(1.5) for a in pistas_ad]
-            ])
-            audio_final.duration = video_original.duration
+            audio_tracks = []
+            if audio_original is not None:
+                audio_tracks.append(audio_original.volumex(0.6))
+            audio_tracks.extend([a.volumex(1.5) for a in pistas_ad])
+            
+            if audio_tracks:
+                audio_final = CompositeAudioClip(audio_tracks)
+                audio_final.duration = video_original.duration
+            else:
+                audio_final = None
 
-        video_final = video_original.set_audio(audio_final)
+        video_final = video_original.set_audio(audio_final) if audio_final else video_original
         output_path = os.path.join(TEMP_DIR, f"{proyecto_id}_AD_PRO.mp4")
 
         try:
