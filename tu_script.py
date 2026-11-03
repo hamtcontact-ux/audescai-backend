@@ -1617,6 +1617,95 @@ def api_tts():
             
     return send_file(path_audio, mimetype="audio/mpeg")
 
+@app.route('/renderizar-audio-fase2', methods=['POST'])
+def api_renderizar_audio_fase2():
+    """
+    Renderiza la mezcla final de audio (.mp3) combinando el audio original del video
+    con las pistas de audiodescripción sincronizadas según la edición actual del editor.
+    """
+    data = request.json or {}
+    video_url = data.get("video_url")
+    proyecto_id = data.get("proyecto_id")
+    bloques_editados = data.get("bloques", [])
+
+    if not video_url or not proyecto_id:
+        return jsonify({"status": "error", "message": "Faltan parámetros obligatorios: video_url, proyecto_id"}), 400
+
+    video_path = os.path.join(TEMP_DIR, f"{proyecto_id}_original.mp4")
+    ruta_mezcla_mp3 = os.path.join(TEMP_DIR, f"{proyecto_id}_mezcla_ad_final.mp3")
+
+    try:
+        if not os.path.exists(video_path):
+            descargar_video(video_url, video_path)
+
+        video_original = VideoFileClip(video_path)
+        audio_original = video_original.audio
+        pistas_ad = []
+        rutas_archivos_ad = []
+
+        for i, bloque in enumerate(bloques_editados):
+            texto = bloque.get("text", "").strip()
+            inicio_clip = float(bloque.get("start", 0))
+            voz_id = bloque.get("voice", "es-ES-AlvaroNeural")
+            rate = bloque.get("rate", "+0%").strip()
+
+            if not texto:
+                continue
+
+            path_audio = generar_audio_pro(texto, i, voz_id, proyecto_id=proyecto_id, rate=rate)
+            if not path_audio:
+                continue
+
+            rutas_archivos_ad.append(path_audio)
+            ad_clip = AudioFileClip(path_audio)
+            ad_clip = ad_clip.set_start(inicio_clip)
+            pistas_ad.append(ad_clip)
+
+        if not pistas_ad:
+            audio_final = audio_original
+        else:
+            audio_tracks = []
+            if audio_original is not None:
+                audio_tracks.append(audio_original.volumex(0.6))
+            audio_tracks.extend([a.volumex(1.4) for a in pistas_ad])
+
+            if audio_tracks:
+                audio_final = CompositeAudioClip(audio_tracks)
+                audio_final.duration = video_original.duration
+            else:
+                audio_final = audio_original
+
+        if audio_final is not None:
+            audio_final.write_audiofile(ruta_mezcla_mp3, verbose=False, logger=None)
+        else:
+            return jsonify({"status": "error", "message": "No se pudo generar la mezcla de audio."}), 500
+
+        video_original.close()
+        for a in pistas_ad:
+            try:
+                a.close()
+            except:
+                pass
+
+        for path_a in rutas_archivos_ad:
+            try:
+                if os.path.exists(path_a):
+                    os.remove(path_a)
+            except:
+                pass
+
+        return send_file(
+            ruta_mezcla_mp3,
+            as_attachment=True,
+            download_name=f"audiodescripcion_{proyecto_id}.mp3",
+            mimetype="audio/mpeg"
+        )
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": f"Error al renderizar audio: {str(e)}"}), 500
+
 @app.route('/renderizar-fase2', methods=['POST'])
 def api_fase2():
     data = request.json or {}

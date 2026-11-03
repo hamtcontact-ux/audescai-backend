@@ -1914,10 +1914,103 @@
                 exportDropdown.classList.add('hidden');
             });
 
-            exportMp3Btn.addEventListener('click', () => {
+            exportMp3Btn.addEventListener('click', async () => {
                 exportDropdown.classList.add('hidden');
-                window.open(`${FLASK_API}/descargar-audio?proyecto_id=${id_proyecto}`, '_blank');
-                showToast('Descargando mezcla .mp3...', 'success');
+                if (!blocks.length) {
+                    showToast('No hay bloques de audiodescripción para renderizar.', 'warn');
+                    return;
+                }
+
+                const uid = auth.currentUser?.uid;
+                if (!uid || !id_proyecto) {
+                    showToast('Error de sesión o proyecto no identificado.', 'error');
+                    return;
+                }
+
+                showToast('Renderizando mezcla de audio con los últimos cambios del editor...', 'info', 4000);
+
+                // Mostrar overlay de progreso
+                renderOverlay.classList.remove('hidden');
+                void renderOverlay.offsetWidth;
+                renderOverlay.classList.remove('opacity-0');
+                renderOverlay.classList.add('opacity-100');
+                renderProgressCircle.style.strokeDashoffset = '251.2';
+                renderProgressText.textContent = '0%';
+
+                let fakeProgress = 10;
+                setRenderProgress(fakeProgress);
+                const progressInterval = setInterval(() => {
+                    fakeProgress = Math.min(90, fakeProgress + Math.random() * 12);
+                    setRenderProgress(fakeProgress);
+                }, 400);
+
+                try {
+                    // 1. Obtener video_url y nombre del proyecto
+                    const projDoc = await db.collection('usuarios').doc(uid).collection('proyectos').doc(id_proyecto).get();
+                    const projData = projDoc.exists ? projDoc.data() : {};
+                    const videoUrl = projData.video_url || mainVideo.src;
+                    const projectName = (projData.name || 'audiodescripcion').replace(/[^a-zA-Z0-9_\-]/g, '_');
+
+                    if (!videoUrl) {
+                        throw new Error('No se encontró la URL del video original.');
+                    }
+
+                    // 2. Persistir bloques actuales en Firestore
+                    await saveBlocksToFirestore();
+
+                    // 3. Enviar al backend los bloques editados actualmente
+                    const payload = {
+                        video_url: videoUrl,
+                        proyecto_id: id_proyecto,
+                        bloques: blocks.map(b => ({
+                            id: b.id,
+                            text: b.text || '',
+                            start: Number(b.start || 0),
+                            end: Number(b.end || 0),
+                            voice: b.voice || 'es-ES-AlvaroNeural',
+                            rate: b.rate || '+0%'
+                        }))
+                    };
+
+                    const res = await fetch(`${FLASK_API}/renderizar-audio-fase2`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    clearInterval(progressInterval);
+
+                    if (!res.ok) {
+                        let errText = 'Error en el servidor al renderizar audio';
+                        try {
+                            const errJson = await res.json();
+                            errText = errJson.message || errText;
+                        } catch (_) {
+                            errText = await res.text();
+                        }
+                        throw new Error(errText);
+                    }
+
+                    setRenderProgress(100);
+                    await delay(300);
+
+                    const blob = await res.blob();
+                    triggerDownload(blob, `${projectName}_mezcla_final.mp3`);
+
+                    closeRenderOverlay();
+                    showToast('¡Mezcla de audio renderizada y descargada con éxito!', 'success', 5000);
+
+                    // Actualizar status a Renderizado
+                    await db.collection('usuarios').doc(uid).collection('proyectos').doc(id_proyecto).update({
+                        status: 'Renderizado'
+                    });
+
+                } catch (err) {
+                    clearInterval(progressInterval);
+                    closeRenderOverlay();
+                    console.error('Error al renderizar audio:', err);
+                    showToast(`Error al renderizar audio: ${err.message}`, 'error', 6000);
+                }
             });
 
             function triggerDownload(blob, filename) {

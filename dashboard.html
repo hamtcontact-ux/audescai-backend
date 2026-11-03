@@ -346,17 +346,17 @@
                             <span id="plan-badge-large" class="px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700">FREE</span>
                         </div>
                         <p id="plan-description" class="text-xs text-zinc-400 mt-2 max-w-2xl leading-relaxed">
-                            300,000 tokens al mes ≈ 10 min de video. Usa modelos gratuitos de OpenRouter, sin API key de OpenAI requerida.
+                            10 minutos de video disponibles para audiodescripción con IA.
                         </p>
                         <ul id="plan-features" class="flex flex-wrap gap-2.5 mt-3 text-xs text-zinc-300">
                             <li class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[11px]">
                                 <span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Editor completo y subtítulos SRT
                             </li>
                             <li class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[11px]">
-                                <span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Sin tarjeta requerida
+                                <span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Descarga de audio
                             </li>
                             <li class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[11px]">
-                                <span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Modelos OpenRouter Free
+                                <span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Sin tarjeta requerida
                             </li>
                         </ul>
                     </div>
@@ -367,80 +367,33 @@
                             <span>Mejorar a Pro — $29/mes</span>
                             <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
                         </button>
-                        <p class="text-[11px] text-zinc-500 text-center lg:text-right">Garantía de rendimiento sin cortes</p>
                     </div>
                 </div>
 
-                <!-- FILA 2: CONSUMO REAL DE TOKENS & MINUTOS -->
+                <!-- FILA 2: MINUTOS DE VIDEO DISPONIBLES -->
                 <div class="pt-6 relative z-10">
                     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-3">
                         <div>
-                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">Consumo real de tokens</p>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">Minutos de video disponibles</p>
                             <div class="flex items-baseline gap-2 mt-1">
-                                <h3 class="text-3xl font-black text-white font-mono"><span id="usage-used">0</span></h3>
-                                <span class="text-sm text-zinc-500 font-mono">/ <span id="usage-total">300,000</span> tokens</span>
+                                <h3 class="text-3xl font-black text-white font-mono"><span id="usage-minutes-available">10.0</span></h3>
+                                <span class="text-sm text-zinc-500 font-mono">/ <span id="usage-minutes-total">10.0</span> min totales</span>
                                 <span id="usage-percent" class="text-xs font-bold text-accent ml-2">0% usado</span>
                             </div>
                         </div>
                         <div class="sm:text-right">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">Tiempo disponible estimado</p>
-                            <p id="usage-minutes" class="text-xl font-black text-accent mt-0.5">≈ 10 min de video disponibles</p>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">Consumo de video</p>
+                            <p id="usage-minutes" class="text-xl font-black text-accent mt-0.5">0.0 min usados</p>
                         </div>
                     </div>
 
                     <!-- Barra de progreso -->
-                    <div class="w-full h-3 rounded-full bg-surface-container-highest overflow-hidden mb-6 border border-white/5 p-0.5">
+                    <div class="w-full h-3 rounded-full bg-surface-container-highest overflow-hidden mb-2 border border-white/5 p-0.5">
                         <div id="usage-progress" class="h-full bg-gradient-to-r from-accent to-accent-hover rounded-full transition-all duration-500" style="width: 0%;"></div>
                     </div>
+                </div>
 
-                    <!-- CUADRÍCULA DE 4 TARJETAS DE ESTADÍSTICAS (ESTILO ADMIN.HTML) -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-white/5">
-                            <div>
-                                <p class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Plan Activo</p>
-                                <h4 id="usage-plan" class="text-sm font-bold text-white mt-0.5">Free</h4>
-                                <p class="text-[10px] text-zinc-500 mt-0.5">OpenRouter Free</p>
-                            </div>
-                            <div class="w-9 h-9 rounded-lg bg-zinc-500/10 border border-zinc-500/20 flex items-center justify-center text-zinc-400">
-                                <span class="material-symbols-outlined text-[20px]">public</span>
-                            </div>
-                        </div>
-
-                        <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-white/5">
-                            <div>
-                                <p class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Tokens Restantes</p>
-                                <h4 id="usage-remaining" class="text-sm font-bold text-accent font-mono mt-0.5">300,000</h4>
-                                <p class="text-[10px] text-zinc-500 mt-0.5">Renueva cada 30 días</p>
-                            </div>
-                            <div class="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
-                                <span class="material-symbols-outlined text-[20px]">data_usage</span>
-                            </div>
-                        </div>
-
-                        <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-white/5">
-                            <div>
-                                <p class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Conversión</p>
-                                <h4 class="text-sm font-bold text-white mt-0.5">30,000 tok/min</h4>
-                                <p class="text-[10px] text-zinc-500 mt-0.5">Visión + Narración</p>
-                            </div>
-                            <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                                <span class="material-symbols-outlined text-[20px]">timer</span>
-                            </div>
-                        </div>
-
-                        <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-white/5">
-                            <div>
-                                <p class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">API Key OpenAI</p>
-                                <h4 id="usage-api-key" class="text-sm font-bold text-white mt-0.5">No requerida</h4>
-                                <p class="text-[10px] text-zinc-500 mt-0.5">Gestionada por Servidor</p>
-                            </div>
-                            <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                                <span class="material-symbols-outlined text-[20px]">key</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Alerta de límite mensual -->
+                <!-- Alerta de límite mensual -->
                     <div id="usage-warning" class="hidden mt-4 bg-amber-500/10 border border-amber-500/20 text-amber-300 px-4 py-3 rounded-xl text-xs flex items-start gap-2">
                         <span class="material-symbols-outlined text-[18px] mt-0.5">warning</span>
                         <span id="usage-warning-text">Estás cerca de tu límite mensual. Amplía tu plan para seguir procesando videos.</span>
@@ -811,18 +764,22 @@
                     }
                 }
 
-                // Usage card
+                // Usage card: Minutos de video disponibles
+                const usageMinAvail = document.getElementById('usage-minutes-available');
+                const usageMinTotal = document.getElementById('usage-minutes-total');
+                if (usageMinAvail) usageMinAvail.textContent = role === 'admin' ? '∞' : `${Math.max(0, remainingMinutes).toFixed(1)}`;
+                if (usageMinTotal) usageMinTotal.textContent = role === 'admin' ? '∞ min' : `${totalMinutes.toFixed(1)} min`;
                 if (usageUsed) usageUsed.textContent = `${usedMinutes.toFixed(1)}`;
                 if (usageTotal) usageTotal.textContent = role === 'admin' ? '∞ min' : `${totalMinutes.toFixed(1)} min`;
                 if (usageRemaining) usageRemaining.textContent = role === 'admin' ? '∞' : `${remainingMinutes.toFixed(1)} min`;
                 if (usageMinutes) {
                     usageMinutes.textContent = role === 'admin'
-                        ? `${formatTokens(used)} tokens consumidos con tu OpenAI Key (${usedMinutes.toFixed(1)} min de video)`
-                        : `${remainingMinutes.toFixed(1)} min de video disponibles (${usedMinutes.toFixed(1)} min consumidos)`;
+                        ? `${usedMinutes.toFixed(1)} min procesados (Ilimitado)`
+                        : `${usedMinutes.toFixed(1)} min usados de ${totalMinutes.toFixed(1)} min`;
                 }
                 if (usagePercent) {
                     usagePercent.textContent = role === 'admin'
-                        ? `${usedMinutes.toFixed(1)} min procesados`
+                        ? 'Ilimitado'
                         : `${pct}% usado`;
                 }
                 if (usageProgress) {
@@ -1105,6 +1062,74 @@
                 videoArchivoReal = null;
             }
 
+                        // Captura de miniatura de video en el cliente (frame 0.5s - 1.0s)
+            function captureVideoThumbnail(videoFile) {
+                return new Promise((resolve) => {
+                    try {
+                        const video = document.createElement('video');
+                        video.preload = 'metadata';
+                        video.muted = true;
+                        video.playsInline = true;
+                        const objUrl = URL.createObjectURL(videoFile);
+                        video.src = objUrl;
+
+                        let timeoutId = setTimeout(() => {
+                            URL.revokeObjectURL(objUrl);
+                            resolve(null);
+                        }, 5000);
+
+                        video.onloadedmetadata = () => {
+                            video.currentTime = Math.min(1.0, (video.duration || 1) / 2);
+                        };
+
+                        video.onseeked = () => {
+                            clearTimeout(timeoutId);
+                            try {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = 480;
+                                canvas.height = Math.round((video.videoHeight / (video.videoWidth || 1)) * 480) || 270;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                                URL.revokeObjectURL(objUrl);
+                                resolve(dataUrl);
+                            } catch (e) {
+                                URL.revokeObjectURL(objUrl);
+                                resolve(null);
+                            }
+                        };
+
+                        video.onerror = () => {
+                            clearTimeout(timeoutId);
+                            URL.revokeObjectURL(objUrl);
+                            resolve(null);
+                        };
+                    } catch (_) {
+                        resolve(null);
+                    }
+                });
+            }
+
+            function showProjectLimitModal(maxLimit, currentCount) {
+                const modal = document.getElementById('project-limit-modal');
+                const textEl = document.getElementById('project-limit-modal-text');
+                if (textEl) {
+                    textEl.innerHTML = `Has superado el límite de proyectos permitidos. Tu cuenta gratuita permite un máximo de <strong>${maxLimit} proyectos</strong> guardados (tienes ${currentCount}). Elimina uno para poder seguir usando la suscripción gratuita o suscríbete al Plan Pro para almacenamiento ilimitado.`;
+                }
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    setTimeout(() => modal.classList.remove('opacity-0'), 20);
+                }
+            }
+
+            document.getElementById('close-project-limit-modal-btn')?.addEventListener('click', () => {
+                const modal = document.getElementById('project-limit-modal');
+                if (modal) {
+                    modal.classList.add('opacity-0');
+                    setTimeout(() => modal.classList.add('hidden'), 200);
+                }
+            });
+
             // Real-time Projects loader
             function loadProjects(uid) {
                 db.collection('usuarios').doc(uid).collection('proyectos')
@@ -1149,8 +1174,12 @@
                                 <button class="delete-project-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/50 hover:text-emerald-400 hover:bg-emerald-400/10 hover:border-emerald-400/30 active:text-red-500 active:bg-red-500/20 active:border-red-500/50 transition-all duration-200" data-id="${doc.id}">
                                     <span class="material-symbols-outlined text-[18px]">delete</span>
                                 </button>
-                                <div class="aspect-video w-full bg-gradient-to-br from-indigo-900/40 to-slate-900 relative overflow-hidden flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-4xl text-primary/40 group-hover:scale-110 transition-transform duration-500">movie</span>
+                                <div class="aspect-video w-full bg-surface-container-highest relative overflow-hidden flex items-center justify-center">
+                                    ${proj.thumbnailUrl 
+                                        ? `<img src="${proj.thumbnailUrl}" alt="${proj.name || 'Proyecto'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />`
+                                        : `<div class="w-full h-full bg-gradient-to-br from-indigo-950/60 to-slate-900 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-primary/40 group-hover:scale-110 transition-transform duration-500">movie</span></div>`
+                                    }
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
                                 </div>
                                 <div class="p-md flex flex-col flex-1">
                                     <h3 class="font-title-lg text-title-lg text-on-surface mb-2 truncate pr-6">${proj.name || 'Proyecto sin nombre'}</h3>
@@ -1210,6 +1239,24 @@
                 if (!file) {
                     alert('Por favor, selecciona un archivo de video.');
                     return;
+                }
+
+                // Control de límite de proyectos guardados para usuarios Free
+                if (userRole === 'free') {
+                    let maxFreeProjects = 5;
+                    try {
+                        const cfgSnap = await db.collection('configuracion').doc('plataforma').get();
+                        if (cfgSnap.exists && cfgSnap.data().max_free_projects) {
+                            maxFreeProjects = parseInt(cfgSnap.data().max_free_projects, 10);
+                        }
+                    } catch (_) {}
+
+                    const projSnap = await db.collection('usuarios').doc(uid).collection('proyectos').get();
+                    if (projSnap.size >= maxFreeProjects) {
+                        closeModal();
+                        showProjectLimitModal(maxFreeProjects, projSnap.size);
+                        return;
+                    }
                 }
                 // La API key de OpenAI ya no se pide ni se envía desde el navegador.
                 // El backend la resuelve por uid para los usuarios Pro.
@@ -1367,15 +1414,22 @@
                         return lastResponse.secure_url;
                     };
 
+                    const thumbnailCapturePromise = captureVideoThumbnail(file);
                     const videoUrl = await uploadToCloudinary();
                     updateProgressUI(80, 'Preparando análisis con IA...');
 
-                    // 3. Guardar metadata inicial en Firestore
+                    let clientThumb = null;
+                    try { clientThumb = await thumbnailCapturePromise; } catch (_) {}
+                    const fallbackThumb = videoUrl ? videoUrl.replace(/\.[a-zA-Z0-9]+$/, '.jpg') : null;
+                    const finalThumbnail = clientThumb || fallbackThumb;
+
+                    // 3. Guardar metadata inicial en Firestore con miniatura
                     await projectRef.set({
                         id: projectId,
                         name: file.name.substring(0, file.name.lastIndexOf('.')) || file.name,
                         status: 'Procesando',
                         video_url: videoUrl,
+                        thumbnailUrl: finalThumbnail,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
@@ -1656,6 +1710,29 @@
             });
         });
     </script>
+    <!-- MODAL DE LÍMITE DE PROYECTOS PARA USUARIOS FREE -->
+    <div id="project-limit-modal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
+        <div class="glass-panel w-full max-w-md rounded-2xl border border-white/15 p-6 relative shadow-2xl text-center space-y-5">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto">
+                <span class="material-symbols-outlined text-[32px]">folder_limited</span>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-white">Has superado el límite de proyectos guardados</h3>
+                <p id="project-limit-modal-text" class="text-xs text-zinc-400 mt-2 leading-relaxed">
+                    Tu cuenta gratuita permite tener un máximo de <strong>5 proyectos</strong> guardados simultáneamente. Elimina uno de tus proyectos anteriores para poder seguir usando la suscripción gratuita o suscríbete al Plan Pro para proyectos ilimitados.
+                </p>
+            </div>
+            <div class="pt-3 border-t border-white/10 flex flex-col sm:flex-row gap-2 justify-center">
+                <button type="button" id="close-project-limit-modal-btn" class="px-4 py-2.5 rounded-xl bg-surface-container-high text-xs text-zinc-300 hover:text-white transition-colors">
+                    Entendido, eliminaré uno
+                </button>
+                <button type="button" onclick="window.location.href='index.html#pricing'" class="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs glow-btn transition-all shadow-lg flex items-center justify-center gap-1.5">
+                    <span>Mejorar a Pro</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

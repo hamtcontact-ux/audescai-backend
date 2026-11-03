@@ -429,6 +429,38 @@
                     </div>
                 </div>
 
+                                <!-- BLOQUE CONFIGURACIÓN: LÍMITE DE PROYECTOS USUARIOS FREE -->
+                <div class="glass-panel rounded-2xl p-6 border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-start sm:items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+                            <span class="material-symbols-outlined text-[22px]">folder_limited</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <span>Límite de Proyectos Almacenados (Rol Free)</span>
+                                <span id="badge-max-projects-count" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-accent/20 text-accent border border-accent/40">5 Proyectos</span>
+                            </h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">
+                                Cantidad máxima de proyectos que un usuario gratuito puede tener guardados simultáneamente (Mínimo: 5, Máximo: 10).
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 self-end sm:self-center">
+                        <select id="select-max-free-projects" class="bg-surface-container-high border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white focus:outline-none focus:border-accent">
+                            <option value="5">5 proyectos máximos</option>
+                            <option value="6">6 proyectos máximos</option>
+                            <option value="7">7 proyectos máximos</option>
+                            <option value="8">8 proyectos máximos</option>
+                            <option value="9">9 proyectos máximos</option>
+                            <option value="10">10 proyectos máximos</option>
+                        </select>
+                        <button id="save-max-free-projects-btn" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-surface-container-lowest text-xs font-bold transition-all shadow-md">
+                            <span class="material-symbols-outlined text-[16px]">save</span>
+                            <span>Guardar Límite</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- TABLA DEL POOL DE CLAVES GRATUITAS -->
                 <div class="glass-panel rounded-2xl p-6 border-white/10 space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1568,6 +1600,12 @@
                     if (data.openai_api_name && inputOpenAIName) {
                         inputOpenAIName.value = data.openai_api_name;
                     }
+                                        if (data.max_free_projects) {
+                        const sel = document.getElementById('select-max-free-projects');
+                        const badge = document.getElementById('badge-max-projects-count');
+                        if (sel) sel.value = String(data.max_free_projects);
+                        if (badge) badge.textContent = `${data.max_free_projects} Proyectos`;
+                    }
                     if (data.openai_api_key) {
                         inputOpenAI.value = data.openai_api_key;
                         badgeOpenAI.textContent = 'Configurada ✓';
@@ -1888,6 +1926,30 @@
                 console.warn("Sincronización de pool:", e);
             }
         }
+
+        
+        // Guardar límite de proyectos para usuarios Free
+        const saveMaxProjectsBtn = document.getElementById('save-max-free-projects-btn');
+        const selectMaxProjects = document.getElementById('select-max-free-projects');
+        const badgeMaxProjects = document.getElementById('badge-max-projects-count');
+
+        selectMaxProjects?.addEventListener('change', () => {
+            if (badgeMaxProjects) badgeMaxProjects.textContent = `${selectMaxProjects.value} Proyectos`;
+        });
+
+        saveMaxProjectsBtn?.addEventListener('click', async () => {
+            const val = parseInt(selectMaxProjects.value, 10);
+            try {
+                await db.collection('configuracion').doc('plataforma').set({
+                    max_free_projects: val,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                if (badgeMaxProjects) badgeMaxProjects.textContent = `${val} Proyectos`;
+                showToast(`Límite guardado: ${val} proyectos almacenados para usuarios gratuitos.`, "success");
+            } catch (err) {
+                showToast(`Error al guardar límite: ${err.message}`, "error");
+            }
+        });
 
         // Modal para añadir clave gratuita
         const freeKeyModal = document.getElementById('free-key-modal');
