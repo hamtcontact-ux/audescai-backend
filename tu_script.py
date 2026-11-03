@@ -69,7 +69,7 @@ TARGET_GROSS_MARGIN_PERCENT = float(os.environ.get("TARGET_GROSS_MARGIN_PERCENT"
 API_COST_PER_MILLION_TOKENS = float(os.environ.get("API_COST_PER_MILLION_TOKENS", "2.50"))
 
 # Planes comerciales (fuente única de verdad para backend y UI)
-PLAN_FREE_TOKENS = int(os.environ.get("PLAN_FREE_TOKENS", "50000"))
+PLAN_FREE_TOKENS = int(os.environ.get("PLAN_FREE_TOKENS", "300000"))
 PLAN_PRO_TOKENS = int(os.environ.get("PLAN_PRO_TOKENS", "5436000"))
 PLAN_PRO_MINUTES = int(os.environ.get("PLAN_PRO_MINUTES", "180"))
 PLAN_PRO_PRICE_USD = float(os.environ.get("PLAN_PRO_PRICE_USD", "29"))
