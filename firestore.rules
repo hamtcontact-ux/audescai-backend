@@ -42,10 +42,14 @@ service cloud.firestore {
         request.resource.data.role != "admin" || request.auth.token.email.lower() == "editor.online.latam@gmail.com"
       ) || (
         isOwner(uid) &&
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'tokens_total', 'has_api_key']) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'tokens_total', 'has_api_key', 'minutes_total']) &&
         (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens_used']) ||
           request.resource.data.tokens_used >= resource.data.tokens_used
+        ) &&
+        (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['minutes_used']) ||
+          request.resource.data.minutes_used >= resource.data.minutes_used
         )
       );
 

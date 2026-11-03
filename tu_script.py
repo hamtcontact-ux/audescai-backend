@@ -78,19 +78,20 @@ OPENROUTER_TITLE = os.environ.get("OPENROUTER_TITLE", "CineParaCiegos AudescAI")
 # NUNCA debe enviarse al frontend ni guardarse en el navegador del usuario.
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 
-# Parámetros del Algoritmo de Rentabilidad
+# Parámetros del Algoritmo de Rentabilidad (Calibrado con datos reales empíricos: 1.09 min = 78,803 tokens = $0.02 USD)
 DEFAULT_TEXT_TOKENS_PER_MIN = int(os.environ.get("DEFAULT_TEXT_TOKENS_PER_MIN", "200"))
-DEFAULT_VISION_TOKENS_PER_MIN = int(os.environ.get("DEFAULT_VISION_TOKENS_PER_MIN", "30000"))
+DEFAULT_VISION_TOKENS_PER_MIN = int(os.environ.get("DEFAULT_VISION_TOKENS_PER_MIN", "72000"))
 TARGET_GROSS_MARGIN_PERCENT = float(os.environ.get("TARGET_GROSS_MARGIN_PERCENT", "50.0"))
-API_COST_PER_MILLION_TOKENS = float(os.environ.get("API_COST_PER_MILLION_TOKENS", "2.50"))
+API_COST_PER_MILLION_TOKENS = float(os.environ.get("API_COST_PER_MILLION_TOKENS", "0.25"))
 
 # Planes comerciales (fuente única de verdad para backend y UI)
-PLAN_FREE_TOKENS = int(os.environ.get("PLAN_FREE_TOKENS", "300000"))
-PLAN_PRO_TOKENS = int(os.environ.get("PLAN_PRO_TOKENS", "5436000"))
+PLAN_FREE_MINUTES = float(os.environ.get("PLAN_FREE_MINUTES", "10.0"))
+PLAN_FREE_TOKENS = int(os.environ.get("PLAN_FREE_TOKENS", str(int(10 * 72200))))
 PLAN_PRO_MINUTES = int(os.environ.get("PLAN_PRO_MINUTES", "180"))
+PLAN_PRO_TOKENS = int(os.environ.get("PLAN_PRO_TOKENS", str(int(180 * 72200))))
 PLAN_PRO_PRICE_USD = float(os.environ.get("PLAN_PRO_PRICE_USD", "29"))
-PLAN_CUSTOM_TOKENS = int(os.environ.get("PLAN_CUSTOM_TOKENS", "18120000"))
 PLAN_CUSTOM_MINUTES = int(os.environ.get("PLAN_CUSTOM_MINUTES", "600"))
+PLAN_CUSTOM_TOKENS = int(os.environ.get("PLAN_CUSTOM_TOKENS", str(int(600 * 72200))))
 PLAN_CUSTOM_PRICE_USD = float(os.environ.get("PLAN_CUSTOM_PRICE_USD", "99"))
 PLAN_OVERAGE_PRICE_PER_MIN = float(os.environ.get("PLAN_OVERAGE_PRICE_PER_MIN", "0.19"))
 
@@ -154,6 +155,66 @@ try:
     recargar_claves_desde_redis()
 except Exception:
     pass
+
+# ==============================================================================
+# POOL DE CLAVES GRATUITAS (ROTACIÓN Y AUTO-FAILOVER)
+# ==============================================================================
+def obtener_pool_claves_gratuitas():
+    """Recupera el pool de claves gratuitas desde Redis o inicializa con clave por defecto."""
+    try:
+        raw = redis_client.get("config:free_keys_pool")
+        if raw:
+            keys = json.loads(raw.decode('utf-8'))
+            if isinstance(keys, list) and len(keys) > 0:
+                return keys
+    except Exception as e:
+        print(f"[Free Keys Pool Warning] No se pudo leer pool de Redis: {e}")
+
+    # Fallback si el pool está vacío pero existe OPENROUTER_API_KEY
+    if OPENROUTER_API_KEY:
+        default_key = {
+            "id": "openrouter-default",
+            "name": "OpenRouter Principal (Env)",
+            "api_key": OPENROUTER_API_KEY,
+            "base_url": OPENROUTER_BASE_URL,
+            "model": OPENROUTER_FREE_MODEL,
+            "status": "active",
+            "uses_count": 0,
+            "last_error": None,
+            "created_at": int(time.time())
+        }
+        guardar_pool_claves_gratuitas([default_key])
+        return [default_key]
+    return []
+
+def guardar_pool_claves_gratuitas(pool):
+    """Persiste el pool de claves gratuitas en Redis."""
+    try:
+        redis_client.set("config:free_keys_pool", json.dumps(pool, ensure_ascii=False), ex=86400 * 365)
+    except Exception as e:
+        print(f"[Free Keys Pool Error] No se pudo persistir pool en Redis: {e}")
+
+def crear_cliente_ia_para_clave(key_obj):
+    """Crea una instancia de cliente OpenAI configurada para una clave específica del pool."""
+    raw_key = (key_obj.get("api_key") or "").strip()
+    base_url = (key_obj.get("base_url") or OPENROUTER_BASE_URL).strip()
+    model_name = (key_obj.get("model") or OPENROUTER_FREE_MODEL).strip()
+    
+    headers = {}
+    if "openrouter" in base_url or raw_key.startswith("sk-or-"):
+        headers = {
+            "HTTP-Referer": OPENROUTER_REFERER,
+            "X-Title": OPENROUTER_TITLE
+        }
+    
+    http_client = httpx.Client(trust_env=False, timeout=60.0)
+    client = OpenAI(
+        base_url=base_url,
+        api_key=raw_key,
+        default_headers=headers if headers else None,
+        http_client=http_client
+    )
+    return client, model_name
 
 # Auxiliares de lectura y guardado de status en Redis
 def guardar_fase1_status(proyecto_id, status, error_message=None):
@@ -645,11 +706,11 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
     uid = kwargs.get("uid") or (args[1] if len(args) > 1 else None)
     role = kwargs.get("role") or (args[2] if len(args) > 2 else "free")
     user_tokens_used = kwargs.get("user_tokens_used") or (args[3] if len(args) > 3 else 0)
-    user_tokens_total = kwargs.get("user_tokens_total") or (args[4] if len(args) > 4 else 50000)
+    user_tokens_total = kwargs.get("user_tokens_total") or (args[4] if len(args) > 4 else PLAN_FREE_TOKENS)
     print(f"[Celery] Iniciando Fase 1: proyecto={proyecto_id}, user={user_email}, role={role}")
     guardar_fase1_status(proyecto_id, "processing")
     video_path = os.path.join(TEMP_DIR, f"{proyecto_id}_original.mp4")
-    
+
     try:
         # Descargar video
         descargar_video(video_url, video_path)
@@ -660,16 +721,21 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
         elif role == "admin":
             role = "free"
 
-        # 2. Control de Consumo y Estimación (Free y Pro comparten la misma cuota)
+        # 2. Control de Duración y Minutos Consumidos
         with VideoFileClip(video_path) as v_clip:
             duracion_segundos = v_clip.duration
-        duracion_minutos = duracion_segundos / 60.0
+        duracion_minutos = round(duracion_segundos / 60.0, 2)
         tokens_estimados = int(duracion_minutos * (DEFAULT_VISION_TOKENS_PER_MIN + DEFAULT_TEXT_TOKENS_PER_MIN))
 
-        # Recuperar estado actualizado de tokens si existe en Redis
+        # Recuperar estado actualizado de minutos y tokens desde Redis
         cur_tokens_used = max(0, int(user_tokens_used or 0))
         cur_tokens_total = int(user_tokens_total or 0)
-        redis_loaded = False
+        cur_minutes_used = 0.0
+        cur_minutes_total = 10.0 if role == "free" else (180.0 if role == "premium" else 999999.0)
+        assigned_free_key_name = ""
+        assigned_free_key_id = ""
+        last_used_key_name = "Ninguna"
+
         if uid:
             try:
                 raw_u = redis_client.get(f"user_data:{uid}")
@@ -677,98 +743,59 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                     u_cached = json.loads(raw_u.decode('utf-8'))
                     cur_tokens_used = int(u_cached.get("tokens_used", cur_tokens_used) or 0)
                     cur_tokens_total = int(u_cached.get("tokens_total", cur_tokens_total) or 0)
-                    redis_loaded = True
-
-                    # Renovación automática de cuota cada 30 días.
-                    now_ts = int(time.time())
-                    last_reset = int(u_cached.get("last_reset_at", 0) or 0)
-                    if last_reset and (now_ts - last_reset) >= 30 * 86400:
-                        cur_tokens_used = 0
-                        u_cached["tokens_used"] = 0
-                        u_cached["last_reset_at"] = now_ts
-                        redis_client.set(f"user_data:{uid}", json.dumps(u_cached), ex=86400 * 30)
-                        print(f"[Tokens] Renovación automática de cuota para {user_email}")
+                    cur_minutes_used = float(u_cached.get("minutes_used", 0.0) or 0.0)
+                    cur_minutes_total = float(u_cached.get("minutes_total", cur_minutes_total) or cur_minutes_total)
+                    assigned_free_key_name = (u_cached.get("assigned_free_key_name") or "").strip()
+                    assigned_free_key_id = (u_cached.get("assigned_free_key_id") or "").strip()
+                    last_used_key_name = u_cached.get("last_used_key_name", "Ninguna")
             except Exception as e_red:
                 print(f"[Redis Cache Warning]: {e_red}")
 
-        # Cuota autoritativa: si Redis no tiene datos del usuario, no se confía
-        # en el total enviado por el navegador; se usa el valor del plan.
-        if not redis_loaded or cur_tokens_total <= 0:
-            if role == "admin":
-                cur_tokens_total = 999999999
-            elif role == "premium":
-                cur_tokens_total = PLAN_PRO_TOKENS
-            else:
-                cur_tokens_total = PLAN_FREE_TOKENS
-
-        # Bloqueo de API si se agotó la cuota (Free y Pro)
-        if role in ("free", "premium") and (cur_tokens_used + tokens_estimados) > cur_tokens_total:
+        # Bloqueo estricto por MINUTOS DE VIDEO (El límite no se resetea al borrar proyectos)
+        if role == "free" and (cur_minutes_used + duracion_minutos) > cur_minutes_total:
             err_msg = (
-                f"Límite de tokens mensual agotado. Has consumido {cur_tokens_used:,} de {cur_tokens_total:,} tokens. "
-                f"Este video requiere ~{tokens_estimados:,} tokens. Por favor renueva tu suscripción o adquiere tokens adicionales."
+                f"Límite de minutos de video agotado. Has utilizado {cur_minutes_used:.1f} de {cur_minutes_total:.1f} minutos "
+                f"permitidos en tu cuenta gratuita. Este video dura {duracion_minutos:.1f} min. "
+                f"Para continuar audiodescribiendo más videos, adquiere un plan Pro."
             )
-            print(f"[Bloqueo API] {err_msg}")
+            print(f"[Bloqueo Minutos] {err_msg}")
             guardar_fase1_status(proyecto_id, "quota_exceeded", err_msg)
             return {"status": "quota_exceeded", "message": err_msg}
 
-        # El plan Pro necesita una API key asignada por el administrador.
+        # El plan Pro necesita una API key asignada por el administrador
         if role == "premium" and not api_key:
             err_msg = "Tu plan Pro aún no tiene una API key asignada por el administrador."
             guardar_fase1_status(proyecto_id, "error", err_msg)
             return {"status": "error", "message": err_msg}
 
-        # Recargar claves de Redis dinámicamente para cada tarea en el worker
+        # Recargar claves globales dinámicamente
         recargar_claves_desde_redis()
+        http_client = httpx.Client(trust_env=False, timeout=60.0)
 
-        # 3. Inicialización dinámica del cliente de IA (OpenRouter Free vs OpenAI Premium)
-        http_client = httpx.Client(trust_env=False)
+        # 3. Preparación del Cliente de IA (Pool con Rotación y Failover para Free, Key dedicada para Pro)
+        free_keys_pool = []
+        active_free_keys = []
+        current_free_key_idx = 0
 
         if role == "free":
-            # Usar OpenRouter con modelos gratuitos de forma transparente
-            or_key = OPENROUTER_API_KEY or (api_key if api_key and api_key.startswith("sk-or-") else "")
-            if not or_key and OPENAI_API_KEY:
-                # Si el administrador configuró OPENAI_API_KEY pero aún no OpenRouter, usar OpenAI con gpt-4o-mini
-                print("[OpenRouter Free] Sin OpenRouter configurado. Usando OpenAI con gpt-4o-mini como fallback universal.")
-                openai_client = OpenAI(api_key=OPENAI_API_KEY, http_client=http_client)
-                model_to_use = "gpt-4o-mini"
-            elif or_key:
-                openai_client = OpenAI(
-                    base_url=OPENROUTER_BASE_URL,
-                    api_key=or_key,
-                    default_headers={
-                        "HTTP-Referer": OPENROUTER_REFERER,
-                        "X-Title": OPENROUTER_TITLE
-                    },
-                    http_client=http_client
-                )
-                model_to_use = OPENROUTER_FREE_MODEL
-                print(f"[OpenRouter Free] Usando modelo {model_to_use} con cabeceras requeridas.")
-            else:
-                err_msg = "El servidor no tiene configurada ninguna API key para procesar videos gratuitos. El administrador debe configurarla en el Panel Admin."
-                guardar_fase1_status(proyecto_id, "error", err_msg)
-                return {"status": "error", "message": err_msg}
-        else:
-            # Rol Premium o Superadmin
-            effective_key = api_key or OPENAI_API_KEY
-            if not effective_key:
-                err_msg = "No se encontró una API key válida configurada para procesar el video."
-                guardar_fase1_status(proyecto_id, "error", err_msg)
-                return {"status": "error", "message": err_msg}
+            free_keys_pool = obtener_pool_claves_gratuitas()
+            # Ordenar claves: si el usuario tiene una clave asignada específica, ponerla de primera si está activa
+            active_free_keys = [k for k in free_keys_pool if k.get("status") == "active"]
+            if assigned_free_key_name or assigned_free_key_id:
+                assigned_matches = [
+                    k for k in active_free_keys 
+                    if k.get("name") == assigned_free_key_name or k.get("id") == assigned_free_key_id
+                ]
+                if assigned_matches:
+                    active_free_keys = assigned_matches + [k for k in active_free_keys if k not in assigned_matches]
 
-            if effective_key.startswith("sk-or-"):
-                openai_client = OpenAI(
-                    base_url=OPENROUTER_BASE_URL,
-                    api_key=effective_key,
-                    default_headers={
-                        "HTTP-Referer": OPENROUTER_REFERER,
-                        "X-Title": OPENROUTER_TITLE
-                    },
-                    http_client=http_client
+            if not active_free_keys and not OPENAI_API_KEY:
+                err_msg = (
+                    "Todas las API keys gratuitas del servidor están suspendidas o agotaron su cuota. "
+                    "El administrador debe agregar o reactivar claves en el Panel Admin."
                 )
-                model_to_use = "openai/gpt-4o-mini"
-            else:
-                openai_client = OpenAI(api_key=effective_key, http_client=http_client)
-                model_to_use = "gpt-4o-mini"
+                guardar_fase1_status(proyecto_id, "error", err_msg)
+                return {"status": "error", "message": err_msg}
 
         # 4. Detección de silencios Silero VAD
         huecos = obtener_huecos_silencio(video_path)
@@ -777,25 +804,97 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
         tokens_reales_acumulados = 0
 
         for i, (inicio, fin) in enumerate(huecos):
-            texto, tokens_escena = analizar_con_openai(openai_client, video_path, inicio, fin, i, historial_ad, model_name=model_to_use)
+            texto = ""
+            tokens_escena = 0
+
+            if role == "free":
+                # Intentar procesar la escena usando el pool de claves con failover automático
+                scene_success = False
+                while not scene_success and current_free_key_idx < len(active_free_keys):
+                    curr_key = active_free_keys[current_free_key_idx]
+                    try:
+                        ai_client, model_name = crear_cliente_ia_para_clave(curr_key)
+                        texto, tokens_escena = analizar_con_openai(
+                            ai_client, video_path, inicio, fin, i, historial_ad, model_name=model_name
+                        )
+                        scene_success = True
+                        last_used_key_name = curr_key.get("name", "Clave Gratuita")
+                        curr_key["uses_count"] = curr_key.get("uses_count", 0) + 1
+                    except Exception as e_ia:
+                        err_str = str(e_ia)
+                        print(f"[Failover Warning] Escena {i}: Clave '{curr_key.get('name')}' falló: {err_str}")
+                        # Marcar clave como suspendida con el motivo del fallo
+                        curr_key["status"] = "suspended"
+                        curr_key["last_error"] = f"{err_str[:150]} ({datetime.utcnow().strftime('%Y-%m-%d %H:%M')})"
+                        # Sincronizar en el pool general y guardar en Redis
+                        for pk in free_keys_pool:
+                            if pk.get("id") == curr_key.get("id"):
+                                pk["status"] = "suspended"
+                                pk["last_error"] = curr_key["last_error"]
+                        guardar_pool_claves_gratuitas(free_keys_pool)
+
+                        # Avanzar a la siguiente clave activa
+                        current_free_key_idx += 1
+                        if current_free_key_idx < len(active_free_keys):
+                            print(f"[Failover] Rotando a siguiente clave: '{active_free_keys[current_free_key_idx].get('name')}'")
+                        else:
+                            print("[Failover] Se agotaron las claves activas en el pool.")
+
+                # Si fallaron todas las del pool pero existe OPENAI_API_KEY en servidor, usarla como salvaguarda
+                if not scene_success:
+                    if OPENAI_API_KEY:
+                        print("[Failover Universal] Utilizando OpenAI Server Key como salvamento final.")
+                        fb_client = OpenAI(api_key=OPENAI_API_KEY, http_client=http_client)
+                        texto, tokens_escena = analizar_con_openai(
+                            fb_client, video_path, inicio, fin, i, historial_ad, model_name="gpt-4o-mini"
+                        )
+                        last_used_key_name = "OpenAI Servidor (Salvamento)"
+                        scene_success = True
+                    else:
+                        raise RuntimeError(
+                            "Todas las API keys gratuitas del pool fallaron o agotaron su cuota (Error 429/401). "
+                            "El administrador debe agregar o reactivar claves en el Panel Admin."
+                        )
+            else:
+                # Rol Premium o Superadmin
+                effective_key = api_key or OPENAI_API_KEY
+                if not effective_key:
+                    raise RuntimeError("No se encontró una API key válida configurada para procesar el video.")
+
+                if effective_key.startswith("sk-or-"):
+                    ai_client = OpenAI(
+                        base_url=OPENROUTER_BASE_URL,
+                        api_key=effective_key,
+                        default_headers={"HTTP-Referer": OPENROUTER_REFERER, "X-Title": OPENROUTER_TITLE},
+                        http_client=http_client
+                    )
+                    model_to_use = "openai/gpt-4o-mini"
+                else:
+                    ai_client = OpenAI(api_key=effective_key, http_client=http_client)
+                    model_to_use = "gpt-4o-mini"
+
+                texto, tokens_escena = analizar_con_openai(
+                    ai_client, video_path, inicio, fin, i, historial_ad, model_name=model_to_use
+                )
+                last_used_key_name = "OpenAI Cuenta Pro" if role == "premium" else "OpenAI Superadmin"
+
             tokens_reales_acumulados += tokens_escena
             historial_ad.append(texto)
-            if len(historial_ad) > 6: 
+            if len(historial_ad) > 6:
                 historial_ad.pop(0)
-            
+
             # Pre-generar TTS
             voz_default = "es-ES-AlvaroNeural"
             if texto:
                 ruta_cache = obtener_ruta_cache_tts(texto, voz_default)
                 generar_tts_robusto(texto, voz_default, ruta_cache)
-                
                 try:
                     clip_audio = AudioFileClip(ruta_cache)
                     duracion_audio = clip_audio.duration
                     clip_audio.close()
-                except Exception as e:
+                except Exception:
                     duracion_audio = len(texto) / 15.0
-                
+
                 fin_limite = inicio + duracion_audio + 0.5
                 if fin_limite < fin:
                     fin = float(f"{fin_limite:.2f}")
@@ -809,8 +908,13 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                 "audio_url": None
             })
 
-        # 5. Acumular consumo de tokens para todos los roles (Free y Pro)
+        # 5. Acumular minutos y tokens de video (incluso si luego se borra el proyecto)
         nuevo_tokens_used = cur_tokens_used + tokens_reales_acumulados
+        nuevo_minutes_used = round(cur_minutes_used + duracion_minutos, 2)
+
+        if role == "free" and free_keys_pool:
+            guardar_pool_claves_gratuitas(free_keys_pool)
+
         if uid:
             try:
                 raw_u = redis_client.get(f"user_data:{uid}")
@@ -821,23 +925,31 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                     "role": role,
                     "tokens_used": nuevo_tokens_used,
                     "tokens_total": cur_tokens_total,
+                    "minutes_used": nuevo_minutes_used,
+                    "minutes_total": cur_minutes_total,
+                    "last_used_key_name": last_used_key_name,
                     "last_usage_at": int(time.time())
                 })
                 redis_client.set(f"user_data:{uid}", json.dumps(u_cached), ex=86400 * 30)
-                print(f"[Tokens] Consumo actualizado para {user_email} ({role}): {nuevo_tokens_used:,} tokens (+{tokens_reales_acumulados})")
+                print(f"[Minutos/Tokens] Consumo actualizado para {user_email} ({role}): {nuevo_minutes_used:.2f} min consumidos (+{duracion_minutos:.2f} min), key usada: {last_used_key_name}")
             except Exception as e_tok:
                 print(f"[Redis Warning] {e_tok}")
 
         # Guardar resultado en Redis
         tokens_restantes = max(0, cur_tokens_total - nuevo_tokens_used)
-        tokens_por_minuto = DEFAULT_VISION_TOKENS_PER_MIN + DEFAULT_TEXT_TOKENS_PER_MIN
+        minutos_restantes = max(0.0, round(cur_minutes_total - nuevo_minutes_used, 2))
+
         res_payload = {
             "bloques": bloques_guion,
             "tokens_consumed": tokens_reales_acumulados,
             "tokens_used_total": nuevo_tokens_used,
             "tokens_total": cur_tokens_total,
             "tokens_remaining": tokens_restantes,
-            "minutes_remaining": round(tokens_restantes / float(tokens_por_minuto), 2) if tokens_por_minuto else 0,
+            "minutes_used": nuevo_minutes_used,
+            "minutes_total": cur_minutes_total,
+            "minutes_remaining": minutos_restantes,
+            "duration_minutes": duracion_minutos,
+            "last_used_key_name": last_used_key_name,
             "role": role
         }
         try:
@@ -846,8 +958,14 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
             print(f"[Redis Error]: {e_red}")
 
         guardar_fase1_status(proyecto_id, "idle")
-        print(f"[Celery] Tarea Fase 1 completada con éxito para {proyecto_id} ({len(bloques_guion)} bloques)")
-        return {"status": "success", "bloques_count": len(bloques_guion), "tokens_consumed": tokens_reales_acumulados}
+        print(f"[Celery] Tarea Fase 1 completada con éxito para {proyecto_id} ({len(bloques_guion)} bloques, key: {last_used_key_name})")
+        return {
+            "status": "success",
+            "bloques_count": len(bloques_guion),
+            "tokens_consumed": tokens_reales_acumulados,
+            "minutes_used": nuevo_minutes_used,
+            "last_used_key_name": last_used_key_name
+        }
 
     except Exception as e:
         import traceback
@@ -856,7 +974,6 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
         guardar_fase1_status(proyecto_id, "error", err_msg)
         print(f"[Celery Error] Falló Fase 1 para {proyecto_id}: {err_msg}")
         return {"status": "error", "message": err_msg}
-
 # ==============================================================================
 # ENDPOINTS REST: PANEL ADMINISTRADOR Y CONTROL DE NEGOCIO
 # ==============================================================================
@@ -886,12 +1003,16 @@ def api_admin_calcular():
 @app.route('/api/admin/user/update', methods=['POST'])
 @require_admin
 def api_admin_update_user():
-    """Actualiza rol, tokens y api_key de un usuario con validación estricta de seguridad."""
+    """Actualiza rol, tokens, minutos y api_key de un usuario con validación estricta de seguridad."""
     data = request.json or {}
     uid = data.get("uid")
     target_email = data.get("target_email", "").strip()
     new_role = data.get("role", "free")
     tokens_total = data.get("tokens_total")
+    minutes_total = data.get("minutes_total")
+    minutes_used = data.get("minutes_used")
+    assigned_free_key_name = data.get("assigned_free_key_name", "")
+    assigned_free_key_id = data.get("assigned_free_key_id", "")
     api_key = data.get("api_key", "")
 
     if not uid or not target_email:
@@ -913,6 +1034,10 @@ def api_admin_update_user():
     else:
         effective_total = PLAN_FREE_TOKENS
 
+    effective_min_total = float(minutes_total) if minutes_total is not None else (
+        999999.0 if effective_role == "admin" else (180.0 if effective_role == "premium" else 10.0)
+    )
+
     try:
         raw_u = redis_client.get(f"user_data:{uid}")
         u_data = json.loads(raw_u.decode('utf-8')) if raw_u else {}
@@ -921,8 +1046,12 @@ def api_admin_update_user():
             "email": target_email,
             "role": effective_role,
             "tokens_total": effective_total,
+            "minutes_total": effective_min_total,
+            "assigned_free_key_name": assigned_free_key_name if assigned_free_key_name is not None else u_data.get("assigned_free_key_name", ""),
+            "assigned_free_key_id": assigned_free_key_id if assigned_free_key_id is not None else u_data.get("assigned_free_key_id", ""),
             "api_key": api_key if api_key else u_data.get("api_key", ""),
             "tokens_used": u_data.get("tokens_used", 0),
+            "minutes_used": float(minutes_used) if minutes_used is not None else float(u_data.get("minutes_used", 0.0)),
             "last_reset_at": u_data.get("last_reset_at", int(time.time()))
         })
         redis_client.set(f"user_data:{uid}", json.dumps(u_data), ex=86400 * 30)
@@ -931,13 +1060,13 @@ def api_admin_update_user():
 
     return jsonify({
         "status": "success",
-        "message": f"Usuario {target_email} actualizado con rol {effective_role} y cuota de {effective_total:,} tokens."
+        "message": f"Usuario {target_email} actualizado con rol {effective_role}, cuota de {effective_min_total:.1f} min ({effective_total:,} tokens)."
     }), 200
 
 @app.route('/api/admin/user/reset-tokens', methods=['POST'])
 @require_admin
 def api_admin_reset_tokens():
-    """Reinicia a 0 los tokens consumidos de un usuario para un nuevo ciclo de facturación."""
+    """Reinicia a 0 los tokens y minutos consumidos de un usuario para un nuevo ciclo de facturación."""
     data = request.json or {}
     uid = data.get("uid")
     if not uid:
@@ -948,12 +1077,13 @@ def api_admin_reset_tokens():
         if raw_u:
             u_data = json.loads(raw_u.decode('utf-8'))
             u_data["tokens_used"] = 0
+            u_data["minutes_used"] = 0.0
             u_data["last_reset_at"] = int(time.time())
             redis_client.set(f"user_data:{uid}", json.dumps(u_data), ex=86400 * 30)
     except Exception as e:
         print(f"[Redis Warning] {e}")
 
-    return jsonify({"status": "success", "message": "Contador de consumo reiniciado a 0 exitosamente."}), 200
+    return jsonify({"status": "success", "message": "Contador de minutos y tokens reiniciado a 0 exitosamente."}), 200
 
 def construir_planes_publicos():
     """Devuelve los planes con su equivalencia real en minutos y margen."""
@@ -1003,6 +1133,118 @@ def construir_planes_publicos():
         }
     }
 
+
+
+# ==============================================================================
+# ENDPOINTS REST: POOL DE CLAVES GRATUITAS Y GESTIÓN
+# ==============================================================================
+@app.route('/api/admin/free-keys', methods=['GET'])
+@require_admin
+def api_admin_get_free_keys():
+    pool = obtener_pool_claves_gratuitas()
+    return jsonify({
+        "status": "success",
+        "keys": pool
+    }), 200
+
+@app.route('/api/admin/free-keys', methods=['POST'])
+@require_admin
+def api_admin_post_free_keys():
+    data = request.json or {}
+    action = data.get("action", "add")
+    pool = obtener_pool_claves_gratuitas()
+
+    if action == "sync":
+        new_keys = data.get("keys", [])
+        if isinstance(new_keys, list):
+            pool = new_keys
+            guardar_pool_claves_gratuitas(pool)
+            return jsonify({"status": "success", "message": f"{len(pool)} claves sincronizadas con éxito.", "keys": pool}), 200
+
+    elif action == "add":
+        name = (data.get("name") or "").strip()
+        key = (data.get("api_key") or "").strip()
+        model = (data.get("model") or OPENROUTER_FREE_MODEL).strip()
+        base_url = (data.get("base_url") or OPENROUTER_BASE_URL).strip()
+        if not name or not key:
+            return jsonify({"status": "error", "message": "El nombre identificador y la API key son obligatorios."}), 400
+
+        new_entry = {
+            "id": uuid.uuid4().hex[:8],
+            "name": name,
+            "api_key": key,
+            "model": model,
+            "base_url": base_url,
+            "status": "active",
+            "uses_count": 0,
+            "last_error": None,
+            "created_at": int(time.time())
+        }
+        pool.append(new_entry)
+        guardar_pool_claves_gratuitas(pool)
+        return jsonify({"status": "success", "message": f"Clave '{name}' añadida con éxito.", "key": new_entry, "keys": pool}), 201
+
+    elif action == "toggle_status":
+        key_id = data.get("id")
+        target_status = data.get("status")
+        found = False
+        for k in pool:
+            if k.get("id") == key_id or k.get("name") == key_id:
+                k["status"] = target_status or ("suspended" if k.get("status") == "active" else "active")
+                if k["status"] == "active":
+                    k["last_error"] = None
+                found = True
+                break
+        if found:
+            guardar_pool_claves_gratuitas(pool)
+            return jsonify({"status": "success", "message": "Estado de la clave actualizado.", "keys": pool}), 200
+        return jsonify({"status": "error", "message": "Clave no encontrada."}), 404
+
+    elif action == "delete":
+        key_id = data.get("id")
+        pool = [k for k in pool if k.get("id") != key_id and k.get("name") != key_id]
+        guardar_pool_claves_gratuitas(pool)
+        return jsonify({"status": "success", "message": "Clave eliminada del pool.", "keys": pool}), 200
+
+    elif action == "test":
+        key_val = (data.get("api_key") or "").strip()
+        key_id = data.get("id")
+        base_url = (data.get("base_url") or OPENROUTER_BASE_URL).strip()
+        model = (data.get("model") or OPENROUTER_FREE_MODEL).strip()
+
+        if not key_val and key_id:
+            for k in pool:
+                if k.get("id") == key_id:
+                    key_val = k.get("api_key", "")
+                    base_url = k.get("base_url", base_url)
+                    model = k.get("model", model)
+                    break
+
+        if not key_val:
+            return jsonify({"status": "error", "message": "No se proporcionó API key para probar."}), 400
+
+        headers = {}
+        if "openrouter" in base_url or key_val.startswith("sk-or-"):
+            headers = {"HTTP-Referer": OPENROUTER_REFERER, "X-Title": OPENROUTER_TITLE}
+
+        try:
+            t_client = OpenAI(
+                base_url=base_url,
+                api_key=key_val,
+                default_headers=headers if headers else None,
+                http_client=httpx.Client(trust_env=False, timeout=12.0)
+            )
+            resp = t_client.chat.completions.create(
+                model=model,
+                max_tokens=10,
+                messages=[{"role": "user", "content": "Hola, prueba rapida de conexion."}]
+            )
+            res_text = resp.choices[0].message.content.strip() if resp.choices else "OK"
+            return jsonify({"status": "success", "message": f"Conexión exitosa con el modelo {model}: {res_text[:50]}"}), 200
+        except Exception as te:
+            return jsonify({"status": "error", "message": f"Fallo al conectar con la API ({type(te).__name__}): {str(te)}"}), 400
+
+    return jsonify({"status": "error", "message": f"Acción desconocida: {action}"}), 400
 
 @app.route('/api/admin/keys', methods=['GET', 'POST'])
 @require_admin
@@ -1154,6 +1396,8 @@ def obtener_api_key_servidor(uid, role):
 def api_fase1():
     try:
         data = request.json or {}
+        minutes_used = float(data.get("minutes_used", 0.0))
+        minutes_total = float(data.get("minutes_total", 10.0))
         video_url = data.get("video_url")
         proyecto_id = data.get("proyecto_id")
         uid = data.get("uid")
@@ -1203,8 +1447,25 @@ def api_fase1():
             guardar_fase1_status(proyecto_id, "error", msg)
             return jsonify({"status": "error", "message": msg}), 400
 
-        if role == "free" and not api_key:
-            api_key = "free_user"
+        if role == "free":
+            if not api_key:
+                api_key = "free_user"
+            # Verificar si ya alcanzó su límite de minutos
+            cur_min_u = minutes_used
+            cur_min_t = minutes_total
+            if uid:
+                try:
+                    raw_u = redis_client.get(f"user_data:{uid}")
+                    if raw_u:
+                        u_chk = json.loads(raw_u.decode('utf-8'))
+                        cur_min_u = float(u_chk.get("minutes_used", cur_min_u) or 0.0)
+                        cur_min_t = float(u_chk.get("minutes_total", cur_min_t) or 10.0)
+                except Exception:
+                    pass
+            if cur_min_u >= cur_min_t:
+                msg = f"Has alcanzado tu límite de {cur_min_t:.1f} minutos de video permitidos en la versión gratuita. Actualiza a Pro para audiodescribir más videos."
+                guardar_fase1_status(proyecto_id, "quota_exceeded", msg)
+                return jsonify({"status": "quota_exceeded", "message": msg}), 400
 
         print(f"[Info] Encolando Fase 1: proyecto={proyecto_id}, email={user_email}, role={role}")
         guardar_fase1_status(proyecto_id, "processing")

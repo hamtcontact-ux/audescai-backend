@@ -255,9 +255,9 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                             <div class="bg-surface-container-high/60 border border-white/5 rounded-xl p-3">
                                 <label class="block text-[11px] text-muted-foreground mb-1">Tokens Visión / min</label>
-                                <input id="calc-vision-tokens" type="number" value="30000" step="1000"
+                                <input id="calc-vision-tokens" type="number" value="72000" step="1000"
                                     class="w-full bg-surface-container border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent" />
-                                <span class="text-[9px] text-zinc-500">Rango: 15k a 45k</span>
+                                <span class="text-[9px] text-accent">Test real: ~72k tok/min (3 req/min)</span>
                             </div>
 
                             <div class="bg-surface-container-high/60 border border-white/5 rounded-xl p-3">
@@ -271,10 +271,10 @@
                                 <label class="block text-[11px] text-muted-foreground mb-1">Costo API / 1M Tokens</label>
                                 <div class="relative">
                                     <span class="absolute left-2.5 top-1.5 text-xs text-zinc-500">$</span>
-                                    <input id="calc-cost-million" type="number" value="2.50" step="0.10"
+                                    <input id="calc-cost-million" type="number" value="0.25" step="0.05"
                                         class="w-full bg-surface-container border border-white/10 rounded-lg pl-6 pr-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent" />
                                 </div>
-                                <span class="text-[9px] text-zinc-500">USD por 1 Millón</span>
+                                <span class="text-[9px] text-emerald-400">Costo real: ~$0.018/min video</span>
                             </div>
                         </div>
                     </div>
@@ -321,6 +321,147 @@
                                 <span>Cargar en Usuario</span>
                             </button>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN CONFIGURACIÓN IA Y POOL DE CLAVES GRATUITAS -->
+            <section id="config-section" class="space-y-6">
+                <!-- CABECERA DE SECCIÓN -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-white/10">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent text-[24px]">tune</span>
+                            <span>Configuración de IA y Claves de API</span>
+                        </h2>
+                        <p class="text-xs text-muted-foreground mt-0.5">
+                            Gestión centralizada de la clave maestra de OpenAI y el Pool de Claves Gratuitas con rotación y auto-failover.
+                        </p>
+                    </div>
+                    <span class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider rounded-full bg-primary/20 text-primary border border-primary/30 w-max">
+                        Exclusivo Superadministrador
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- BLOQUE 1: CLAVE OPENAI DEL SERVIDOR / SUPERADMIN -->
+                    <div class="lg:col-span-5 glass-panel rounded-2xl p-6 border-white/10 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-[20px]">key</span>
+                                    <h3 class="text-sm font-bold text-white">OpenAI Master Key</h3>
+                                </div>
+                                <span id="badge-openai-status" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+                                    Sin configurar
+                                </span>
+                            </div>
+                            <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+                                Esta clave se usa para procesar los videos de tu cuenta de <strong>Superadmin</strong> y para los usuarios suscritos al <strong>Plan Pro</strong>. Nunca se expone en el frontend de clientes.
+                            </p>
+
+                            <div class="space-y-2">
+                                <label class="block text-[11px] font-medium text-zinc-300">OpenAI API Key (sk-proj-...)</label>
+                                <div class="relative">
+                                    <input id="input-openai-key" type="password" placeholder="sk-proj-..."
+                                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-primary pr-20" />
+                                    <button type="button" id="toggle-openai-key-btn"
+                                        class="absolute right-2.5 top-2 text-[11px] text-accent hover:underline">
+                                        Ver
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-white/5 flex gap-2">
+                            <button id="save-openai-key-btn"
+                                class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn shadow-lg">
+                                <span class="material-symbols-outlined text-[16px]">save</span>
+                                <span>Guardar Clave OpenAI</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BLOQUE 2: RESUMEN Y REGLAS DEL POOL GRATUITO -->
+                    <div class="lg:col-span-7 glass-panel rounded-2xl p-6 border-accent/20 bg-accent/[0.02] flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center gap-2 text-accent mb-2">
+                                <span class="material-symbols-outlined text-[20px]">autorenew</span>
+                                <h3 class="text-sm font-bold text-white">Reglas del Pool Gratuito (Rol Free)</h3>
+                            </div>
+                            <p class="text-xs text-zinc-300 leading-relaxed space-y-2">
+                                <span>Los usuarios gratuitos disponen de <strong>10 minutos de video</strong> para audiodescripción. El consumo se contabiliza en <strong>minutos reales de video subido</strong> y <em>no se reinicia si el usuario borra proyectos</em>.</span>
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-xs">
+                                <div class="p-3 rounded-xl bg-surface-container-high/60 border border-white/5">
+                                    <p class="font-bold text-accent flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[16px]">security</span> Auto-Suspensión
+                                    </p>
+                                    <p class="text-[11px] text-zinc-400 mt-1">
+                                        Si una clave responde con <strong>429 (Cuota Agotada)</strong> o <strong>401 (Inválida)</strong>, se marca como <span class="text-red-400 font-semibold">Suspendida</span> y el sistema pasa a otra activa.
+                                    </p>
+                                </div>
+                                <div class="p-3 rounded-xl bg-surface-container-high/60 border border-white/5">
+                                    <p class="font-bold text-emerald-400 flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[16px]">alt_route</span> Failover Ininterrumpido
+                                    </p>
+                                    <p class="text-[11px] text-zinc-400 mt-1">
+                                        El video del usuario continúa analizándose con la siguiente clave activa del pool sin abortar ni mostrar fallos.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
+                            <span class="text-[11px] text-zinc-400">Puedes asignar una clave específica a un usuario desde su ventana "Gestionar".</span>
+                            <button id="add-free-key-btn"
+                                class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-surface-container-lowest text-xs font-bold transition-all shadow-md">
+                                <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                                <span>+ Añadir API Key Gratuita</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLA DEL POOL DE CLAVES GRATUITAS -->
+                <div class="glass-panel rounded-2xl p-6 border-white/10 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                                <span class="material-symbols-outlined text-[18px]">view_carousel</span>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Claves Configuradas en el Pool Gratuito</h3>
+                                <p class="text-[11px] text-muted-foreground">Listado de claves disponibles para rotación en el procesamiento gratuito.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="refresh-free-keys-btn" class="p-2 rounded-xl bg-surface-container-high border border-white/10 hover:bg-surface-container-highest text-zinc-300 hover:text-white transition-colors" title="Refrescar pool">
+                                <span class="material-symbols-outlined text-[18px]">sync</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-xl border border-white/5">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-surface-container-high/80 text-zinc-400 uppercase tracking-wider text-[10px] border-b border-white/5">
+                                    <th class="py-3 px-4">Nombre / Identificador</th>
+                                    <th class="py-3 px-4">Proveedor & Modelo</th>
+                                    <th class="py-3 px-4">Clave API</th>
+                                    <th class="py-3 px-4">Estado</th>
+                                    <th class="py-3 px-4">Videos Procesados</th>
+                                    <th class="py-3 px-4 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="free-keys-table-body" class="divide-y divide-white/5">
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-zinc-500">
+                                        Cargando claves del pool...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -441,6 +582,75 @@
         </main>
     </div>
 
+
+    <!-- MODAL PARA AÑADIR / EDITAR API KEY GRATUITA AL POOL -->
+    <div id="free-key-modal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
+        <div class="glass-panel w-full max-w-md rounded-2xl border border-white/15 p-6 relative shadow-2xl space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent">
+                        <span class="material-symbols-outlined text-[20px]">add_moderator</span>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Añadir API Key Gratuita</h3>
+                        <p class="text-xs text-muted-foreground">Pool de rotación para usuarios Free</p>
+                    </div>
+                </div>
+                <button id="close-free-key-modal-btn" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="free-key-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Nombre / Identificador de la Clave</label>
+                    <input id="free-key-name-input" type="text" placeholder="Ej: OpenRouter Cuenta 1, Gemini Free Secundario..." required
+                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent" />
+                    <p class="text-[10px] text-zinc-500 mt-1">Este nombre identificará la clave en la tabla y en la ventana de gestionar usuario.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Preset de Proveedor & Modelo</label>
+                    <select id="free-key-preset-select" class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent">
+                        <option value="openrouter_gemini">OpenRouter — Gemini 2.0 Flash (Free)</option>
+                        <option value="openrouter_llama">OpenRouter — Llama 3.3 70B (Free)</option>
+                        <option value="openrouter_mistral">OpenRouter — Mistral 7B (Free)</option>
+                        <option value="openrouter_qwen">OpenRouter — Qwen 2.5 72B (Free)</option>
+                        <option value="custom">Personalizado (OpenAI compatible)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1">Modelo de IA</label>
+                        <input id="free-key-model-input" type="text" value="google/gemini-2.0-flash-exp:free" required
+                            class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-accent" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1">Base URL</label>
+                        <input id="free-key-base-url-input" type="text" value="https://openrouter.ai/api/v1" required
+                            class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-accent" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Clave de API (Key)</label>
+                    <input id="free-key-api-key-input" type="password" placeholder="sk-or-v1-..." required
+                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-accent" />
+                </div>
+
+                <div class="pt-3 border-t border-white/10 flex justify-end gap-2">
+                    <button type="button" id="cancel-free-key-btn" class="px-4 py-2 rounded-xl bg-surface-container-high text-xs text-zinc-300 hover:text-white">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="save-free-key-submit-btn" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-surface-container-lowest font-bold text-xs">
+                        Guardar Clave en el Pool
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL DE EDICIÓN Y GESTIÓN DE USUARIO -->
     <div id="user-modal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
         <div class="glass-panel w-full max-w-lg rounded-2xl border border-white/15 p-6 relative shadow-2xl space-y-6">
@@ -469,16 +679,36 @@
                         Plan y Nivel de Cuenta (Rol)
                     </label>
                     <select id="modal-role" class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
-                        <option value="free">Free (Modelos Gratuitos OpenRouter)</option>
-                        <option value="premium">Pro (API key asignada + cuota de tokens)</option>
+                        <option value="free">Free (10 min de video · Modelos Gratuitos)</option>
+                        <option value="premium">Pro (180 min de video · OpenAI Key asignada)</option>
                     </select>
                     <p id="admin-role-hint" class="text-[11px] text-zinc-500 mt-1">
                         Nota: Solo <code>editor.online.latam@gmail.com</code> puede ostentar el rol de Superadministrador.
                     </p>
                 </div>
 
-                <!-- API KEY PERSONALIZADA -->
-                <div>
+                <!-- ÚLTIMA API KEY USADA Y ASIGNACIÓN DE CLAVE GRATUITA -->
+                <div id="modal-free-keys-block" class="p-3.5 rounded-xl bg-surface-container-high/60 border border-white/5 space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-white/5">
+                        <span class="text-xs text-zinc-400">Última API Key usada por el usuario:</span>
+                        <span id="modal-last-used-key" class="font-bold text-xs text-accent font-mono">Ninguna todavía</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1">
+                            Asignar API Key Gratuita Específica
+                        </label>
+                        <select id="modal-assigned-free-key" class="w-full bg-surface-container border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent">
+                            <option value="">Automática (Cualquiera activa del Pool)</option>
+                        </select>
+                        <p class="text-[10px] text-zinc-500 mt-1">
+                            Si esta clave llega a fallar durante el procesamiento, el failover rotará automáticamente a otra activa y se registrará como última clave usada.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- API KEY PERSONALIZADA (PLAN PRO) -->
+                <div id="modal-pro-key-block">
                     <div class="flex justify-between items-center mb-1.5">
                         <label class="text-xs font-semibold text-zinc-300">
                             API Key de OpenAI para el plan Pro (privada)
@@ -495,52 +725,65 @@
                     </p>
                 </div>
 
-                <!-- CUOTA DE TOKENS -->
+                <!-- CONTROL DE MINUTOS DE VIDEO CONSUMIDOS -->
                 <div class="p-4 rounded-xl bg-surface-container-high/60 border border-white/5 space-y-3">
                     <div class="flex justify-between items-center">
                         <label class="text-xs font-semibold text-zinc-300">
-                            Límite / Cuota Mensual de Tokens
+                            Minutos de Video Consumidos (Cuota de Video)
                         </label>
-                        <span id="modal-token-percent" class="text-xs font-mono font-bold text-accent">0% Usado</span>
+                        <span id="modal-minute-percent" class="text-xs font-mono font-bold text-accent">0% Usado</span>
                     </div>
 
-                    <div class="flex gap-2">
-                        <input id="modal-tokens-total" type="number" step="10000" min="0"
-                            class="flex-1 bg-surface-container border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-primary" />
-                        <button type="button" id="modal-reset-tokens-btn" class="px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-red-300 border border-red-800/30 text-xs font-medium transition-colors" title="Poner tokens consumidos a 0 para un nuevo ciclo de facturación">
-                            Reiniciar Consumo a 0
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[10px] text-zinc-400 block mb-0.5">Minutos consumidos</span>
+                            <input id="modal-minutes-used" type="number" step="0.1" min="0"
+                                class="w-full bg-surface-container border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-accent" />
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-zinc-400 block mb-0.5">Límite total del plan (min)</span>
+                            <input id="modal-minutes-total" type="number" step="1" min="0"
+                                class="w-full bg-surface-container border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-accent" />
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-[10px] text-zinc-500">El contador se acumula y no se reduce aunque el usuario borre proyectos.</span>
+                        <button type="button" id="modal-reset-minutes-btn" class="px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-red-300 border border-red-800/30 text-[11px] font-medium transition-colors" title="Poner minutos consumidos a 0 para un nuevo ciclo de facturación">
+                            Reiniciar Minutos a 0
                         </button>
                     </div>
 
-                    <!-- PRESETS RÁPIDOS DE TOKENS -->
+                    <!-- PRESETS RÁPIDOS DE MINUTOS -->
                     <div class="flex flex-wrap gap-1.5 pt-1">
-                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="300000">
-                            300K (Free ≈ 10 min)
+                        <button type="button" class="preset-min-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-min="10">
+                            10 min (Free)
                         </button>
-                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="3020000">
-                            3.02M (100 min)
+                        <button type="button" class="preset-min-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-min="30">
+                            30 min
                         </button>
-                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="5436000">
-                            5.44M (180 min · Pro)
+                        <button type="button" class="preset-min-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-min="100">
+                            100 min
                         </button>
-                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="10872000">
-                            10.87M (360 min)
+                        <button type="button" class="preset-min-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-min="180">
+                            180 min (Pro · 3h)
                         </button>
-                        <button type="button" class="preset-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-tokens="18120000">
-                            18.12M (600 min · Empresarial)
+                        <button type="button" class="preset-min-btn px-2.5 py-1 text-[10px] rounded-lg bg-surface-container border border-white/10 hover:border-accent text-zinc-300" data-min="600">
+                            600 min (Empresarial · 10h)
                         </button>
                     </div>
 
-                    <!-- BARRA DE CONSUMO ACTUAL -->
+                    <!-- BARRA DE CONSUMO DE MINUTOS -->
                     <div class="pt-2">
                         <div class="flex justify-between text-[11px] text-zinc-400 mb-1">
-                            <span>Consumo Actual:</span>
-                            <span id="modal-consumption-text" class="font-mono text-zinc-300">0 / 0</span>
+                            <span>Consumo de Video:</span>
+                            <span id="modal-consumption-text" class="font-mono text-zinc-300">0.0 / 10.0 min</span>
                         </div>
                         <div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
                             <div id="modal-progress-bar" class="h-full bg-accent transition-all duration-300" style="width: 0%;"></div>
                         </div>
                     </div>
+                    <input type="hidden" id="modal-tokens-total" value="722000" />
                 </div>
 
                 <div class="pt-3 border-t border-white/10 flex justify-end gap-2">
@@ -732,13 +975,19 @@
 
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    const uRole = data.role || 'free';
                     const user = {
                         uid: doc.id,
                         email: data.email || 'Sin correo',
                         displayName: data.displayName || data.email || 'Usuario',
-                        role: data.role || 'free',
-                        tokens_total: Number(data.tokens_total || (data.role === 'admin' ? 999999999 : (data.role === 'premium' ? 5436000 : 50000))),
+                        role: uRole,
+                        tokens_total: Number(data.tokens_total || (uRole === 'admin' ? 999999999 : (uRole === 'premium' ? 12996000 : 722000))),
                         tokens_used: Number(data.tokens_used || 0),
+                        minutes_used: Number(data.minutes_used !== undefined ? data.minutes_used : (data.tokens_used ? Math.round((data.tokens_used / 72200) * 10) / 10 : 0.0)),
+                        minutes_total: Number(data.minutes_total !== undefined ? data.minutes_total : (uRole === 'admin' ? 999999 : (uRole === 'premium' ? 180.0 : 10.0))),
+                        last_used_key_name: data.last_used_key_name || '',
+                        assigned_free_key_name: data.assigned_free_key_name || '',
+                        assigned_free_key_id: data.assigned_free_key_id || '',
                         has_api_key: data.has_api_key === true || (typeof data.api_key === 'string' && data.api_key.trim().length > 5),
                         createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date()
                     };
@@ -840,7 +1089,9 @@
             }
 
             tbody.innerHTML = filtered.map(u => {
-                const percent = u.tokens_total > 0 ? Math.min(100, Math.round((u.tokens_used / u.tokens_total) * 100)) : 0;
+                const totalMin = Number(u.minutes_total || (u.role === 'admin' ? 999999 : (u.role === 'premium' ? 180 : 10)));
+                const usedMin = Number(u.minutes_used || 0);
+                const percent = totalMin > 0 ? Math.min(100, Math.round((usedMin / totalMin) * 100)) : 0;
                 
                 // Color barra
                 let barColor = "bg-emerald-500";
@@ -857,6 +1108,24 @@
 
                 const hasCustomKey = u.has_api_key === true;
                 const formattedDate = u.createdAt.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                // Indicador de clave para rol Free o Pro
+                let keyIndicator = '';
+                if (u.role === 'free') {
+                    if (u.last_used_key_name) {
+                        keyIndicator = `<span class="inline-flex items-center gap-1 text-[11px] text-accent font-medium"><span class="material-symbols-outlined text-[13px]">vpn_key</span> ${u.last_used_key_name}</span>`;
+                    } else if (u.assigned_free_key_name) {
+                        keyIndicator = `<span class="inline-flex items-center gap-1 text-[11px] text-zinc-300 font-medium"><span class="material-symbols-outlined text-[13px]">tag</span> Asig: ${u.assigned_free_key_name}</span>`;
+                    } else {
+                        keyIndicator = `<span class="text-[11px] text-zinc-500">Auto (Pool)</span>`;
+                    }
+                } else if (u.role === 'premium') {
+                    keyIndicator = hasCustomKey 
+                        ? `<span class="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-mono"><span class="material-symbols-outlined text-[13px]">key</span> Key Pro ✓</span>`
+                        : `<span class="text-[11px] text-amber-400">Sin asignar</span>`;
+                } else {
+                    keyIndicator = `<span class="text-[11px] text-primary font-semibold">OpenAI Servidor</span>`;
+                }
 
                 return `
                     <tr class="hover:bg-white/[0.02] transition-colors">
@@ -877,18 +1146,16 @@
                         <td class="py-3 px-4 min-w-[180px]">
                             <div class="space-y-1">
                                 <div class="flex justify-between text-[10px]">
-                                    <span class="text-zinc-400 font-mono">${u.tokens_used.toLocaleString()} / ${u.tokens_total.toLocaleString()}</span>
-                                    <span class="font-bold text-zinc-300 font-mono">${percent}%</span>
+                                    <span class="text-zinc-300 font-bold font-mono">${u.role === 'admin' ? `${usedMin.toFixed(1)} min procesados` : `${usedMin.toFixed(1)} / ${totalMin.toFixed(1)} min`}</span>
+                                    <span class="font-bold text-zinc-400 font-mono">${u.role === 'admin' ? '∞' : `${percent}%`}</span>
                                 </div>
                                 <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
-                                    <div class="h-full ${barColor}" style="width: ${percent}%;"></div>
+                                    <div class="h-full ${barColor}" style="width: ${u.role === 'admin' ? '100%' : `${percent}%`};"></div>
                                 </div>
                             </div>
                         </td>
                         <td class="py-3 px-4">
-                            ${hasCustomKey 
-                                ? `<span class="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-mono"><span class="material-symbols-outlined text-[14px]">key</span> Configurada</span>`
-                                : `<span class="text-[11px] text-zinc-500">Por defecto</span>`}
+                            ${keyIndicator}
                         </td>
                         <td class="py-3 px-4 text-zinc-400 text-[11px]">
                             ${formattedDate}
@@ -920,11 +1187,16 @@
         const modalUserEmail = document.getElementById('modal-user-email');
         const modalRole = document.getElementById('modal-role');
         const modalApiKey = document.getElementById('modal-api-key');
-        const modalTokensTotal = document.getElementById('modal-tokens-total');
-        const modalTokenPercent = document.getElementById('modal-token-percent');
+        const modalLastUsedKey = document.getElementById('modal-last-used-key');
+        const modalAssignedFreeKey = document.getElementById('modal-assigned-free-key');
+        const modalMinutesUsed = document.getElementById('modal-minutes-used');
+        const modalMinutesTotal = document.getElementById('modal-minutes-total');
+        const modalMinutePercent = document.getElementById('modal-minute-percent');
         const modalConsumptionText = document.getElementById('modal-consumption-text');
         const modalProgressBar = document.getElementById('modal-progress-bar');
         const adminRoleHint = document.getElementById('admin-role-hint');
+        const modalFreeKeysBlock = document.getElementById('modal-free-keys-block');
+        const modalProKeyBlock = document.getElementById('modal-pro-key-block');
 
         window.openUserModal = async function(uid) {
             selectedUser = allUsers.find(u => u.uid === uid);
@@ -933,13 +1205,35 @@
             modalUid.value = selectedUser.uid;
             modalUserEmail.textContent = selectedUser.email;
             modalRole.value = selectedUser.role === 'admin' ? 'premium' : selectedUser.role;
-            modalTokensTotal.value = selectedUser.tokens_total || (selectedUser.role === 'premium' ? 5436000 : 300000);
+            
+            // Minutos
+            const currentMinUsed = Number(selectedUser.minutes_used || 0);
+            const currentMinTotal = Number(selectedUser.minutes_total || (selectedUser.role === 'premium' ? 180.0 : 10.0));
+            modalMinutesUsed.value = currentMinUsed.toFixed(1);
+            modalMinutesTotal.value = currentMinTotal.toFixed(1);
+
+            // Última API key usada
+            if (modalLastUsedKey) {
+                modalLastUsedKey.textContent = selectedUser.last_used_key_name || 'Ninguna todavía';
+            }
+
+            // Repoblar selector de API keys gratuitas disponibles en el pool
+            if (modalAssignedFreeKey) {
+                modalAssignedFreeKey.innerHTML = `<option value="">Automática (Cualquiera activa del Pool)</option>`;
+                freeKeysPool.forEach(k => {
+                    const statusTag = k.status === 'active' ? '[Activa]' : '[Suspendida]';
+                    const isSelected = selectedUser.assigned_free_key_name === k.name ? 'selected' : '';
+                    modalAssignedFreeKey.innerHTML += `<option value="${k.name}" ${isSelected}>${statusTag} ${k.name} (${k.model || 'OpenRouter'})</option>`;
+                });
+            }
+
+            // Alternar visibilidad de bloques según rol
+            toggleRoleModalBlocks();
+
             modalApiKey.value = '';
             modalKeyLoaded = false;
 
-            // La clave vive en una subcolección privada. Si aún existe en el
-            // documento público (datos antiguos), se usa como respaldo y se
-            // migrará automáticamente al guardar.
+            // Leer clave de subcolección privada
             try {
                 const privRef = db.collection('usuarios').doc(selectedUser.uid).collection('privado').doc('credenciales');
                 const [privSnap, userSnap] = await Promise.all([
@@ -971,6 +1265,12 @@
             setTimeout(() => userModal.classList.remove('opacity-0'), 20);
         };
 
+        function toggleRoleModalBlocks() {
+            const isPro = modalRole.value === 'premium';
+            if (modalFreeKeysBlock) modalFreeKeysBlock.style.display = isPro ? 'none' : 'block';
+            if (modalProKeyBlock) modalProKeyBlock.style.display = isPro ? 'block' : 'none';
+        }
+
         function closeUserModal() {
             userModal.classList.add('opacity-0');
             setTimeout(() => userModal.classList.add('hidden'), 200);
@@ -980,14 +1280,14 @@
         document.getElementById('modal-close-btn')?.addEventListener('click', closeUserModal);
         document.getElementById('modal-cancel-btn')?.addEventListener('click', closeUserModal);
 
-        // Al cambiar de plan, ajustar los tokens al valor por defecto del plan
-        // solo si el campo sigue en un valor estándar (no sobrescribe ajustes manuales).
+        // Al cambiar de plan, ajustar minutos por defecto
         modalRole?.addEventListener('change', () => {
-            const current = Number(modalTokensTotal.value) || 0;
-            if (modalRole.value === 'premium' && current <= 300000) {
-                modalTokensTotal.value = 5436000;
-            } else if (modalRole.value === 'free' && current >= 5436000) {
-                modalTokensTotal.value = 300000;
+            toggleRoleModalBlocks();
+            const currentMin = Number(modalMinutesTotal.value) || 0;
+            if (modalRole.value === 'premium' && currentMin <= 10) {
+                modalMinutesTotal.value = "180.0";
+            } else if (modalRole.value === 'free' && currentMin >= 180) {
+                modalMinutesTotal.value = "10.0";
             }
             updateModalProgress();
         });
@@ -1001,51 +1301,66 @@
             }
         });
 
-        // Actualizar barra de consumo en el modal
+        // Actualizar barra de consumo de minutos en el modal
         function updateModalProgress() {
             if (!selectedUser) return;
-            const total = Number(modalTokensTotal.value) || 1;
-            const used = selectedUser.tokens_used || 0;
-            const percent = Math.min(100, Math.round((used / total) * 100));
+            const totalMin = Number(modalMinutesTotal.value) || 10.0;
+            const usedMin = Number(modalMinutesUsed.value) || 0.0;
+            const percent = totalMin > 0 ? Math.min(100, Math.round((usedMin / totalMin) * 100)) : 0;
 
-            modalTokenPercent.textContent = `${percent}% Usado`;
-            modalConsumptionText.textContent = `${used.toLocaleString()} / ${total.toLocaleString()} tokens`;
-            modalProgressBar.style.width = `${percent}%`;
-
-            if (percent >= 90) modalProgressBar.className = "h-full bg-red-500 transition-all duration-300";
-            else if (percent >= 70) modalProgressBar.className = "h-full bg-amber-500 transition-all duration-300";
-            else modalProgressBar.className = "h-full bg-accent transition-all duration-300";
+            if (modalMinutePercent) modalMinutePercent.textContent = `${percent}% Usado`;
+            if (modalConsumptionText) modalConsumptionText.textContent = `${usedMin.toFixed(1)} / ${totalMin.toFixed(1)} min de video`;
+            if (modalProgressBar) {
+                modalProgressBar.style.width = `${percent}%`;
+                if (percent >= 90) modalProgressBar.className = "h-full bg-red-500 transition-all duration-300";
+                else if (percent >= 70) modalProgressBar.className = "h-full bg-amber-500 transition-all duration-300";
+                else modalProgressBar.className = "h-full bg-accent transition-all duration-300";
+            }
         }
 
-        modalTokensTotal?.addEventListener('input', updateModalProgress);
+        modalMinutesTotal?.addEventListener('input', updateModalProgress);
+        modalMinutesUsed?.addEventListener('input', updateModalProgress);
 
-        // Presets rápidos
-        document.querySelectorAll('.preset-btn').forEach(btn => {
+        // Presets rápidos de minutos
+        document.querySelectorAll('.preset-min-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const val = btn.getAttribute('data-tokens');
-                modalTokensTotal.value = val;
+                const val = btn.getAttribute('data-min');
+                modalMinutesTotal.value = Number(val).toFixed(1);
                 updateModalProgress();
             });
         });
 
-        // Botón reiniciar consumo
-        document.getElementById('modal-reset-tokens-btn')?.addEventListener('click', async () => {
+        // Botón reiniciar minutos a 0
+        document.getElementById('modal-reset-minutes-btn')?.addEventListener('click', async () => {
             if (!selectedUser) return;
-            if (!confirm(`¿Deseas reiniciar el contador de tokens consumidos a 0 para ${selectedUser.email}? Esto iniciará un nuevo ciclo de facturación.`)) {
+            if (!confirm(`¿Deseas reiniciar el contador de minutos consumidos a 0 para ${selectedUser.email}? Esto iniciará un nuevo ciclo de uso.`)) {
                 return;
             }
 
             try {
                 await db.collection('usuarios').doc(selectedUser.uid).update({
+                    minutes_used: 0.0,
                     tokens_used: 0,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                selectedUser.minutes_used = 0.0;
                 selectedUser.tokens_used = 0;
+                modalMinutesUsed.value = "0.0";
                 updateModalProgress();
-                showToast("Contador de tokens reiniciado a 0 exitosamente.", "success");
+
+                // Notificar al backend
+                try {
+                    await fetch(`${FLASK_API}/api/admin/user/reset-tokens`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-User-Email': SUPERADMIN_EMAIL },
+                        body: JSON.stringify({ admin_email: SUPERADMIN_EMAIL, uid: selectedUser.uid })
+                    });
+                } catch (_) {}
+
+                showToast("Contador de minutos reiniciado a 0 exitosamente.", "success");
             } catch (err) {
-                console.error("Error reiniciando tokens:", err);
-                showToast("Error al reiniciar tokens: " + err.message, "error");
+                console.error("Error reiniciando minutos:", err);
+                showToast("Error al reiniciar minutos: " + err.message, "error");
             }
         });
 
@@ -1066,7 +1381,10 @@
                 newRole = 'admin';
             }
 
-            const newTokensTotal = Number(modalTokensTotal.value) || (newRole === 'premium' ? 5436000 : 300000);
+            const newMinutesTotal = Number(modalMinutesTotal.value) || (newRole === 'premium' ? 180.0 : 10.0);
+            const newMinutesUsed = Number(modalMinutesUsed.value) || 0.0;
+            const newTokensTotal = Math.round(newMinutesTotal * 72200);
+            const assignedFreeKey = modalAssignedFreeKey ? modalAssignedFreeKey.value : '';
             const newApiKey = modalApiKey.value.trim();
 
             const saveBtn = document.getElementById('modal-save-btn');
@@ -1074,34 +1392,33 @@
             saveBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Guardando...`;
 
             try {
-                // 1. Guardar la API key en la subcolección privada.
-                // El documento público solo guarda un booleano has_api_key.
+                // 1. Guardar la API key en la subcolección privada si es Pro
                 const userRef = db.collection('usuarios').doc(selectedUser.uid);
                 const privRef = userRef.collection('privado').doc('credenciales');
 
-                if (newApiKey) {
+                if (newApiKey && newRole === 'premium') {
                     await privRef.set({
                         api_key: newApiKey,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
                 } else if (modalKeyLoaded || newRole !== 'premium') {
-                    // Solo se borra si la clave existente se cargó correctamente.
-                    // Si la lectura falló, se conserva para no perder la asignación.
                     await privRef.delete();
                 }
 
-                // 2. Actualizar el perfil público y eliminar cualquier clave
-                // antigua que hubiera quedado en el documento público.
+                // 2. Actualizar el perfil público con minutos y clave asignada
                 const preserveKey = !newApiKey && !modalKeyLoaded && newRole === 'premium';
                 await userRef.update({
                     role: newRole,
+                    minutes_total: newMinutesTotal,
+                    minutes_used: newMinutesUsed,
                     tokens_total: newTokensTotal,
+                    assigned_free_key_name: assignedFreeKey,
                     has_api_key: preserveKey ? selectedUser.has_api_key === true : !!newApiKey,
                     api_key: firebase.firestore.FieldValue.delete(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // 3. Notificar al backend de Flask (sincroniza la key en Redis)
+                // 3. Notificar al backend de Flask (sincroniza en Redis)
                 try {
                     await fetch(`${FLASK_API}/api/admin/user/update`, {
                         method: 'POST',
@@ -1114,7 +1431,10 @@
                             uid: selectedUser.uid,
                             target_email: selectedUser.email,
                             role: newRole,
+                            minutes_total: newMinutesTotal,
+                            minutes_used: newMinutesUsed,
                             tokens_total: newTokensTotal,
+                            assigned_free_key_name: assignedFreeKey,
                             api_key: newApiKey
                         })
                     });
@@ -1154,9 +1474,9 @@
 
             function calculate() {
                 const minutes = Number(minInput.value) || 180;
-                const visionPerMin = Number(visionInput.value) || 30000;
+                const visionPerMin = Number(visionInput.value) || 72000;
                 const textPerMin = Number(textInput.value) || 200;
-                const costPerMillion = Number(costInput.value) || 2.50;
+                const costPerMillion = Number(costInput.value) || 0.25;
 
                 minDisplay.textContent = `${minutes} minutos`;
 
@@ -1371,6 +1691,268 @@
                 btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span><span>Guardar OpenRouter Key</span>`;
             }
         });
+
+        // ==============================================================================
+        // GESTIÓN DEL POOL DE CLAVES GRATUITAS (ROTACIÓN, SUSPENSIÓN Y FAILOVER)
+        // ==============================================================================
+        let freeKeysPool = [];
+
+        async function loadFreeKeysPool() {
+            try {
+                // 1. Cargar desde Firestore (/configuracion/claves_gratuitas)
+                const docRef = db.collection('configuracion').doc('claves_gratuitas');
+                const snap = await docRef.get();
+                if (snap.exists && snap.data().keys && Array.isArray(snap.data().keys)) {
+                    freeKeysPool = snap.data().keys;
+                } else {
+                    // Si Firestore está vacío, cargar del backend
+                    try {
+                        const res = await fetch(`${FLASK_API}/api/admin/free-keys?admin_email=${SUPERADMIN_EMAIL}`);
+                        if (res.ok) {
+                            const bData = await res.json();
+                            if (bData.keys && Array.isArray(bData.keys) && bData.keys.length > 0) {
+                                freeKeysPool = bData.keys;
+                                await docRef.set({ keys: freeKeysPool, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                            }
+                        }
+                    } catch (_) {}
+                }
+                renderFreeKeysTable();
+            } catch (err) {
+                console.warn("Error cargando pool de claves gratuitas:", err);
+            }
+        }
+
+        function renderFreeKeysTable() {
+            const tbody = document.getElementById('free-keys-table-body');
+            if (!tbody) return;
+
+            if (freeKeysPool.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-zinc-500">
+                            No hay API keys gratuitas configuradas en el pool. Haz clic en <strong>+ Añadir API Key Gratuita</strong> para agregar la primera.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = freeKeysPool.map(k => {
+                const isActive = k.status === 'active';
+                const statusBadge = isActive
+                    ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1 w-max"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Activa</span>`
+                    : `<div class="space-y-0.5">
+                        <span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-bold flex items-center gap-1 w-max" title="${k.last_error || 'Error'}"><span class="material-symbols-outlined text-[12px]">error</span> Suspendida</span>
+                        <p class="text-[9px] text-red-400/90 font-mono max-w-[180px] truncate" title="${k.last_error || 'Cuota agotada'}">${k.last_error || 'Cuota agotada'}</p>
+                       </div>`;
+
+                const maskedKey = k.api_key && k.api_key.length > 8
+                    ? `${k.api_key.slice(0, 7)}...${k.api_key.slice(-4)}`
+                    : 'sk-...';
+
+                return `
+                    <tr class="hover:bg-white/[0.02] transition-colors">
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-md bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-xs">
+                                    <span class="material-symbols-outlined text-[14px]">key</span>
+                                </div>
+                                <span class="font-bold text-white text-xs">${k.name}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="font-mono text-xs text-zinc-300">${k.model || 'google/gemini-2.0-flash-exp:free'}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="font-mono text-xs text-zinc-400 bg-surface-container px-2 py-0.5 rounded border border-white/5">${maskedKey}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            ${statusBadge}
+                        </td>
+                        <td class="py-3 px-4 font-mono text-xs text-zinc-300">
+                            ${k.uses_count || 0} videos
+                        </td>
+                        <td class="py-3 px-4 text-right space-x-1">
+                            <button onclick="testFreeKey('${k.id}')" class="px-2.5 py-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-zinc-300 hover:text-white border border-white/10 text-[11px] font-medium transition-colors" title="Probar conexión con esta API key">
+                                Probar
+                            </button>
+                            <button onclick="toggleFreeKeyStatus('${k.id}')" class="px-2.5 py-1 rounded-lg ${isActive ? 'bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 border border-amber-800/30' : 'bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/30'} text-[11px] font-medium transition-colors">
+                                ${isActive ? 'Suspender' : 'Reactivar'}
+                            </button>
+                            <button onclick="deleteFreeKey('${k.id}')" class="p-1 rounded-lg bg-red-950/40 hover:bg-red-900/50 text-red-400 border border-red-800/30 text-[11px] transition-colors" title="Eliminar clave del pool">
+                                <span class="material-symbols-outlined text-[14px]">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Probar API Key
+        window.testFreeKey = async function(id) {
+            const keyObj = freeKeysPool.find(k => k.id === id);
+            if (!keyObj) return;
+
+            showToast(`Probando clave "${keyObj.name}"...`, "info");
+            try {
+                const res = await fetch(`${FLASK_API}/api/admin/free-keys`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-User-Email': SUPERADMIN_EMAIL },
+                    body: JSON.stringify({
+                        admin_email: SUPERADMIN_EMAIL,
+                        action: 'test',
+                        id: keyObj.id,
+                        api_key: keyObj.api_key,
+                        base_url: keyObj.base_url,
+                        model: keyObj.model
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    showToast(`✓ Clave "${keyObj.name}" responde correctamente.`, "success");
+                } else {
+                    showToast(`Error probando clave: ${data.message || 'Fallo de autenticación o cuota'}`, "error");
+                }
+            } catch (err) {
+                showToast(`Error de red al probar clave: ${err.message}`, "error");
+            }
+        };
+
+        // Alternar estado activo / suspendido
+        window.toggleFreeKeyStatus = async function(id) {
+            const keyObj = freeKeysPool.find(k => k.id === id);
+            if (!keyObj) return;
+
+            keyObj.status = keyObj.status === 'active' ? 'suspended' : 'active';
+            if (keyObj.status === 'active') keyObj.last_error = null;
+
+            await syncFreeKeysPool();
+            renderFreeKeysTable();
+            showToast(`Clave "${keyObj.name}" marcada como ${keyObj.status === 'active' ? 'Activa' : 'Suspendida'}.`, "success");
+        };
+
+        // Eliminar clave
+        window.deleteFreeKey = async function(id) {
+            const keyObj = freeKeysPool.find(k => k.id === id);
+            if (!keyObj) return;
+            if (!confirm(`¿Eliminar la clave "${keyObj.name}" del pool gratuito?`)) return;
+
+            freeKeysPool = freeKeysPool.filter(k => k.id !== id);
+            await syncFreeKeysPool();
+            renderFreeKeysTable();
+            showToast(`Clave "${keyObj.name}" eliminada del pool.`, "info");
+        };
+
+        // Sincronizar pool en Firestore y Backend
+        async function syncFreeKeysPool() {
+            try {
+                // Guardar en Firestore
+                await db.collection('configuracion').doc('claves_gratuitas').set({
+                    keys: freeKeysPool,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                // Sincronizar en Backend Flask (Redis)
+                await fetch(`${FLASK_API}/api/admin/free-keys`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-User-Email': SUPERADMIN_EMAIL },
+                    body: JSON.stringify({
+                        admin_email: SUPERADMIN_EMAIL,
+                        action: 'sync',
+                        keys: freeKeysPool
+                    })
+                });
+            } catch (e) {
+                console.warn("Sincronización de pool:", e);
+            }
+        }
+
+        // Modal para añadir clave gratuita
+        const freeKeyModal = document.getElementById('free-key-modal');
+        const openFreeKeyModalBtn = document.getElementById('add-free-key-btn');
+        const closeFreeKeyModalBtn = document.getElementById('close-free-key-modal-btn');
+        const cancelFreeKeyBtn = document.getElementById('cancel-free-key-btn');
+        const freeKeyForm = document.getElementById('free-key-form');
+        const freeKeyPresetSelect = document.getElementById('free-key-preset-select');
+        const freeKeyModelInput = document.getElementById('free-key-model-input');
+        const freeKeyBaseUrlInput = document.getElementById('free-key-base-url-input');
+
+        openFreeKeyModalBtn?.addEventListener('click', () => {
+            freeKeyForm.reset();
+            freeKeyModelInput.value = 'google/gemini-2.0-flash-exp:free';
+            freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
+            freeKeyModal.classList.remove('hidden');
+            setTimeout(() => freeKeyModal.classList.remove('opacity-0'), 20);
+        });
+
+        function closeFreeKeyModal() {
+            freeKeyModal.classList.add('opacity-0');
+            setTimeout(() => freeKeyModal.classList.add('hidden'), 200);
+        }
+
+        closeFreeKeyModalBtn?.addEventListener('click', closeFreeKeyModal);
+        cancelFreeKeyBtn?.addEventListener('click', closeFreeKeyModal);
+
+        freeKeyPresetSelect?.addEventListener('change', () => {
+            const val = freeKeyPresetSelect.value;
+            if (val === 'openrouter_gemini') {
+                freeKeyModelInput.value = 'google/gemini-2.0-flash-exp:free';
+                freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
+            } else if (val === 'openrouter_llama') {
+                freeKeyModelInput.value = 'meta-llama/llama-3.3-70b-instruct:free';
+                freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
+            } else if (val === 'openrouter_mistral') {
+                freeKeyModelInput.value = 'mistralai/mistral-7b-instruct:free';
+                freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
+            } else if (val === 'openrouter_qwen') {
+                freeKeyModelInput.value = 'qwen/qwen-2.5-72b-instruct:free';
+                freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
+            } else {
+                freeKeyModelInput.value = 'gpt-4o-mini';
+                freeKeyBaseUrlInput.value = 'https://api.openai.com/v1';
+            }
+        });
+
+        freeKeyForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('free-key-name-input').value.trim();
+            const model = freeKeyModelInput.value.trim();
+            const baseUrl = freeKeyBaseUrlInput.value.trim();
+            const apiKey = document.getElementById('free-key-api-key-input').value.trim();
+
+            if (!name || !apiKey) {
+                alert("Por favor completa el nombre y la API key.");
+                return;
+            }
+
+            const newEntry = {
+                id: 'key_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                name: name,
+                model: model,
+                base_url: baseUrl,
+                api_key: apiKey,
+                status: 'active',
+                uses_count: 0,
+                last_error: null,
+                created_at: Date.now()
+            };
+
+            freeKeysPool.push(newEntry);
+            await syncFreeKeysPool();
+            renderFreeKeysTable();
+            closeFreeKeyModal();
+            showToast(`API Key "${name}" añadida al pool con éxito.`, "success");
+        });
+
+        document.getElementById('refresh-free-keys-btn')?.addEventListener('click', () => {
+            loadFreeKeysPool();
+            showToast("Pool de claves actualizado.", "info");
+        });
+
+        // Cargar pool inicial
+        loadFreeKeysPool();
+
 </script>
 </body>
 </html>
