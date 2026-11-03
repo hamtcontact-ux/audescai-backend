@@ -1048,7 +1048,7 @@
                             email: user.email,
                             displayName: user.displayName || user.email.split('@')[0],
                             role: isSuperAdmin ? "admin" : "free",
-                            tokens_total: isSuperAdmin ? 999999999 : 50000,
+                            tokens_total: isSuperAdmin ? 999999999 : 300000,
                             tokens_used: 0,
                             has_api_key: false,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
