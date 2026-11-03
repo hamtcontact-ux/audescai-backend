@@ -194,11 +194,39 @@ def guardar_pool_claves_gratuitas(pool):
     except Exception as e:
         print(f"[Free Keys Pool Error] No se pudo persistir pool en Redis: {e}")
 
+def resolver_config_clave(api_key, name=""):
+    """Determina automáticamente el modelo y base_url según la clave o el nombre de forma transparente."""
+    raw_key = (api_key or "").strip()
+    name_lower = (name or "").lower()
+
+    if raw_key.startswith("sk-or-"):
+        base_url = OPENROUTER_BASE_URL
+        if "llama" in name_lower:
+            model = "meta-llama/llama-3.3-70b-instruct:free"
+        elif "mistral" in name_lower:
+            model = "mistralai/mistral-7b-instruct:free"
+        elif "qwen" in name_lower:
+            model = "qwen/qwen-2.5-72b-instruct:free"
+        else:
+            model = "google/gemini-2.0-flash-exp:free"
+    elif raw_key.startswith("sk-") and not raw_key.startswith("sk-or-"):
+        base_url = "https://api.openai.com/v1"
+        model = "gpt-4o-mini"
+    elif "gemini" in name_lower or raw_key.startswith("AIza"):
+        base_url = OPENROUTER_BASE_URL
+        model = "google/gemini-2.0-flash-exp:free"
+    else:
+        base_url = OPENROUTER_BASE_URL
+        model = OPENROUTER_FREE_MODEL
+    return base_url, model
+
 def crear_cliente_ia_para_clave(key_obj):
     """Crea una instancia de cliente OpenAI configurada para una clave específica del pool."""
     raw_key = (key_obj.get("api_key") or "").strip()
-    base_url = (key_obj.get("base_url") or OPENROUTER_BASE_URL).strip()
-    model_name = (key_obj.get("model") or OPENROUTER_FREE_MODEL).strip()
+    name = (key_obj.get("name") or "").strip()
+    auto_url, auto_model = resolver_config_clave(raw_key, name)
+    base_url = (key_obj.get("base_url") or auto_url).strip()
+    model_name = (key_obj.get("model") or auto_model).strip()
     
     headers = {}
     if "openrouter" in base_url or raw_key.startswith("sk-or-"):
@@ -1164,10 +1192,12 @@ def api_admin_post_free_keys():
     elif action == "add":
         name = (data.get("name") or "").strip()
         key = (data.get("api_key") or "").strip()
-        model = (data.get("model") or OPENROUTER_FREE_MODEL).strip()
-        base_url = (data.get("base_url") or OPENROUTER_BASE_URL).strip()
         if not name or not key:
-            return jsonify({"status": "error", "message": "El nombre identificador y la API key son obligatorios."}), 400
+            return jsonify({"status": "error", "message": "El nombre y la Clave de API son obligatorios."}), 400
+
+        auto_url, auto_model = resolver_config_clave(key, name)
+        model = (data.get("model") or auto_model).strip()
+        base_url = (data.get("base_url") or auto_url).strip()
 
         new_entry = {
             "id": uuid.uuid4().hex[:8],

@@ -344,31 +344,37 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- BLOQUE 1: CLAVE OPENAI DEL SERVIDOR / SUPERADMIN -->
+                    <!-- BLOQUE 1: API KEY PRO / MASTER -->
                     <div class="lg:col-span-5 glass-panel rounded-2xl p-6 border-white/10 flex flex-col justify-between space-y-4">
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary text-[20px]">key</span>
-                                    <h3 class="text-sm font-bold text-white">OpenAI Master Key</h3>
+                                    <span class="material-symbols-outlined text-primary text-[20px]">workspace_premium</span>
+                                    <h3 class="text-sm font-bold text-white">API Key PRO (Servidor & Pro)</h3>
                                 </div>
                                 <span id="badge-openai-status" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
                                     Sin configurar
                                 </span>
                             </div>
                             <p class="text-xs text-zinc-400 leading-relaxed mb-4">
-                                Esta clave se usa para procesar los videos de tu cuenta de <strong>Superadmin</strong> y para los usuarios suscritos al <strong>Plan Pro</strong>. Nunca se expone en el frontend de clientes.
+                                Esta clave se usa para procesar los videos de tu cuenta de <strong>Superadmin</strong> y para los usuarios del <strong>Plan Pro</strong>.
                             </p>
 
-                            <div class="space-y-2">
-                                <label class="block text-[11px] font-medium text-zinc-300">OpenAI API Key (sk-proj-...)</label>
-                                <div class="relative">
-                                    <input id="input-openai-key" type="password" placeholder="sk-proj-..."
-                                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-primary pr-20" />
-                                    <button type="button" id="toggle-openai-key-btn"
-                                        class="absolute right-2.5 top-2 text-[11px] text-accent hover:underline">
-                                        Ver
-                                    </button>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Nombre</label>
+                                    <input id="input-openai-name" type="text" placeholder="Ej: OpenAI Master Key o Gemini API KEY"
+                                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-primary" />
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label class="text-xs font-semibold text-zinc-300">Clave de API</label>
+                                        <button type="button" id="toggle-openai-key-btn" class="text-[11px] text-accent hover:underline">
+                                            Mostrar / Ocultar
+                                        </button>
+                                    </div>
+                                    <input id="input-openai-key" type="password" placeholder="Inserta aquí la API KEY"
+                                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-primary" />
                                 </div>
                             </div>
                         </div>
@@ -377,7 +383,7 @@
                             <button id="save-openai-key-btn"
                                 class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn shadow-lg">
                                 <span class="material-symbols-outlined text-[16px]">save</span>
-                                <span>Guardar Clave OpenAI</span>
+                                <span>Guardar API Key PRO</span>
                             </button>
                         </div>
                     </div>
@@ -446,9 +452,8 @@
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-surface-container-high/80 text-zinc-400 uppercase tracking-wider text-[10px] border-b border-white/5">
-                                    <th class="py-3 px-4">Nombre / Identificador</th>
-                                    <th class="py-3 px-4">Proveedor & Modelo</th>
-                                    <th class="py-3 px-4">Clave API</th>
+                                    <th class="py-3 px-4">Nombre</th>
+                                    <th class="py-3 px-4">Clave de API</th>
                                     <th class="py-3 px-4">Estado</th>
                                     <th class="py-3 px-4">Videos Procesados</th>
                                     <th class="py-3 px-4 text-right">Acciones</th>
@@ -456,7 +461,7 @@
                             </thead>
                             <tbody id="free-keys-table-body" class="divide-y divide-white/5">
                                 <tr>
-                                    <td colspan="6" class="py-8 text-center text-zinc-500">
+                                    <td colspan="5" class="py-8 text-center text-zinc-500">
                                         Cargando claves del pool...
                                     </td>
                                 </tr>
@@ -603,40 +608,21 @@
 
             <form id="free-key-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Nombre / Identificador de la Clave</label>
-                    <input id="free-key-name-input" type="text" placeholder="Ej: OpenRouter Cuenta 1, Gemini Free Secundario..." required
-                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent" />
-                    <p class="text-[10px] text-zinc-500 mt-1">Este nombre identificará la clave en la tabla y en la ventana de gestionar usuario.</p>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Nombre</label>
+                    <input id="free-key-name-input" type="text" placeholder="Ej: Gemini API KEY" required
+                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent" />
+                    <p class="text-[10px] text-zinc-500 mt-1">Nombre identificador para esta clave (ej: Gemini API KEY, OpenRouter 1, etc.).</p>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Preset de Proveedor & Modelo</label>
-                    <select id="free-key-preset-select" class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent">
-                        <option value="openrouter_gemini">OpenRouter — Gemini 2.0 Flash (Free)</option>
-                        <option value="openrouter_llama">OpenRouter — Llama 3.3 70B (Free)</option>
-                        <option value="openrouter_mistral">OpenRouter — Mistral 7B (Free)</option>
-                        <option value="openrouter_qwen">OpenRouter — Qwen 2.5 72B (Free)</option>
-                        <option value="custom">Personalizado (OpenAI compatible)</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1">Modelo de IA</label>
-                        <input id="free-key-model-input" type="text" value="google/gemini-2.0-flash-exp:free" required
-                            class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-accent" />
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-semibold text-zinc-300">Clave de API</label>
+                        <button type="button" id="toggle-free-key-vis-btn" class="text-[11px] text-accent hover:underline">
+                            Mostrar / Ocultar
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1">Base URL</label>
-                        <input id="free-key-base-url-input" type="text" value="https://openrouter.ai/api/v1" required
-                            class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-accent" />
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Clave de API (Key)</label>
-                    <input id="free-key-api-key-input" type="password" placeholder="sk-or-v1-..." required
-                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-accent" />
+                    <input id="free-key-api-key-input" type="password" placeholder="Inserta aquí la API KEY" required
+                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-accent" />
                 </div>
 
                 <div class="pt-3 border-t border-white/10 flex justify-end gap-2">
@@ -707,22 +693,26 @@
                     </div>
                 </div>
 
-                <!-- API KEY PERSONALIZADA (PLAN PRO) -->
-                <div id="modal-pro-key-block">
-                    <div class="flex justify-between items-center mb-1.5">
-                        <label class="text-xs font-semibold text-zinc-300">
-                            API Key de OpenAI para el plan Pro (privada)
-                        </label>
-                        <button type="button" id="toggle-key-visibility" class="text-[11px] text-accent hover:underline">
-                            Mostrar / Ocultar
-                        </button>
+                <!-- API KEY PRO PERSONALIZADA (PLAN PRO) -->
+                <div id="modal-pro-key-block" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1">Nombre</label>
+                        <input id="modal-api-key-name" type="text" placeholder="Ej: Gemini API KEY, OpenAI Pro..."
+                            class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-primary" />
                     </div>
-                    <input id="modal-api-key" type="password" placeholder="sk-proj-... (solo administrador)"
-                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-primary" />
-                    <p class="text-[10px] text-zinc-500 mt-1">
-                        Se guarda en una subcolección privada (<code>usuarios/{uid}/privado/credenciales</code>)
-                        y solo el Superadmin puede leerla. El usuario nunca ve la clave.
-                    </p>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-semibold text-zinc-300">Clave de API</label>
+                            <button type="button" id="toggle-key-visibility" class="text-[11px] text-accent hover:underline">
+                                Mostrar / Ocultar
+                            </button>
+                        </div>
+                        <input id="modal-api-key" type="password" placeholder="Inserta aquí la API KEY"
+                            class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-primary" />
+                        <p class="text-[10px] text-zinc-500 mt-1">
+                            Se guarda de forma privada para este usuario. Solo tú como Superadmin puedes verla.
+                        </p>
+                    </div>
                 </div>
 
                 <!-- CONTROL DE MINUTOS DE VIDEO CONSUMIDOS -->
@@ -1080,7 +1070,7 @@
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-zinc-500">
+                        <td colspan="5" class="py-8 text-center text-zinc-500">
                             No se encontraron usuarios que coincidan con la búsqueda.
                         </td>
                     </tr>
@@ -1242,6 +1232,9 @@
                 ]);
                 const privateKey = privSnap.exists ? (privSnap.data().api_key || '') : '';
                 const legacyKey = userSnap.exists ? (userSnap.data().api_key || '') : '';
+                const privateKeyName = privSnap.exists ? (privSnap.data().api_name || '') : '';
+                const modalApiKeyName = document.getElementById('modal-api-key-name');
+                if (modalApiKeyName) modalApiKeyName.value = privateKeyName;
                 modalApiKey.value = privateKey || legacyKey;
                 modalKeyLoaded = true;
             } catch (e) {
@@ -1396,8 +1389,12 @@
                 const userRef = db.collection('usuarios').doc(selectedUser.uid);
                 const privRef = userRef.collection('privado').doc('credenciales');
 
+                const modalApiKeyName = document.getElementById('modal-api-key-name');
+                const newApiKeyName = modalApiKeyName ? modalApiKeyName.value.trim() : '';
+
                 if (newApiKey && newRole === 'premium') {
                     await privRef.set({
+                        api_name: newApiKeyName || 'Clave Pro',
                         api_key: newApiKey,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
@@ -1553,6 +1550,9 @@
                 const snap = await configRef.get();
                 if (snap.exists) {
                     const data = snap.data();
+                    if (data.openai_api_name && inputOpenAIName) {
+                        inputOpenAIName.value = data.openai_api_name;
+                    }
                     if (data.openai_api_key) {
                         inputOpenAI.value = data.openai_api_key;
                         badgeOpenAI.textContent = 'Configurada ✓';
@@ -1591,11 +1591,14 @@
             }
         }
 
-        // Guardar OpenAI Key
+        // Guardar API Key PRO
+        const inputOpenAIName = document.getElementById('input-openai-name');
+
         document.getElementById('save-openai-key-btn')?.addEventListener('click', async () => {
+            const name = inputOpenAIName ? inputOpenAIName.value.trim() : 'API Key PRO';
             const key = inputOpenAI.value.trim();
             if (!key) {
-                alert("Por favor ingresa una clave válida de OpenAI.");
+                alert("Por favor inserta la Clave de API.");
                 return;
             }
 
@@ -1606,9 +1609,11 @@
             try {
                 // Guardar en localStorage del navegador
                 localStorage.setItem('openai_api_key', key);
+                localStorage.setItem('openai_api_name', name);
 
                 // 1. Guardar en Firestore
                 await db.collection('configuracion').doc('plataforma').set({
+                    openai_api_name: name,
                     openai_api_key: key,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
@@ -1624,6 +1629,7 @@
                         },
                         body: JSON.stringify({
                             admin_email: SUPERADMIN_EMAIL,
+                            openai_api_name: name,
                             openai_api_key: key
                         })
                     });
@@ -1633,7 +1639,7 @@
 
                 badgeOpenAI.textContent = 'Configurada ✓';
                 badgeOpenAI.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-accent/20 text-accent border border-accent/40';
-                showToast("Clave de OpenAI guardada y sincronizada con éxito.", "success");
+                showToast(`API Key "${name}" guardada y sincronizada con éxito.`, "success");
             } catch (err) {
                 console.error("Error guardando clave OpenAI:", err);
                 showToast("Error al guardar clave: " + err.message, "error");
@@ -1730,7 +1736,7 @@
             if (freeKeysPool.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-zinc-500">
+                        <td colspan="5" class="py-8 text-center text-zinc-500">
                             No hay API keys gratuitas configuradas en el pool. Haz clic en <strong>+ Añadir API Key Gratuita</strong> para agregar la primera.
                         </td>
                     </tr>
@@ -1762,10 +1768,7 @@
                             </div>
                         </td>
                         <td class="py-3 px-4">
-                            <span class="font-mono text-xs text-zinc-300">${k.model || 'google/gemini-2.0-flash-exp:free'}</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="font-mono text-xs text-zinc-400 bg-surface-container px-2 py-0.5 rounded border border-white/5">${maskedKey}</span>
+                            <span class="font-mono text-xs text-zinc-300 bg-surface-container px-2 py-0.5 rounded border border-white/5">${maskedKey}</span>
                         </td>
                         <td class="py-3 px-4">
                             ${statusBadge}
@@ -1880,8 +1883,6 @@
 
         openFreeKeyModalBtn?.addEventListener('click', () => {
             freeKeyForm.reset();
-            freeKeyModelInput.value = 'google/gemini-2.0-flash-exp:free';
-            freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
             freeKeyModal.classList.remove('hidden');
             setTimeout(() => freeKeyModal.classList.remove('opacity-0'), 20);
         });
@@ -1914,16 +1915,39 @@
             }
         });
 
+        // Toggle visibilidad en modal de clave gratuita
+        document.getElementById('toggle-free-key-vis-btn')?.addEventListener('click', () => {
+            const inp = document.getElementById('free-key-api-key-input');
+            if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+        });
+
         freeKeyForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('free-key-name-input').value.trim();
-            const model = freeKeyModelInput.value.trim();
-            const baseUrl = freeKeyBaseUrlInput.value.trim();
             const apiKey = document.getElementById('free-key-api-key-input').value.trim();
 
             if (!name || !apiKey) {
-                alert("Por favor completa el nombre y la API key.");
+                alert("Por favor completa el nombre y la Clave de API.");
                 return;
+            }
+
+            // Detección automática transparente
+            let baseUrl = 'https://openrouter.ai/api/v1';
+            let model = 'google/gemini-2.0-flash-exp:free';
+            const nameLower = name.toLowerCase();
+
+            if (apiKey.startsWith('sk-or-')) {
+                baseUrl = 'https://openrouter.ai/api/v1';
+                if (nameLower.includes('llama')) model = 'meta-llama/llama-3.3-70b-instruct:free';
+                else if (nameLower.includes('mistral')) model = 'mistralai/mistral-7b-instruct:free';
+                else if (nameLower.includes('qwen')) model = 'qwen/qwen-2.5-72b-instruct:free';
+                else model = 'google/gemini-2.0-flash-exp:free';
+            } else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) {
+                baseUrl = 'https://api.openai.com/v1';
+                model = 'gpt-4o-mini';
+            } else {
+                baseUrl = 'https://openrouter.ai/api/v1';
+                model = 'google/gemini-2.0-flash-exp:free';
             }
 
             const newEntry = {
@@ -1942,7 +1966,7 @@
             await syncFreeKeysPool();
             renderFreeKeysTable();
             closeFreeKeyModal();
-            showToast(`API Key "${name}" añadida al pool con éxito.`, "success");
+            showToast(`Clave "${name}" guardada con éxito en el pool.`, "success");
         });
 
         document.getElementById('refresh-free-keys-btn')?.addEventListener('click', () => {
