@@ -195,12 +195,13 @@ def guardar_pool_claves_gratuitas(pool):
         print(f"[Free Keys Pool Error] No se pudo persistir pool en Redis: {e}")
 
 def resolver_config_clave(api_key, name=""):
-    """Determina automáticamente el modelo y base_url según la clave o el nombre de forma transparente."""
+    """Determina automáticamente el proveedor, modelo y base_url según la clave o el nombre de forma 100% transparente."""
     raw_key = (api_key or "").strip()
     name_lower = (name or "").lower()
 
+    # 1. OpenRouter (empieza con sk-or-)
     if raw_key.startswith("sk-or-"):
-        base_url = OPENROUTER_BASE_URL
+        base_url = "https://openrouter.ai/api/v1"
         if "llama" in name_lower:
             model = "meta-llama/llama-3.3-70b-instruct:free"
         elif "mistral" in name_lower:
@@ -209,15 +210,32 @@ def resolver_config_clave(api_key, name=""):
             model = "qwen/qwen-2.5-72b-instruct:free"
         else:
             model = "google/gemini-2.0-flash-exp:free"
-    elif raw_key.startswith("sk-") and not raw_key.startswith("sk-or-"):
+
+    # 2. Google AI Studio directa oficial (Gemini Free: clave que empieza con AIza... o nombre gemini sin ser sk-)
+    elif raw_key.startswith("AIza") or ("gemini" in name_lower and not raw_key.startswith("sk-")):
+        base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+        model = "gemini-1.5-flash"
+
+    # 3. Groq (empieza con gsk_... o nombre contiene groq)
+    elif raw_key.startswith("gsk_") or "groq" in name_lower:
+        base_url = "https://api.groq.com/openai/v1"
+        model = "llama-3.3-70b-versatile"
+
+    # 4. DeepSeek
+    elif "deepseek" in name_lower:
+        base_url = "https://api.deepseek.com"
+        model = "deepseek-chat"
+
+    # 5. OpenAI directa (empieza con sk-...)
+    elif raw_key.startswith("sk-"):
         base_url = "https://api.openai.com/v1"
         model = "gpt-4o-mini"
-    elif "gemini" in name_lower or raw_key.startswith("AIza"):
-        base_url = OPENROUTER_BASE_URL
-        model = "google/gemini-2.0-flash-exp:free"
+
+    # 6. Fallback seguro por defecto (OpenRouter con Gemini Flash Free)
     else:
         base_url = OPENROUTER_BASE_URL
         model = OPENROUTER_FREE_MODEL
+
     return base_url, model
 
 def crear_cliente_ia_para_clave(key_obj):

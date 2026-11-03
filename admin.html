@@ -1931,7 +1931,7 @@
                 return;
             }
 
-            // Detección automática transparente
+            // Detección automática transparente de proveedor y modelo
             let baseUrl = 'https://openrouter.ai/api/v1';
             let model = 'google/gemini-2.0-flash-exp:free';
             const nameLower = name.toLowerCase();
@@ -1942,7 +1942,16 @@
                 else if (nameLower.includes('mistral')) model = 'mistralai/mistral-7b-instruct:free';
                 else if (nameLower.includes('qwen')) model = 'qwen/qwen-2.5-72b-instruct:free';
                 else model = 'google/gemini-2.0-flash-exp:free';
-            } else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) {
+            } else if (apiKey.startsWith('AIza') || (nameLower.includes('gemini') && !apiKey.startsWith('sk-'))) {
+                baseUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/';
+                model = 'gemini-1.5-flash';
+            } else if (apiKey.startsWith('gsk_') || nameLower.includes('groq')) {
+                baseUrl = 'https://api.groq.com/openai/v1';
+                model = 'llama-3.3-70b-versatile';
+            } else if (nameLower.includes('deepseek')) {
+                baseUrl = 'https://api.deepseek.com';
+                model = 'deepseek-chat';
+            } else if (apiKey.startsWith('sk-')) {
                 baseUrl = 'https://api.openai.com/v1';
                 model = 'gpt-4o-mini';
             } else {
