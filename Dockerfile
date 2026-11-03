@@ -8,10 +8,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# 1. Instalar PyTorch y TorchAudio versión CPU pura (ahorra más de 5GB de CUDA/NVIDIA que saturaban el disco del VPS)
-RUN pip install --no-cache-dir torch==2.2.1 torchaudio==2.2.1 --index-url https://download.pytorch.org/whl/cpu
+# 1. Actualizar pip para compatibilidad total con PEP 625 y paquetes modernos
+RUN pip install --no-cache-dir --upgrade pip
 
-# 2. Copiar e instalar el resto de dependencias
+# 2. Instalar PyTorch y TorchAudio versión CPU pura (ahorra más de 5GB de CUDA/NVIDIA que saturaban el disco)
+RUN pip install --no-cache-dir torch==2.2.1+cpu torchaudio==2.2.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+
+# 3. Copiar e instalar el resto de dependencias
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
