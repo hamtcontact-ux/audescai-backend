@@ -11,6 +11,7 @@
     "ignore": [
       "firebase.json",
       "**/.*",
+      "**/*.py",
       "**/node_modules/**",
       "Dockerfile",
       "docker-compose.yml",
@@ -20,6 +21,7 @@
       "RESULTADOS_AD",
       "TEMP_PROCESAMIENTO",
       "handoff.md",
+      "PLANES_Y_RENTABILIDAD.md",
       "key.txt",
       "storage.rules",
       "firestore.rules",

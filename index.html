@@ -660,13 +660,13 @@
                         </div>
                     </div>
 
-                    <!-- Plan Custom -->
+                    <!-- Plan Empresarial -->
                     <div class="bento-card rounded-3xl overflow-hidden flex flex-col h-full transition-all duration-500">
                         <div class="p-8 flex-1 flex flex-col">
                             <div class="mb-8">
                                 <div class="flex items-center justify-between gap-2 mb-2">
-                                    <h3 class="font-display text-xl font-bold text-foreground">Custom</h3>
-                                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">Empresas</span>
+                                    <h3 class="font-display text-xl font-bold text-foreground">Empresarial</h3>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">A medida</span>
                                 </div>
                                 <div class="flex items-end gap-1 mb-4">
                                     <span class="font-display font-black text-3xl leading-none text-foreground">Desde $99</span>
@@ -1001,9 +1001,9 @@
                     e.preventDefault();
                     const plan = btn.getAttribute('data-plan') || 'pro';
 
-                    // Custom: contacto directo con ventas.
+                    // Empresarial: contacto directo con ventas.
                     if (plan === 'custom') {
-                        window.location.href = 'mailto:editor.online.latam@gmail.com?subject=Plan%20Custom%20AudescAI&body=Hola%2C%20quiero%20cotizar%20el%20plan%20Custom%20para%20mi%20organizaci%C3%B3n.';
+                        window.location.href = 'mailto:editor.online.latam@gmail.com?subject=Plan%20Empresarial%20AudescAI&body=Hola%2C%20quiero%20cotizar%20el%20plan%20Empresarial%20para%20mi%20organizaci%C3%B3n.';
                         return;
                     }
 

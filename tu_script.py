@@ -800,7 +800,7 @@ def construir_planes_publicos():
             "minutos_extra_precio_usd": PLAN_OVERAGE_PRICE_PER_MIN
         },
         "custom": {
-            "nombre": "Custom",
+            "nombre": "Empresarial",
             "precio_desde_usd": PLAN_CUSTOM_PRICE_USD,
             "tokens": PLAN_CUSTOM_TOKENS,
             "minutos": PLAN_CUSTOM_MINUTES,

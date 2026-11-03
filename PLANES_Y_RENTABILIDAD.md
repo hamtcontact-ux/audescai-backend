@@ -93,7 +93,7 @@ El administrador también puede reiniciar el consumo manualmente desde el panel.
 al menos 50% de margen, el precio mínimo es $27.18. $29 deja un pequeño colchón
 y un margen de 53.1%, por encima del objetivo.
 
-### Custom — desde $99/mes
+### Empresarial — desde $99/mes
 
 - 18,120,000 tokens/mes.
 - Equivalencia: **600 min de video (10 horas)**.
