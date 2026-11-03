@@ -68,9 +68,9 @@ ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "editor.online.latam@gmail.com").str
 
 # Configuración OpenRouter (Modelos Gratuitos para rol 'free')
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "").strip()
-OPENROUTER_BASE_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").strip()
-OPENROUTER_FREE_MODEL = os.environ.get("OPENROUTER_FREE_MODEL", "google/gemini-2.0-flash-exp:free").strip()
-OPENROUTER_FALLBACK_MODEL = os.environ.get("OPENROUTER_FALLBACK_MODEL", "meta-llama/llama-3.3-70b-instruct:free").strip()
+OPENROUTER_BASE_URL = os.environ.get("OPENROUTER_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/").strip()
+OPENROUTER_FREE_MODEL = os.environ.get("OPENROUTER_FREE_MODEL", "gemini-3.5-flash-lite").strip()
+OPENROUTER_FALLBACK_MODEL = os.environ.get("OPENROUTER_FALLBACK_MODEL", "gemini-3.5-flash-lite").strip()
 OPENROUTER_REFERER = os.environ.get("OPENROUTER_REFERER", "https://cineparaciegos.com").strip()
 OPENROUTER_TITLE = os.environ.get("OPENROUTER_TITLE", "CineParaCiegos AudescAI").strip()
 
@@ -173,8 +173,8 @@ def obtener_pool_claves_gratuitas():
     # Fallback si el pool está vacío pero existe OPENROUTER_API_KEY
     if OPENROUTER_API_KEY:
         default_key = {
-            "id": "openrouter-default",
-            "name": "OpenRouter Principal (Env)",
+            "id": "gemini-default",
+            "name": "Google AI Studio Principal (Env)",
             "api_key": OPENROUTER_API_KEY,
             "base_url": OPENROUTER_BASE_URL,
             "model": OPENROUTER_FREE_MODEL,
@@ -194,65 +194,47 @@ def guardar_pool_claves_gratuitas(pool):
     except Exception as e:
         print(f"[Free Keys Pool Error] No se pudo persistir pool en Redis: {e}")
 
-def resolver_config_clave(api_key, name=""):
-    """Determina automáticamente el proveedor, modelo y base_url según la clave o el nombre de forma 100% transparente."""
+def resolver_config_clave(api_key, name="", model=None, base_url=None):
+    """
+    Resuelve la configuración de conexión IA respetando explícitamente el modelo y base_url configurados.
+    Elimina deducciones automáticas por prefijo para modelos obsoletos.
+    """
     raw_key = (api_key or "").strip()
-    name_lower = (name or "").lower()
+    explicit_model = (model or "").strip()
+    explicit_url = (base_url or "").strip()
 
-    # 1. OpenRouter (empieza con sk-or-)
-    if raw_key.startswith("sk-or-"):
-        base_url = "https://openrouter.ai/api/v1"
-        if "llama" in name_lower:
-            model = "meta-llama/llama-3.3-70b-instruct:free"
-        elif "mistral" in name_lower:
-            model = "mistralai/mistral-7b-instruct:free"
-        elif "qwen" in name_lower:
-            model = "qwen/qwen-2.5-72b-instruct:free"
-        else:
-            model = "google/gemini-2.0-flash-exp:free"
+    # Si se especificó explícitamente modelo gemini-3.5-flash-lite (o variante gemini), fijar estrictamente su endpoint
+    if explicit_model == "gemini-3.5-flash-lite" or "gemini" in explicit_model.lower():
+        return "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-3.5-flash-lite"
 
-    # 2. Google AI Studio directa oficial (Gemini Free: clave que empieza con AIza... o nombre gemini sin ser sk-)
-    elif raw_key.startswith("AIza") or ("gemini" in name_lower and not raw_key.startswith("sk-")):
-        base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
-        model = "gemini-1.5-flash"
+    # Si viene con modelo y base_url específicos y no es gemini, respetarlos directamente
+    if explicit_model and explicit_url:
+        return explicit_url, explicit_model
 
-    # 3. Groq (empieza con gsk_... o nombre contiene groq)
-    elif raw_key.startswith("gsk_") or "groq" in name_lower:
-        base_url = "https://api.groq.com/openai/v1"
-        model = "llama-3.3-70b-versatile"
+    # Conserva únicamente la detección de OpenAI directa (sk-... que no sea sk-or-) para Premium / Superadmin
+    if raw_key.startswith("sk-") and not raw_key.startswith("sk-or-"):
+        return "https://api.openai.com/v1", "gpt-4o-mini"
 
-    # 4. DeepSeek
-    elif "deepseek" in name_lower:
-        base_url = "https://api.deepseek.com"
-        model = "deepseek-chat"
+    # Fallback estricto por defecto: Google AI Studio gemini-3.5-flash-lite
+    return OPENROUTER_BASE_URL, OPENROUTER_FREE_MODEL
 
-    # 5. OpenAI directa (empieza con sk-...)
-    elif raw_key.startswith("sk-"):
-        base_url = "https://api.openai.com/v1"
-        model = "gpt-4o-mini"
-
-    # 6. Fallback seguro por defecto (OpenRouter con Gemini Flash Free)
-    else:
-        base_url = OPENROUTER_BASE_URL
-        model = OPENROUTER_FREE_MODEL
-
-    return base_url, model
 
 def crear_cliente_ia_para_clave(key_obj):
     """Crea una instancia de cliente OpenAI configurada para una clave específica del pool."""
     raw_key = (key_obj.get("api_key") or "").strip()
     name = (key_obj.get("name") or "").strip()
-    auto_url, auto_model = resolver_config_clave(raw_key, name)
-    base_url = (key_obj.get("base_url") or auto_url).strip()
-    model_name = (key_obj.get("model") or auto_model).strip()
-    
+    k_model = (key_obj.get("model") or "").strip()
+    k_url = (key_obj.get("base_url") or "").strip()
+
+    base_url, model_name = resolver_config_clave(raw_key, name, model=k_model, base_url=k_url)
+
     headers = {}
     if "openrouter" in base_url or raw_key.startswith("sk-or-"):
         headers = {
             "HTTP-Referer": OPENROUTER_REFERER,
             "X-Title": OPENROUTER_TITLE
         }
-    
+
     http_client = httpx.Client(trust_env=False, timeout=60.0)
     client = OpenAI(
         base_url=base_url,
@@ -605,12 +587,17 @@ Genera UNA SOLA oracion corta (max {palabras} palabras) sobre la imagen. Aplica 
             break
         except Exception as e:
             error_str = str(e).lower()
-            if 'rate_limit' in error_str or '429' in error_str or 'too many requests' in error_str:
+            transient_signals = ['rate_limit', '429', '503', 'unavailable', 'high demand', 'too many requests', 'resource_exhausted', 'overloaded']
+            if any(sig in error_str for sig in transient_signals):
                 if attempt < max_retries - 1:
                     delay = base_delay * (2 ** attempt)
-                    print(f"   [Wait] Rate limit alcanzado. Reintentando en {delay} seg... (Intento {attempt + 1}/{max_retries})")
+                    print(f"   [Wait] Error temporal ({error_str[:60]}). Backoff {delay:.1f} seg... (Intento {attempt + 1}/{max_retries})")
                     time.sleep(delay)
                     continue
+                else:
+                    print(f"   [Failover Trigger] Error 429/503 persistente tras {max_retries} intentos en clave de {model_name}.")
+                    raise RuntimeError(f"API RateLimit/Quota agotada (429/503 persistente en {model_name}): {e}")
+
             print(f"   [Error] Error IA ({model_name}): {e}")
             if any(k in error_str for k in ["authentication", "invalid_api_key", "401", "incorrect api key"]):
                 raise RuntimeError(f"Clave de API inválida o no autorizada para {model_name} (401). Ingresa tu clave real en el Panel Admin.")
@@ -1203,6 +1190,11 @@ def api_admin_post_free_keys():
     if action == "sync":
         new_keys = data.get("keys", [])
         if isinstance(new_keys, list):
+            for k in new_keys:
+                k_mod = (k.get("model") or "").strip()
+                if not k_mod or k_mod == "gemini-3.5-flash-lite" or "gemini" in k_mod.lower():
+                    k["model"] = "gemini-3.5-flash-lite"
+                    k["base_url"] = "https://generativelanguage.googleapis.com/v1beta/openai/"
             pool = new_keys
             guardar_pool_claves_gratuitas(pool)
             return jsonify({"status": "success", "message": f"{len(pool)} claves sincronizadas con éxito.", "keys": pool}), 200
@@ -1210,12 +1202,16 @@ def api_admin_post_free_keys():
     elif action == "add":
         name = (data.get("name") or "").strip()
         key = (data.get("api_key") or "").strip()
+        model = (data.get("model") or "gemini-3.5-flash-lite").strip()
+        base_url = (data.get("base_url") or "https://generativelanguage.googleapis.com/v1beta/openai/").strip()
+
         if not name or not key:
             return jsonify({"status": "error", "message": "El nombre y la Clave de API son obligatorios."}), 400
 
-        auto_url, auto_model = resolver_config_clave(key, name)
-        model = (data.get("model") or auto_model).strip()
-        base_url = (data.get("base_url") or auto_url).strip()
+        # Para cualquier clave registrada con modelo gemini-3.5-flash-lite, fija estrictamente su base_url y model
+        if model == "gemini-3.5-flash-lite" or "gemini" in model.lower():
+            base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+            model = "gemini-3.5-flash-lite"
 
         new_entry = {
             "id": uuid.uuid4().hex[:8],
@@ -1230,7 +1226,7 @@ def api_admin_post_free_keys():
         }
         pool.append(new_entry)
         guardar_pool_claves_gratuitas(pool)
-        return jsonify({"status": "success", "message": f"Clave '{name}' añadida con éxito.", "key": new_entry, "keys": pool}), 201
+        return jsonify({"status": "success", "message": f"Clave '{name}' añadida con éxito ({model}).", "key": new_entry, "keys": pool}), 201
 
     elif action == "toggle_status":
         key_id = data.get("id")
@@ -1257,40 +1253,44 @@ def api_admin_post_free_keys():
     elif action == "test":
         key_val = (data.get("api_key") or "").strip()
         key_id = data.get("id")
-        base_url = (data.get("base_url") or OPENROUTER_BASE_URL).strip()
-        model = (data.get("model") or OPENROUTER_FREE_MODEL).strip()
+        key_name = (data.get("name") or "").strip()
+        model = (data.get("model") or "").strip()
+        base_url = (data.get("base_url") or "").strip()
 
         if not key_val and key_id:
             for k in pool:
-                if k.get("id") == key_id:
+                if k.get("id") == key_id or k.get("name") == key_id:
                     key_val = k.get("api_key", "")
-                    base_url = k.get("base_url", base_url)
+                    key_name = k.get("name", "")
                     model = k.get("model", model)
+                    base_url = k.get("base_url", base_url)
                     break
 
         if not key_val:
             return jsonify({"status": "error", "message": "No se proporcionó API key para probar."}), 400
 
+        resolved_url, resolved_model = resolver_config_clave(key_val, key_name, model=model, base_url=base_url)
+
         headers = {}
-        if "openrouter" in base_url or key_val.startswith("sk-or-"):
+        if "openrouter" in resolved_url or key_val.startswith("sk-or-"):
             headers = {"HTTP-Referer": OPENROUTER_REFERER, "X-Title": OPENROUTER_TITLE}
 
         try:
             t_client = OpenAI(
-                base_url=base_url,
+                base_url=resolved_url,
                 api_key=key_val,
                 default_headers=headers if headers else None,
-                http_client=httpx.Client(trust_env=False, timeout=12.0)
+                http_client=httpx.Client(trust_env=False, timeout=15.0)
             )
             resp = t_client.chat.completions.create(
-                model=model,
+                model=resolved_model,
                 max_tokens=10,
                 messages=[{"role": "user", "content": "Hola, prueba rapida de conexion."}]
             )
             res_text = resp.choices[0].message.content.strip() if resp.choices else "OK"
-            return jsonify({"status": "success", "message": f"Conexión exitosa con el modelo {model}: {res_text[:50]}"}), 200
+            return jsonify({"status": "success", "message": f"Conexión exitosa con el modelo {resolved_model}: {res_text[:60]}", "model": resolved_model}), 200
         except Exception as te:
-            return jsonify({"status": "error", "message": f"Fallo al conectar con la API ({type(te).__name__}): {str(te)}"}), 400
+            return jsonify({"status": "error", "message": f"Fallo al conectar con la API ({resolved_model}): {str(te)}"}), 400
 
     return jsonify({"status": "error", "message": f"Acción desconocida: {action}"}), 400
 

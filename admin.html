@@ -608,10 +608,19 @@
 
             <form id="free-key-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Nombre</label>
-                    <input id="free-key-name-input" type="text" placeholder="Ej: Gemini API KEY" required
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Nombre / Identificador</label>
+                    <input id="free-key-name-input" type="text" placeholder="Ej: Gemini Cuenta 1" required
                         class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent" />
-                    <p class="text-[10px] text-zinc-500 mt-1">Nombre identificador para esta clave (ej: Gemini API KEY, OpenRouter 1, etc.).</p>
+                    <p class="text-[10px] text-zinc-500 mt-1">Etiqueta para identificar la clave (ej: Gemini Cuenta 1, Gemini Proy B).</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Modelo / Tipo</label>
+                    <select id="modal_key_model"
+                        class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent">
+                        <option value="gemini-3.5-flash-lite" selected>gemini-3.5-flash-lite (Google AI Studio Free)</option>
+                    </select>
+                    <p class="text-[10px] text-zinc-500 mt-1">Modelo validado para procesamiento gratuito de fotogramas.</p>
                 </div>
 
                 <div>
@@ -621,8 +630,14 @@
                             Mostrar / Ocultar
                         </button>
                     </div>
-                    <input id="free-key-api-key-input" type="password" placeholder="Inserta aquí la API KEY" required
+                    <input id="free-key-api-key-input" type="password" placeholder="Pega aquí la clave (ej: AIzaSy...)" required
                         class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-accent" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Base URL (Endpoint)</label>
+                    <input id="modal_key_base_url" type="text" value="https://generativelanguage.googleapis.com/v1beta/openai/" readonly
+                        class="w-full bg-surface-container-high/50 border border-white/5 rounded-xl px-3 py-2 text-xs text-zinc-400 font-mono focus:outline-none cursor-not-allowed" />
                 </div>
 
                 <div class="pt-3 border-t border-white/10 flex justify-end gap-2">
@@ -1764,7 +1779,10 @@
                                 <div class="w-6 h-6 rounded-md bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-xs">
                                     <span class="material-symbols-outlined text-[14px]">key</span>
                                 </div>
-                                <span class="font-bold text-white text-xs">${k.name}</span>
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-white text-xs">${k.name}</span>
+                                    <span class="text-[10px] text-zinc-400 font-mono">${k.model || 'gemini-3.5-flash-lite'}</span>
+                                </div>
                             </div>
                         </td>
                         <td class="py-3 px-4">
@@ -1877,12 +1895,25 @@
         const closeFreeKeyModalBtn = document.getElementById('close-free-key-modal-btn');
         const cancelFreeKeyBtn = document.getElementById('cancel-free-key-btn');
         const freeKeyForm = document.getElementById('free-key-form');
-        const freeKeyPresetSelect = document.getElementById('free-key-preset-select');
-        const freeKeyModelInput = document.getElementById('free-key-model-input');
-        const freeKeyBaseUrlInput = document.getElementById('free-key-base-url-input');
+        const modalKeyModel = document.getElementById('modal_key_model');
+        const modalKeyBaseUrl = document.getElementById('modal_key_base_url');
+
+        // Mapeo extensible para modelos y endpoints
+        const MODEL_ENDPOINT_MAP = {
+            'gemini-3.5-flash-lite': 'https://generativelanguage.googleapis.com/v1beta/openai/'
+        };
+
+        modalKeyModel?.addEventListener('change', () => {
+            const selected = modalKeyModel.value;
+            if (modalKeyBaseUrl) {
+                modalKeyBaseUrl.value = MODEL_ENDPOINT_MAP[selected] || 'https://generativelanguage.googleapis.com/v1beta/openai/';
+            }
+        });
 
         openFreeKeyModalBtn?.addEventListener('click', () => {
             freeKeyForm.reset();
+            if (modalKeyModel) modalKeyModel.value = 'gemini-3.5-flash-lite';
+            if (modalKeyBaseUrl) modalKeyBaseUrl.value = 'https://generativelanguage.googleapis.com/v1beta/openai/';
             freeKeyModal.classList.remove('hidden');
             setTimeout(() => freeKeyModal.classList.remove('opacity-0'), 20);
         });
@@ -1895,26 +1926,6 @@
         closeFreeKeyModalBtn?.addEventListener('click', closeFreeKeyModal);
         cancelFreeKeyBtn?.addEventListener('click', closeFreeKeyModal);
 
-        freeKeyPresetSelect?.addEventListener('change', () => {
-            const val = freeKeyPresetSelect.value;
-            if (val === 'openrouter_gemini') {
-                freeKeyModelInput.value = 'google/gemini-2.0-flash-exp:free';
-                freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
-            } else if (val === 'openrouter_llama') {
-                freeKeyModelInput.value = 'meta-llama/llama-3.3-70b-instruct:free';
-                freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
-            } else if (val === 'openrouter_mistral') {
-                freeKeyModelInput.value = 'mistralai/mistral-7b-instruct:free';
-                freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
-            } else if (val === 'openrouter_qwen') {
-                freeKeyModelInput.value = 'qwen/qwen-2.5-72b-instruct:free';
-                freeKeyBaseUrlInput.value = 'https://openrouter.ai/api/v1';
-            } else {
-                freeKeyModelInput.value = 'gpt-4o-mini';
-                freeKeyBaseUrlInput.value = 'https://api.openai.com/v1';
-            }
-        });
-
         // Toggle visibilidad en modal de clave gratuita
         document.getElementById('toggle-free-key-vis-btn')?.addEventListener('click', () => {
             const inp = document.getElementById('free-key-api-key-input');
@@ -1925,38 +1936,12 @@
             e.preventDefault();
             const name = document.getElementById('free-key-name-input').value.trim();
             const apiKey = document.getElementById('free-key-api-key-input').value.trim();
+            const model = document.getElementById('modal_key_model')?.value.trim() || 'gemini-3.5-flash-lite';
+            const baseUrl = document.getElementById('modal_key_base_url')?.value.trim() || 'https://generativelanguage.googleapis.com/v1beta/openai/';
 
             if (!name || !apiKey) {
                 alert("Por favor completa el nombre y la Clave de API.");
                 return;
-            }
-
-            // Detección automática transparente de proveedor y modelo
-            let baseUrl = 'https://openrouter.ai/api/v1';
-            let model = 'google/gemini-2.0-flash-exp:free';
-            const nameLower = name.toLowerCase();
-
-            if (apiKey.startsWith('sk-or-')) {
-                baseUrl = 'https://openrouter.ai/api/v1';
-                if (nameLower.includes('llama')) model = 'meta-llama/llama-3.3-70b-instruct:free';
-                else if (nameLower.includes('mistral')) model = 'mistralai/mistral-7b-instruct:free';
-                else if (nameLower.includes('qwen')) model = 'qwen/qwen-2.5-72b-instruct:free';
-                else model = 'google/gemini-2.0-flash-exp:free';
-            } else if (apiKey.startsWith('AIza') || (nameLower.includes('gemini') && !apiKey.startsWith('sk-'))) {
-                baseUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/';
-                model = 'gemini-1.5-flash';
-            } else if (apiKey.startsWith('gsk_') || nameLower.includes('groq')) {
-                baseUrl = 'https://api.groq.com/openai/v1';
-                model = 'llama-3.3-70b-versatile';
-            } else if (nameLower.includes('deepseek')) {
-                baseUrl = 'https://api.deepseek.com';
-                model = 'deepseek-chat';
-            } else if (apiKey.startsWith('sk-')) {
-                baseUrl = 'https://api.openai.com/v1';
-                model = 'gpt-4o-mini';
-            } else {
-                baseUrl = 'https://openrouter.ai/api/v1';
-                model = 'google/gemini-2.0-flash-exp:free';
             }
 
             const newEntry = {
@@ -1975,7 +1960,7 @@
             await syncFreeKeysPool();
             renderFreeKeysTable();
             closeFreeKeyModal();
-            showToast(`Clave "${name}" guardada con éxito en el pool.`, "success");
+            showToast(`Clave "${name}" guardada con éxito en el pool (${model}).`, "success");
         });
 
         document.getElementById('refresh-free-keys-btn')?.addEventListener('click', () => {
