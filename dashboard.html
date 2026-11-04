@@ -1539,7 +1539,11 @@
                                                 const overallPercent = (currentBytes / fileSize) * 70; // 10% a 80%
                                                 const mbUploaded = (currentBytes / (1024 * 1024)).toFixed(1);
                                                 const mbTotal = (fileSize / (1024 * 1024)).toFixed(1);
-                                                updateProgressUI(10 + overallPercent, `Subiendo video (${mbUploaded}MB / ${mbTotal}MB)...`, 'Subiendo');
+                                                if (chunkIdx === totalChunks - 1 && e.loaded >= (end - start)) {
+                                                    updateProgressUI(80, 'Optimizando video para reproducción fluida...', 'Optimizando');
+                                                } else {
+                                                    updateProgressUI(10 + overallPercent, `Subiendo video (${mbUploaded}MB / ${mbTotal}MB)...`, 'Subiendo');
+                                                }
                                             }
                                         };
 

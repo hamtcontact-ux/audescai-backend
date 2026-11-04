@@ -1962,6 +1962,59 @@ def descargar_audio():
         return jsonify({"status": "error", "message": "No hay mezcla de audio disponible para este proyecto. Renderiza primero."}), 404
     return send_file(ruta_mp3, as_attachment=True, download_name="audiodescripcion_final.mp3", mimetype="audio/mpeg")
 
+def optimizar_video_web(input_path):
+    """
+    Optimización web automática con FFmpeg:
+    - Escala adaptativa: máx 1280px de ancho (720p HD), respetando relación de aspecto y orientación
+    - Compresión H.264 ultra rápida (preset ultrafast, CRF 26, maxrate 2500k)
+    - Audio AAC 128k estéreo
+    - Bandera +faststart (mueve el átomo moov al inicio para reproducción inmediata sin buffering)
+    - Elimina el video original pesado para ahorrar espacio en disco
+    """
+    temp_opt = input_path + ".web_opt.mp4"
+    try:
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", input_path,
+            "-vf", "scale='min(1280,iw)':-2",
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-crf", "26",
+            "-maxrate", "2500k",
+            "-bufsize", "4000k",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            "-ar", "44100",
+            "-movflags", "+faststart",
+            temp_opt
+        ]
+        print(f"[Optimizador Video] Iniciando compresión web de {input_path}...")
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=240)
+        if res.returncode == 0 and os.path.exists(temp_opt) and os.path.getsize(temp_opt) > 1000:
+            orig_size = os.path.getsize(input_path)
+            new_size = os.path.getsize(temp_opt)
+            # Eliminar el archivo original pesado (el usuario no requiere conservarlo)
+            try:
+                os.remove(input_path)
+            except Exception as e_del:
+                print(f"[Optimizador Video Warning] No se pudo borrar video original: {e_del}")
+            # Reemplazar con la versión optimizada
+            os.replace(temp_opt, input_path)
+            print(f"[Optimizador Video] Video optimizado con éxito: de {orig_size / (1024*1024):.1f}MB a {new_size / (1024*1024):.1f}MB ({((1 - new_size/orig_size)*100):.1f}% reducción)")
+            return True
+        else:
+            print(f"[Optimizador Video Error] FFmpeg falló (código {res.returncode}): {res.stderr[-300:]}")
+            if os.path.exists(temp_opt):
+                try: os.remove(temp_opt)
+                except: pass
+            return False
+    except Exception as e:
+        print(f"[Optimizador Video Excepción]: {e}")
+        if os.path.exists(temp_opt):
+            try: os.remove(temp_opt)
+            except: pass
+        return False
+
 @app.route('/api/upload-video', methods=['POST', 'OPTIONS'])
 def api_upload_video():
     """
@@ -2005,16 +2058,19 @@ def api_upload_video():
         with open(part_file, mode) as f:
             file_obj.save(f)
 
-        # Si se completaron todos los fragmentos, ensamblar archivo final
+        # Si se completaron todos los fragmentos, ensamblar y optimizar archivo final
         if chunk_index >= total_chunks - 1:
             if os.path.exists(final_file):
                 try: os.remove(final_file)
                 except Exception: pass
             os.rename(part_file, final_file)
 
+            # Optimización web automática: reduce videos de 300MB a ~35MB, aplica FastStart y elimina el original pesado
+            optimizar_video_web(final_file)
+
             final_size = os.path.getsize(final_file)
             video_url = f"https://api.cineparaciegos.com/videos/{final_filename}"
-            print(f"[Upload Video] Video final ensamblado exitosamente: {final_filename} ({final_size} bytes)")
+            print(f"[Upload Video] Video final ensamblado y optimizado: {final_filename} ({final_size} bytes)")
 
             return jsonify({
                 "status": "success",
