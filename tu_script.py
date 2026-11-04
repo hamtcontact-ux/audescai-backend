@@ -528,7 +528,7 @@ def obtener_huecos_silencio(video_path, min_gap=2.2, max_intervalo=6.0):
     return huecos_subdivididos
 
 # --- 2. ANÁLISIS CON OPENAI / OPENROUTER ---
-def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, historial, model_name="gpt-4o-mini"):
+def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, historial, model_name="gpt-4o-mini", ocr_enabled=True):
     duracion_max = fin - inicio
     print(f"   [Info] Analizando escena {indice_escena} ({model_name}): {inicio:.1f}s a {fin:.1f}s")
     
@@ -548,10 +548,12 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
     )
     historial_str = " | ".join(historial[-3:]) if historial else "Ninguno"
     
+    ocr_prompt_extra = "\nINSTRUCCIÓN ESPECIAL 'DE TEXTO A VOZ' ACTIVADA: Si en la imagen aparece cualquier texto relevante en pantalla (letreros, carteles, títulos, mensajes de texto, créditos o rótulos), DEBES leerlo y describirlo explícitamente dentro de la audiodescripción de manera natural (ej: 'En pantalla se lee...', 'Un cartel indica...')." if ocr_enabled else ""
+
     prompt_sistema = f"""Eres un audiodescriptor profesional experto en sintesis.
 MANUAL DE REGLAS:
 {REGLAS_PROFESIONALES}
-CONTEXTO DE ESCENA: {instruccion_escena}"""
+CONTEXTO DE ESCENA: {instruccion_escena}{ocr_prompt_extra}"""
     prompt_usuario = f"""EJEMPLOS:
 {EJEMPLOS_ESTILO}
 HISTORIAL RECIENTE: {historial_str}
@@ -742,6 +744,8 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
     role = kwargs.get("role") or (args[2] if len(args) > 2 else "free")
     user_tokens_used = kwargs.get("user_tokens_used") or (args[3] if len(args) > 3 else 0)
     user_tokens_total = kwargs.get("user_tokens_total") or (args[4] if len(args) > 4 else PLAN_FREE_TOKENS)
+    selected_voice = kwargs.get("voice") or "es-ES-AlvaroNeural"
+    ocr_enabled = kwargs.get("ocr_enabled", True)
     print(f"[Celery] Iniciando Fase 1: proyecto={proyecto_id}, user={user_email}, role={role}")
     guardar_fase1_status(proyecto_id, "processing")
     video_path = os.path.join(TEMP_DIR, f"{proyecto_id}_original.mp4")
@@ -909,7 +913,7 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                     model_to_use = "gpt-4o-mini"
 
                 texto, tokens_escena = analizar_con_openai(
-                    ai_client, video_path, inicio, fin, i, historial_ad, model_name=model_to_use
+                    ai_client, video_path, inicio, fin, i, historial_ad, model_name=model_to_use, ocr_enabled=ocr_enabled
                 )
                 last_used_key_name = "OpenAI Cuenta Pro" if role == "premium" else "OpenAI Superadmin"
 
@@ -919,7 +923,7 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                 historial_ad.pop(0)
 
             # Pre-generar TTS
-            voz_default = "es-ES-AlvaroNeural"
+            voz_default = selected_voice or "es-ES-AlvaroNeural"
             if texto:
                 ruta_cache = obtener_ruta_cache_tts(texto, voz_default)
                 generar_tts_robusto(texto, voz_default, ruta_cache)
@@ -1549,9 +1553,15 @@ def api_fase1():
 
         # Encolar en Celery con auto-recuperación en caso de VersionMismatch de redis
         enqueued = False
+        selected_voice = data.get("voice", "es-ES-AlvaroNeural")
+        ocr_enabled = bool(data.get("ocr_enabled", True))
+
         for attempt in range(2):
             try:
-                procesar_video_task.delay(video_url, api_key, proyecto_id, user_email, uid, role, tokens_used, tokens_total)
+                procesar_video_task.apply_async(
+                    args=[video_url, api_key, proyecto_id, user_email, uid, role, tokens_used, tokens_total],
+                    kwargs={"voice": selected_voice, "ocr_enabled": ocr_enabled}
+                )
                 enqueued = True
                 break
             except Exception as e_cel:

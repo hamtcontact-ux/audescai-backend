@@ -242,6 +242,15 @@
                     <span>Configuración IA</span>
                 </a>
             </li>
+
+            <!-- BOTÓN CERRAR SESIÓN UBICADO MÁS ARRIBA COMO ANTES -->
+            <li class="pt-2 border-t border-white/5">
+                <button id="nav-logout-btn"
+                    class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all text-left">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span>Cerrar Sesión</span>
+                </button>
+            </li>
         </ul>
 
         <!-- ÁREA INFERIOR: PERFIL DE USUARIO Y CONSUMO -->
@@ -267,52 +276,31 @@
                     </div>
                 </div>
             </div>
-
-            <button id="nav-logout-btn"
-                class="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all">
-                <span class="material-symbols-outlined text-[16px]">logout</span>
-                <span>Cerrar Sesión</span>
-            </button>
         </div>
     </nav>
     <!-- Main Content -->
     <main class="md:ml-64 min-h-screen pb-xl">
-        <!-- Header con Botón Nuevo Proyecto y Buscador Integrado -->
+        <!-- Header con Botón Nuevo Proyecto con Márgenes Generosos -->
         <header
-            class="sticky top-0 z-30 glass-panel border-b-0 border-white/5 px-md md:px-lg h-20 flex justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
+            class="sticky top-0 z-30 glass-panel border-b-0 border-white/5 px-6 md:px-10 h-20 flex justify-between items-center gap-4">
+            <div class="flex items-center gap-4 my-auto">
                 <button id="mobile-sidebar-toggle"
-                    class="md:hidden text-on-surface hover:text-primary transition-colors p-2 mr-1">
-                    <span class="material-symbols-outlined text-[28px]">menu</span>
+                    class="md:hidden text-on-surface hover:text-primary transition-colors p-2.5 rounded-xl hover:bg-white/5 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[26px]">menu</span>
                 </button>
-                <!-- Botón Principal Nuevo Proyecto (Reemplaza a 'Mis Proyectos' y 'Subir Nuevo Video') -->
+                <!-- Botón Principal Nuevo Proyecto con márgenes óptimos -->
                 <button
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn shadow-lg"
+                    class="flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn shadow-lg hover:scale-[1.02] active:scale-[0.98]"
                     id="main-upload-btn">
-                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    <span class="material-symbols-outlined text-[20px]">add</span>
                     <span>Nuevo Proyecto</span>
                 </button>
             </div>
-            <div class="flex items-center gap-3 flex-1 max-w-md justify-end">
-                <!-- Buscador de proyectos por coincidencia de texto (%BUSQUEDA%) -->
-                <div class="relative w-full max-w-xs sm:max-w-sm">
-                    <span
-                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-[20px]">search</span>
-                    <input
-                        id="project-search-input"
-                        class="w-full bg-surface-container-high border border-outline-variant/50 rounded-full py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-zinc-500"
-                        placeholder="Buscar proyectos..." type="text" />
-                </div>
-
+            <div class="flex items-center gap-3">
                 <!-- Botón de Configuración Móvil -->
                 <button id="mobile-settings-btn"
                     class="hidden md:hidden w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
                     <span class="material-symbols-outlined text-[22px]">settings</span>
-                </button>
-                <!-- Botón de Cerrar Sesión Móvil -->
-                <button id="mobile-logout-btn"
-                    class="md:hidden w-10 h-10 rounded-full bg-error-container/10 flex items-center justify-center text-error hover:bg-error-container/20 transition-all">
-                    <span class="material-symbols-outlined text-[22px]">logout</span>
                 </button>
             </div>
         </header>
@@ -361,18 +349,27 @@
                 </div>
             </section>
 
-            <!-- Project Grid Section (Alineado con el margen superior) -->
-            <div class="space-y-6">
+            <!-- Barra de Búsqueda de Proyectos (%BUSQUEDA%) situada entre Suscripción y Mis Proyectos -->
+            <div class="relative w-full max-w-xl">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-[22px]">search</span>
+                <input
+                    id="project-search-input"
+                    class="w-full bg-surface-container/90 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-xs text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-500 shadow-md backdrop-blur-md"
+                    placeholder="Buscar proyectos..." type="text" />
+            </div>
+
+            <!-- Project Grid Section con diseño de bloques de video mejorado -->
+            <div class="space-y-6 pt-2">
                 <div class="flex items-center justify-between pb-3 border-b border-white/5">
                     <div>
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
                             <span class="material-symbols-outlined text-primary text-[22px]">video_library</span>
-                            Mis Proyectos
+                            <span>Mis Proyectos</span>
                         </h2>
                         <p class="text-xs text-zinc-400 mt-0.5">Tus producciones y audiodescripciones cinematográficas recientes.</p>
                     </div>
                 </div>
-                <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7">
                     <!-- Se cargará dinámicamente desde Firestore -->
                 </div>
             </div>
@@ -426,6 +423,48 @@
                     id="success-alert">
                     <span class="material-symbols-outlined text-[20px] mt-0.5">check_circle</span>
                     <p class="text-xs font-semibold">Archivo listo para procesar</p>
+                </div>
+
+                <!-- Configuración Pre-Audiodescripción: Voz y Texto a Voz -->
+                <div class="mt-5 pt-4 border-t border-white/10 space-y-4">
+                    <!-- Selector de Voz de Audiodescripción con Prueba de Audio -->
+                    <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-[18px]">record_voice_over</span>
+                                Voz de Audiodescripción
+                            </label>
+                            <button type="button" id="upload-test-voice-btn" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[11px] font-bold transition-all shadow-sm">
+                                <span class="material-symbols-outlined text-[15px]" id="upload-test-voice-icon">play_arrow</span>
+                                <span id="upload-test-voice-text">Probar voz</span>
+                            </button>
+                        </div>
+                        <select id="upload-voice-select" class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all cursor-pointer">
+                            <option value="es-ES-AlvaroNeural" selected>Álvaro (España - Masculina)</option>
+                            <option value="es-ES-ElviraNeural">Elvira (España - Femenina)</option>
+                            <option value="es-MX-JorgeNeural">Jorge (México - Masculina)</option>
+                            <option value="es-MX-DaliaNeural">Dalia (México - Femenina)</option>
+                            <option value="es-US-AlonsoNeural">Alonso (EE.UU. - Masculina)</option>
+                            <option value="es-US-PalomaNeural">Paloma (EE.UU. - Femenina)</option>
+                        </select>
+                    </div>
+
+                    <!-- Opción De Texto a Voz -->
+                    <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all flex items-center justify-between gap-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[18px]">subtitles</span>
+                            </div>
+                            <div>
+                                <label for="upload-ocr-toggle" class="text-xs font-bold text-white cursor-pointer select-none">De texto a voz</label>
+                                <p class="text-[11px] text-zinc-400 leading-relaxed select-none">Si existe texto en pantalla será audiodescrito</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" id="upload-ocr-toggle" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div
@@ -1123,6 +1162,66 @@
                 }
             });
 
+            // --- REPRODUCTOR DE DEMO DE VOZ EN MODAL DE SUBIDA ---
+            const UPLOAD_VOICE_DEMOS = {
+                'es-ES-AlvaroNeural': 'Hola, soy Álvaro. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-ES-ElviraNeural': 'Hola, soy Elvira. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-MX-JorgeNeural': 'Hola, soy Jorge. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-MX-DaliaNeural': 'Hola, soy Dalia. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-US-AlonsoNeural': 'Hola, soy Alonso. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-US-PalomaNeural': 'Hola, soy Paloma. Esta es una demostración de mi voz para la audiodescripción de tus videos.'
+            };
+
+            let uploadVoiceAudio = null;
+            const uploadTestVoiceBtn = document.getElementById('upload-test-voice-btn');
+            const uploadVoiceSelect = document.getElementById('upload-voice-select');
+            const uploadTestVoiceIcon = document.getElementById('upload-test-voice-icon');
+            const uploadTestVoiceText = document.getElementById('upload-test-voice-text');
+
+            if (uploadTestVoiceBtn && uploadVoiceSelect) {
+                uploadTestVoiceBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (uploadVoiceAudio) {
+                        uploadVoiceAudio.pause();
+                        uploadVoiceAudio = null;
+                        if (uploadTestVoiceIcon) uploadTestVoiceIcon.textContent = 'play_arrow';
+                        if (uploadTestVoiceText) uploadTestVoiceText.textContent = 'Probar voz';
+                        return;
+                    }
+
+                    const v = uploadVoiceSelect.value;
+                    const txt = UPLOAD_VOICE_DEMOS[v] || 'Hola, esta es una prueba de voz para la audiodescripción.';
+                    const url = `${FLASK_API}/api/tts?text=${encodeURIComponent(txt)}&voice=${encodeURIComponent(v)}&rate=+0%`;
+                    
+                    uploadVoiceAudio = new Audio(url);
+                    if (uploadTestVoiceIcon) uploadTestVoiceIcon.textContent = 'stop';
+                    if (uploadTestVoiceText) uploadTestVoiceText.textContent = 'Detener';
+
+                    uploadVoiceAudio.onended = () => {
+                        uploadVoiceAudio = null;
+                        if (uploadTestVoiceIcon) uploadTestVoiceIcon.textContent = 'play_arrow';
+                        if (uploadTestVoiceText) uploadTestVoiceText.textContent = 'Probar voz';
+                    };
+                    uploadVoiceAudio.onerror = () => {
+                        uploadVoiceAudio = null;
+                        if (uploadTestVoiceIcon) uploadTestVoiceIcon.textContent = 'play_arrow';
+                        if (uploadTestVoiceText) uploadTestVoiceText.textContent = 'Probar voz';
+                        showToast('Error al reproducir audio de prueba', 'error');
+                    };
+                    uploadVoiceAudio.play().catch(() => {});
+                });
+
+                uploadVoiceSelect.addEventListener('change', () => {
+                    if (uploadVoiceAudio) {
+                        uploadVoiceAudio.pause();
+                        uploadVoiceAudio = null;
+                        if (uploadTestVoiceIcon) uploadTestVoiceIcon.textContent = 'play_arrow';
+                        if (uploadTestVoiceText) uploadTestVoiceText.textContent = 'Probar voz';
+                    }
+                });
+            }
+
             // Real-time Projects loader & Search Engine (%BUSQUEDA%)
             let allUserProjects = [];
 
@@ -1168,7 +1267,7 @@
 
                 filtered.forEach(proj => {
                     const card = document.createElement('article');
-                    card.className = 'cursor-pointer group bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col relative';
+                    card.className = 'cursor-pointer group glass-panel bg-surface-container/80 hover:bg-surface-container rounded-2xl overflow-hidden border border-white/10 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.6)] hover:-translate-y-1 flex flex-col relative';
                     card.addEventListener('click', () => {
                         window.location.href = `editor.html?project=${proj.id}`;
                     });
@@ -1184,23 +1283,32 @@
                     }
 
                     card.innerHTML = `
-                        <button class="delete-project-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/50 hover:text-emerald-400 hover:bg-emerald-400/10 hover:border-emerald-400/30 active:text-red-500 active:bg-red-500/20 active:border-red-500/50 transition-all duration-200" data-id="${proj.id}">
-                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        <button class="delete-project-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/70 hover:text-red-400 hover:bg-red-500/20 hover:border-red-500/40 transition-all duration-200 shadow-md" data-id="${proj.id}">
+                            <span class="material-symbols-outlined text-[17px]">delete</span>
                         </button>
-                        <div class="aspect-video w-full bg-surface-container-highest relative overflow-hidden flex items-center justify-center">
+                        <div class="aspect-video w-full bg-zinc-950/80 relative overflow-hidden flex items-center justify-center">
                             ${proj.thumbnailUrl 
                                 ? `<img src="${proj.thumbnailUrl}" alt="${proj.name || 'Proyecto'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />`
-                                : `<div class="w-full h-full bg-gradient-to-br from-indigo-950/60 to-slate-900 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-primary/40 group-hover:scale-110 transition-transform duration-500">movie</span></div>`
+                                : `<div class="w-full h-full bg-gradient-to-br from-indigo-950/80 to-slate-900 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-primary/40 group-hover:scale-110 transition-transform duration-500">movie</span></div>`
                             }
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none"></div>
                         </div>
-                        <div class="p-md flex flex-col flex-1">
-                            <h3 class="font-title-lg text-title-lg text-on-surface mb-2 truncate pr-6">${proj.name || 'Proyecto sin nombre'}</h3>
-                            <div class="flex items-center justify-between mt-auto pt-4">
-                                <span class="font-label-md text-label-md text-on-surface-variant">${new Date(proj.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}</span>
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}">
+                        <div class="p-5 flex flex-col flex-1 justify-between gap-3">
+                            <div>
+                                <h3 class="text-white font-bold text-sm tracking-tight mb-1 truncate pr-2 group-hover:text-primary transition-colors">${proj.name || 'Proyecto sin nombre'}</h3>
+                                <p class="text-[11px] text-zinc-400 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[13px] text-zinc-500">schedule</span>
+                                    <span>${new Date(proj.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                </p>
+                            </div>
+                            <div class="flex items-center justify-between pt-3 border-t border-white/5">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusClass}">
                                     <span class="w-1.5 h-1.5 rounded-full ${dotClass} mr-1.5"></span>
                                     ${proj.status}
+                                </span>
+                                <span class="text-[11px] font-bold text-zinc-400 group-hover:text-white flex items-center gap-0.5 transition-colors">
+                                    <span>Editar</span>
+                                    <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                                 </span>
                             </div>
                         </div>
@@ -1456,13 +1564,20 @@
                     const fallbackThumb = videoUrl ? videoUrl.replace(/\.[a-zA-Z0-9]+$/, '.jpg') : null;
                     const finalThumbnail = clientThumb || fallbackThumb;
 
-                    // 3. Guardar metadata inicial en Firestore con miniatura
+                    // 3. Guardar metadata inicial en Firestore con miniatura, voz seleccionada y opción de texto a voz
+                    const uploadVoiceSelPre = document.getElementById('upload-voice-select');
+                    const uploadOcrTglPre = document.getElementById('upload-ocr-toggle');
+                    const preSelectedVoice = uploadVoiceSelPre ? uploadVoiceSelPre.value : 'es-ES-AlvaroNeural';
+                    const preOcrEnabled = uploadOcrTglPre ? uploadOcrTglPre.checked : true;
+
                     await projectRef.set({
                         id: projectId,
                         name: file.name.substring(0, file.name.lastIndexOf('.')) || file.name,
                         status: 'Procesando',
                         video_url: videoUrl,
                         thumbnailUrl: finalThumbnail,
+                        voice: preSelectedVoice,
+                        ocr_enabled: preOcrEnabled,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
@@ -1480,6 +1595,11 @@
                         } catch (_) {}
                     }
 
+                    const uploadVoiceSel = document.getElementById('upload-voice-select');
+                    const uploadOcrTgl = document.getElementById('upload-ocr-toggle');
+                    const selectedVoice = uploadVoiceSel ? uploadVoiceSel.value : 'es-ES-AlvaroNeural';
+                    const ocrEnabled = uploadOcrTgl ? uploadOcrTgl.checked : true;
+
                     const payloadData = {
                         video_url: videoUrl,
                         proyecto_id: projectId,
@@ -1490,7 +1610,9 @@
                         minutes_total: currentUserProfile?.minutes_total || (userRole === 'premium' ? 180.0 : 10.0),
                         tokens_used: currentUserProfile?.tokens_used || 0,
                         tokens_total: currentUserProfile?.tokens_total || FREE_TOKENS,
-                        api_key: localKey
+                        api_key: localKey,
+                        voice: selectedVoice,
+                        ocr_enabled: ocrEnabled
                     };
 
                     let result = null;

@@ -250,11 +250,13 @@
             border-top-right-radius: 4px;
             border-bottom-right-radius: 4px;
         }
-            @keyframes blockCascade {
+
+        @keyframes blockCascade {
             0% {
                 opacity: 0;
                 transform: translateY(16px) scale(0.9);
             }
+
             100% {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -439,13 +441,13 @@
             </div>
         </main>
     </div>
-    <aside class="w-[300px] border-l border-white/5 bg-surface flex flex-col shrink-0 overflow-y-auto h-full z-50"
+    <aside class="hidden lg:flex w-[320px] border-l border-white/5 bg-surface flex-col shrink-0 overflow-y-auto h-full z-50"
         id="editSidebar">
         <div
             class="p-md border-b border-white/10 flex justify-between items-center sticky top-0 bg-surface/90 backdrop-blur-sm z-10">
             <h2 class="font-title-lg text-title-lg text-on-surface flex items-center gap-xs">
                 <span class="material-symbols-outlined text-primary">edit_note</span>
-                Co-Creación Humana
+                Edición Asistida
             </h2>
             <button class="text-on-surface-variant hover:text-on-surface transition-colors"
                 onclick="document.getElementById('editSidebar').classList.add('hidden')">
@@ -482,18 +484,18 @@
                             class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined text-[16px]">record_voice_over</span>
                         <div class="relative w-full" id="custom-voice-dropdown">
                             <select class="hidden" id="voiceSelect">
-                                <!-- Opciones se llenan por JS o estaticas, ahora estaticas -->
-                                <option value="es-MX-JorgeNeural">es-MX-JorgeNeural</option>
-                                <option value="es-ES-ElviraNeural">es-ES-ElviraNeural</option>
-                                <option value="es-MX-DaliaNeural">es-MX-DaliaNeural</option>
-                                <option value="es-MX-JorgeNeural">es-MX-JorgeNeural</option>
-                                <option value="es-US-AlonsoNeural">es-US-AlonsoNeural</option>
+                                <option value="es-ES-AlvaroNeural" selected>Álvaro</option>
+                                <option value="es-ES-ElviraNeural">Elvira</option>
+                                <option value="es-MX-JorgeNeural">Jorge</option>
+                                <option value="es-MX-DaliaNeural">Dalia</option>
+                                <option value="es-US-AlonsoNeural">Alonso</option>
+                                <option value="es-US-PalomaNeural">Paloma</option>
                             </select>
                             <button
                                 class="w-full bg-[#1a1b1e] border border-white/10 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:bg-white/5 transition-colors focus:outline-none focus:border-primary"
                                 id="voice-dropdown-btn">
                                 <span class="font-label-md text-on-surface truncate"
-                                    id="voice-dropdown-label">es-MX-JorgeNeural - Voz Masculina (México)</span>
+                                    id="voice-dropdown-label">Álvaro - Voz Masculina (España)</span>
                                 <span
                                     class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
                             </button>
@@ -585,41 +587,52 @@
     </aside>
 
     <!-- VENTANA EMERGENTE DE ESPERA DINÁMICA CON ANIMACIÓN CONTINUA (ESTILO VIDEOJUEGO) -->
-    <div id="ai-stream-overlay" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 pointer-events-none flex items-center justify-center p-4">
+    <div id="ai-stream-overlay"
+        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 pointer-events-none flex items-center justify-center p-4">
         <!-- Fondo translúcido con desenfoque cinematográfico -->
         <div class="absolute inset-0 bg-black/75 backdrop-blur-md"></div>
 
         <!-- Tarjeta flotante interactiva -->
-        <div class="relative glass-panel rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] pointer-events-auto text-center space-y-6 animate-fade-in bg-surface-container/95 backdrop-blur-xl">
-            
+        <div
+            class="relative glass-panel rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] pointer-events-auto text-center space-y-6 animate-fade-in bg-surface-container/95 backdrop-blur-xl">
+
             <!-- CONTENEDOR DE ANIMACIÓN CONTINUA (DOBLE ANILLO + EQUALIZADOR VIVO) -->
             <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
                 <!-- Anillo exterior con gradiente continuo que gira a 60fps -->
-                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-accent border-r-primary animate-spin" style="animation-duration: 1.2s;"></div>
-                
+                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-accent border-r-primary animate-spin"
+                    style="animation-duration: 1.2s;"></div>
+
                 <!-- Anillo interior que gira en sentido contrario -->
-                <div class="absolute inset-2 rounded-full border-3 border-transparent border-b-accent border-l-primary/60 animate-spin" style="animation-duration: 2s; animation-direction: reverse;"></div>
+                <div class="absolute inset-2 rounded-full border-3 border-transparent border-b-accent border-l-primary/60 animate-spin"
+                    style="animation-duration: 2s; animation-direction: reverse;"></div>
 
                 <!-- Halo pulsante de fondo -->
                 <div class="absolute inset-4 rounded-full bg-accent/20 blur-md animate-pulse"></div>
 
                 <!-- Ecualizador de audio animado en el centro -->
                 <div class="relative z-10 flex items-center gap-1">
-                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse" style="animation-delay: 0.1s; animation-duration: 0.8s;"></span>
-                    <span class="w-1.5 h-6 bg-primary rounded-full animate-pulse" style="animation-delay: 0.3s; animation-duration: 0.7s;"></span>
-                    <span class="w-1.5 h-8 bg-accent rounded-full animate-pulse" style="animation-delay: 0.15s; animation-duration: 0.9s;"></span>
-                    <span class="w-1.5 h-5 bg-primary rounded-full animate-pulse" style="animation-delay: 0.4s; animation-duration: 0.75s;"></span>
-                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse" style="animation-delay: 0.2s; animation-duration: 0.85s;"></span>
+                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse"
+                        style="animation-delay: 0.1s; animation-duration: 0.8s;"></span>
+                    <span class="w-1.5 h-6 bg-primary rounded-full animate-pulse"
+                        style="animation-delay: 0.3s; animation-duration: 0.7s;"></span>
+                    <span class="w-1.5 h-8 bg-accent rounded-full animate-pulse"
+                        style="animation-delay: 0.15s; animation-duration: 0.9s;"></span>
+                    <span class="w-1.5 h-5 bg-primary rounded-full animate-pulse"
+                        style="animation-delay: 0.4s; animation-duration: 0.75s;"></span>
+                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse"
+                        style="animation-delay: 0.2s; animation-duration: 0.85s;"></span>
                 </div>
             </div>
 
             <!-- Textos y progreso en tiempo real -->
             <div class="space-y-2">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-xs font-bold">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-xs font-bold">
                     <span class="w-2 h-2 rounded-full bg-accent animate-ping"></span>
                     <span id="stream-badge-text">Audiodescripción con IA</span>
                 </div>
-                <h3 class="text-lg font-black text-white" id="stream-title-text">Analizando Escenas y Sintetizando Voces</h3>
+                <h3 class="text-lg font-black text-white" id="stream-title-text">Analizando Escenas y Sintetizando Voces
+                </h3>
                 <p id="stream-status-text" class="text-xs text-zinc-300 font-medium">
                     Sincronizando pistas de audiodescripción...
                 </p>
@@ -632,8 +645,11 @@
                     <span id="stream-percent" class="font-bold text-white">0%</span>
                 </div>
                 <!-- Barra con efecto de brillo continuo (shimmer) que se mueve siempre -->
-                <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5 border border-white/5 relative">
-                    <div id="stream-progress-bar" class="h-full bg-gradient-to-r from-primary via-accent to-accent-hover rounded-full transition-all duration-500 relative" style="width: 0%;">
+                <div
+                    class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5 border border-white/5 relative">
+                    <div id="stream-progress-bar"
+                        class="h-full bg-gradient-to-r from-primary via-accent to-accent-hover rounded-full transition-all duration-500 relative"
+                        style="width: 0%;">
                         <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
                     </div>
                 </div>
@@ -648,31 +664,41 @@
         <div class="absolute inset-0 bg-black/75 backdrop-blur-md"></div>
 
         <!-- Tarjeta flotante interactiva -->
-        <div class="relative glass-panel rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] pointer-events-auto text-center space-y-6 animate-fade-in bg-surface-container/95 backdrop-blur-xl">
-            
+        <div
+            class="relative glass-panel rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] pointer-events-auto text-center space-y-6 animate-fade-in bg-surface-container/95 backdrop-blur-xl">
+
             <!-- CONTENEDOR DE ANIMACIÓN CONTINUA (DOBLE ANILLO + EQUALIZADOR VIVO) -->
             <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
-                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-accent border-r-primary animate-spin" style="animation-duration: 1.2s;"></div>
-                <div class="absolute inset-2 rounded-full border-3 border-transparent border-b-accent border-l-primary/60 animate-spin" style="animation-duration: 2s; animation-direction: reverse;"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-accent border-r-primary animate-spin"
+                    style="animation-duration: 1.2s;"></div>
+                <div class="absolute inset-2 rounded-full border-3 border-transparent border-b-accent border-l-primary/60 animate-spin"
+                    style="animation-duration: 2s; animation-direction: reverse;"></div>
                 <div class="absolute inset-4 rounded-full bg-accent/20 blur-md animate-pulse"></div>
 
                 <div class="relative z-10 flex items-center gap-1">
-                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse" style="animation-delay: 0.1s; animation-duration: 0.8s;"></span>
-                    <span class="w-1.5 h-6 bg-primary rounded-full animate-pulse" style="animation-delay: 0.3s; animation-duration: 0.7s;"></span>
-                    <span class="w-1.5 h-8 bg-accent rounded-full animate-pulse" style="animation-delay: 0.15s; animation-duration: 0.9s;"></span>
-                    <span class="w-1.5 h-5 bg-primary rounded-full animate-pulse" style="animation-delay: 0.4s; animation-duration: 0.75s;"></span>
-                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse" style="animation-delay: 0.2s; animation-duration: 0.85s;"></span>
+                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse"
+                        style="animation-delay: 0.1s; animation-duration: 0.8s;"></span>
+                    <span class="w-1.5 h-6 bg-primary rounded-full animate-pulse"
+                        style="animation-delay: 0.3s; animation-duration: 0.7s;"></span>
+                    <span class="w-1.5 h-8 bg-accent rounded-full animate-pulse"
+                        style="animation-delay: 0.15s; animation-duration: 0.9s;"></span>
+                    <span class="w-1.5 h-5 bg-primary rounded-full animate-pulse"
+                        style="animation-delay: 0.4s; animation-duration: 0.75s;"></span>
+                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse"
+                        style="animation-delay: 0.2s; animation-duration: 0.85s;"></span>
                 </div>
             </div>
 
             <!-- Textos y progreso -->
             <div class="space-y-2">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-xs font-bold">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-xs font-bold">
                     <span class="w-2 h-2 rounded-full bg-accent animate-ping"></span>
                     <span>Renderizado de Audio en Proceso</span>
                 </div>
                 <h3 class="text-lg font-black text-white">Consolidando y Mezclando Audio IA</h3>
-                <p class="text-xs text-zinc-300 font-medium">Exportando pistas maestras sincronizadas con precisión de milisegundos...</p>
+                <p class="text-xs text-zinc-300 font-medium">Exportando pistas maestras sincronizadas con precisión de
+                    milisegundos...</p>
             </div>
 
             <!-- Barra de progreso -->
@@ -681,8 +707,11 @@
                     <span class="font-bold text-accent">Renderizando</span>
                     <span id="render-progress-text" class="font-bold text-white">0%</span>
                 </div>
-                <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5 border border-white/5 relative">
-                    <div id="render-progress-bar" class="h-full bg-gradient-to-r from-primary via-accent to-accent-hover rounded-full transition-all duration-500 relative" style="width: 0%;">
+                <div
+                    class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5 border border-white/5 relative">
+                    <div id="render-progress-bar"
+                        class="h-full bg-gradient-to-r from-primary via-accent to-accent-hover rounded-full transition-all duration-500 relative"
+                        style="width: 0%;">
                         <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
                     </div>
                 </div>
@@ -954,7 +983,7 @@
             // ═══════════════════════════════════════════════════════════
             //  CARGAR/PERSISTIR DATOS DESDE EL BACKEND
             // ═══════════════════════════════════════════════════════════
-            
+
             // ═══════════════════════════════════════════════════════════
             //  STREAMING EN VIVO DE PISTAS IA A LA LÍNEA DE TIEMPO
             // ═══════════════════════════════════════════════════════════
@@ -1003,7 +1032,7 @@
                                 try {
                                     db.collection('usuarios').doc(uid).collection('proyectos').doc(id_proyecto)
                                         .collection('bloques').doc(String(b.id)).set(b);
-                                } catch (_) {}
+                                } catch (_) { }
                             }
                         }
 
@@ -1040,7 +1069,7 @@
                                 await db.collection('usuarios').doc(uid).collection('proyectos').doc(id_proyecto).update({
                                     status: 'Listo para editar'
                                 });
-                            } catch (_) {}
+                            } catch (_) { }
 
                             // Sincronizar tokens si hubo consumo
                             if (data.tokens_consumed) {
@@ -1049,7 +1078,7 @@
                                         tokens_used: firebase.firestore.FieldValue.increment(data.tokens_consumed),
                                         minutes_used: firebase.firestore.FieldValue.increment(data.minutes_used || 0)
                                     }, { merge: true });
-                                } catch (_) {}
+                                } catch (_) { }
                             }
 
                             // Seleccionar primer bloque si existe
@@ -1975,7 +2004,7 @@
 
                 // 1. Validar que no se salga de la duración del video
                 if (targetEnd > videoDuration) {
-                    showToast('No hay espacio suuficiente.', 'warn');
+                    showToast('No hay espacio suficiente.', 'warn');
                     return;
                 }
 
@@ -2027,9 +2056,21 @@
             //  SÍNTESIS REAL DE VOZ IA (CLOUD DEMO)
             // ═══════════════════════════════════════════════════════════
             const VOICE_DEMO_TEXTS = {
-                'es-MX-JorgeNeural': 'Hola, soy Álvaro. Esta es una demostración de mi voz española para la audiodescripción inteligente de tus videos.',
-                'es-ES-ElviraNeural': 'Hola, soy Elvira. Esta es una demostración de mi voz española para la audiodescripción inteligente de tus videos.',
-                'es-MX-MateoNeural': 'Hola, soy Mateo. Esta es una demostración de mi voz mexicana para la audiodescripción inteligente de tus videos.'
+                'es-ES-AlvaroNeural': 'Hola, soy Álvaro. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-ES-ElviraNeural': 'Hola, soy Elvira. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-MX-JorgeNeural': 'Hola, soy Jorge. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-MX-DaliaNeural': 'Hola, soy Dalia. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-US-AlonsoNeural': 'Hola, soy Alonso. Esta es una demostración de mi voz para la audiodescripción de tus videos.',
+                'es-US-PalomaNeural': 'Hola, soy Paloma. Esta es una demostración de mi voz para la audiodescripción de tus videos.'
+            };
+
+            const VOICE_CLEAN_NAMES = {
+                'es-ES-AlvaroNeural': 'Álvaro',
+                'es-ES-ElviraNeural': 'Elvira',
+                'es-MX-JorgeNeural': 'Jorge',
+                'es-MX-DaliaNeural': 'Dalia',
+                'es-US-AlonsoNeural': 'Alonso',
+                'es-US-PalomaNeural': 'Paloma'
             };
 
             let currentVoicePreviewAudio = null;
@@ -2045,8 +2086,8 @@
                     voiceVisualInterval = null;
                 }
 
-                const selected = voiceSelect.value;
-                const demoText = VOICE_DEMO_TEXTS[selected] || 'Hola, esta es una prueba de voz.';
+                const selected = voiceSelect.value || 'es-ES-AlvaroNeural';
+                const demoText = VOICE_DEMO_TEXTS[selected] || `Hola, soy ${VOICE_CLEAN_NAMES[selected] || 'narrador'}. Esta es una demostración de mi voz.`;
                 const rateSelected = document.getElementById('voiceRateSelect').value;
                 const url = `${FLASK_API}/api/tts?text=${encodeURIComponent(demoText)}&voice=${encodeURIComponent(selected)}&rate=${encodeURIComponent(rateSelected)}`;
 
@@ -2057,8 +2098,8 @@
                 miniVisualizer.classList.remove('hidden');
                 voiceTestStatus.classList.remove('hidden');
 
-                const profileLabel = selected.includes('Alvaro') ? 'Álvaro' : (selected.includes('Elvira') ? 'Elvira' : 'Mateo');
-                voiceTestText.textContent = `Escuchando demo de ${profileLabel}...`;
+                const speakerName = VOICE_CLEAN_NAMES[selected] || 'Voz';
+                voiceTestText.textContent = `Escuchando demo de ${speakerName}...`;
 
                 const bars = miniVisualizer.querySelectorAll('div');
                 voiceVisualInterval = setInterval(() => {
@@ -2396,11 +2437,12 @@
 
             // 2. Custom Dropdowns
             const voices = [
-                { val: "es-ES-AlvaroNeural", title: "es-ES-AlvaroNeural", sub: "Voz Masculina (España)" },
-                { val: "es-ES-ElviraNeural", title: "es-ES-ElviraNeural", sub: "Voz Femenina (España)" },
-                { val: "es-MX-DaliaNeural", title: "es-MX-DaliaNeural", sub: "Voz Femenina (México)" },
-                { val: "es-MX-JorgeNeural", title: "es-MX-JorgeNeural", sub: "Voz Masculina (México)" },
-                { val: "es-US-AlonsoNeural", title: "es-US-AlonsoNeural", sub: "Voz Masculina (US)" }
+                { val: "es-ES-AlvaroNeural", title: "Álvaro", sub: "Voz Masculina (España)" },
+                { val: "es-ES-ElviraNeural", title: "Elvira", sub: "Voz Femenina (España)" },
+                { val: "es-MX-JorgeNeural", title: "Jorge", sub: "Voz Masculina (México)" },
+                { val: "es-MX-DaliaNeural", title: "Dalia", sub: "Voz Femenina (México)" },
+                { val: "es-US-AlonsoNeural", title: "Alonso", sub: "Voz Masculina (EE.UU.)" },
+                { val: "es-US-PalomaNeural", title: "Paloma", sub: "Voz Femenina (EE.UU.)" }
             ];
             const speeds = [
                 { val: "-40%", title: "Muy lento (-40%)", sub: "Para escenas de gran detalle" },
@@ -2614,6 +2656,6 @@
 
 
     </script>
-    </body>
+</body>
 
-    </html>
+</html>
