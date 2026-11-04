@@ -259,10 +259,11 @@
             opacity: 1;
         }
 
-        /* Control de volumen estilo Pelismaster (rojo con halo circular, pista bicolor y ancho fluido) */
-        #video-volume-slider,
-        #fs-volume-slider {
+        /* Control de volumen estilo Pelismaster (consistente en PC y Celular con halo rojo) */
+        input[type=range]#video-volume-slider,
+        #video-volume-slider {
             -webkit-appearance: none !important;
+            -moz-appearance: none !important;
             appearance: none !important;
             height: 4px !important;
             border-radius: 9999px !important;
@@ -270,15 +271,16 @@
             outline: none !important;
             cursor: pointer !important;
             vertical-align: middle !important;
-            accent-color: #e50914 !important;
             transition: background 0.05s ease !important;
             margin: 0 !important;
             padding: 0 !important;
+            border: none !important;
+            touch-action: none !important; /* Previene conflicto de gestos táctiles en celulares */
         }
 
-        /* Webkit track */
-        #video-volume-slider::-webkit-slider-runnable-track,
-        #fs-volume-slider::-webkit-slider-runnable-track {
+        /* Webkit track (Chrome, Safari, Edge, Android, iOS) */
+        #video-volume-slider::-webkit-slider-runnable-track {
+            -webkit-appearance: none !important;
             width: 100% !important;
             height: 4px !important;
             background: transparent !important;
@@ -287,9 +289,8 @@
             cursor: pointer !important;
         }
 
-        /* Thumb Webkit (Chrome, Safari, Edge, Android) */
-        #video-volume-slider::-webkit-slider-thumb,
-        #fs-volume-slider::-webkit-slider-thumb {
+        /* Thumb Webkit (Chrome, Safari, Edge, Android, iOS) */
+        #video-volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none !important;
             appearance: none !important;
             width: 14px !important;
@@ -297,23 +298,20 @@
             border-radius: 50% !important;
             background: #e50914 !important;
             cursor: pointer !important;
-            border: none !important;
+            border: 0 !important;
             margin-top: -5px !important;
             box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.4) !important;
             transition: transform 0.15s ease, box-shadow 0.15s ease !important;
         }
 
         #video-volume-slider::-webkit-slider-thumb:hover,
-        #fs-volume-slider::-webkit-slider-thumb:hover,
-        #video-volume-slider:active::-webkit-slider-thumb,
-        #fs-volume-slider:active::-webkit-slider-thumb {
+        #video-volume-slider:active::-webkit-slider-thumb {
             transform: scale(1.15) !important;
             box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.55) !important;
         }
 
         /* Thumb Firefox */
-        #video-volume-slider::-moz-range-thumb,
-        #fs-volume-slider::-moz-range-thumb {
+        #video-volume-slider::-moz-range-thumb {
             width: 14px !important;
             height: 14px !important;
             border-radius: 50% !important;
@@ -325,24 +323,20 @@
         }
 
         #video-volume-slider::-moz-range-thumb:hover,
-        #fs-volume-slider::-moz-range-thumb:hover,
-        #video-volume-slider:active::-moz-range-thumb,
-        #fs-volume-slider:active::-moz-range-thumb {
+        #video-volume-slider:active::-moz-range-thumb {
             transform: scale(1.15) !important;
             box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.55) !important;
         }
 
         /* Firefox track y progreso */
-        #video-volume-slider::-moz-range-track,
-        #fs-volume-slider::-moz-range-track {
+        #video-volume-slider::-moz-range-track {
             background: #52525b !important;
             height: 4px !important;
             border-radius: 9999px !important;
             border: none !important;
         }
 
-        #video-volume-slider::-moz-range-progress,
-        #fs-volume-slider::-moz-range-progress {
+        #video-volume-slider::-moz-range-progress {
             background: #e50914 !important;
             height: 4px !important;
             border-radius: 9999px !important;
@@ -465,40 +459,38 @@
                         <span id="video-timecode">00:00.00 / 00:00.00</span>
                     </div>
 
-                    <!-- BARRA DE REPRODUCTOR EN PANTALLA COMPLETA (ELEVADA Y PLAY CENTRADO) -->
+                    <!-- BARRA DE REPRODUCTOR EN PANTALLA COMPLETA (ELEVADA Y TODAS LAS OPCIONES CENTRADAS) -->
                     <div id="fullscreen-controls-bar"
-                        class="hidden absolute bottom-12 sm:bottom-16 md:bottom-20 left-4 right-4 sm:left-auto sm:right-auto sm:w-[92%] sm:max-w-xl sm:left-1/2 sm:-translate-x-1/2 z-50 px-5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between pointer-events-auto transition-opacity duration-300 bg-black/75 backdrop-blur-xl rounded-2xl border border-white/15 shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
+                        class="hidden absolute bottom-12 sm:bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-center gap-2.5 sm:gap-4 pointer-events-auto transition-opacity duration-300 bg-black/85 backdrop-blur-xl rounded-full border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.85)] max-w-[95vw] w-auto">
                         
-                        <!-- Lado izquierdo: VOLUMEN estilo Pelismaster -->
-                        <div class="flex items-center gap-1.5 sm:gap-2 flex-1 justify-start">
-                            <button id="fs-volume-btn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors" title="Silenciar / Activar sonido">
-                                <span class="material-symbols-outlined text-[20px] sm:text-[22px]" id="fs-volume-icon">volume_up</span>
-                            </button>
-                            <input type="range" id="fs-volume-slider" min="0" max="1" step="0.05" value="1"
-                                class="w-16 sm:w-24 cursor-pointer" title="Control de volumen">
-                        </div>
+                        <!-- 1. VOLUMEN: CON SONIDO / SIN SONIDO (Botón toggle) -->
+                        <button id="fs-volume-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors active:scale-95 shrink-0" title="Con sonido / Sin sonido (Silenciar / Activar)">
+                            <span class="material-symbols-outlined text-[22px] sm:text-[24px]" id="fs-volume-icon">volume_up</span>
+                        </button>
 
-                        <!-- Centro: ATRÁS - PLAY (PERFECTAMENTE CENTRADO) - ADELANTE -->
-                        <div class="flex items-center justify-center gap-3 sm:gap-5 flex-shrink-0">
-                            <button id="fs-prev-btn" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors active:scale-95" title="Retroceder 5s">
-                                <span class="material-symbols-outlined text-[22px] sm:text-[26px]">skip_previous</span>
-                            </button>
+                        <div class="h-4 w-px bg-white/15 shrink-0"></div>
 
-                            <button id="fs-play-btn" class="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-600/40 active:scale-95" title="Reproducir / Pausar">
-                                <span class="material-symbols-outlined text-[26px] sm:text-[32px]" id="fs-play-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                            </button>
+                        <!-- 2. ATRÁS (Retroceder 5s) -->
+                        <button id="fs-prev-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors active:scale-95 shrink-0" title="Retroceder 5s">
+                            <span class="material-symbols-outlined text-[22px] sm:text-[26px]">skip_previous</span>
+                        </button>
 
-                            <button id="fs-next-btn" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors active:scale-95" title="Avanzar 5s">
-                                <span class="material-symbols-outlined text-[22px] sm:text-[26px]">skip_next</span>
-                            </button>
-                        </div>
+                        <!-- 3. PLAY / PAUSE (CENTRAL) -->
+                        <button id="fs-play-btn" class="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-600/40 active:scale-95 shrink-0" title="Reproducir / Pausar">
+                            <span class="material-symbols-outlined text-[26px] sm:text-[32px]" id="fs-play-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </button>
 
-                        <!-- Lado derecho: PANTALLA COMPLETA (SALIR) -->
-                        <div class="flex items-center justify-end flex-1">
-                            <button id="fs-fullscreen-btn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors" title="Salir de pantalla completa">
-                                <span class="material-symbols-outlined text-[20px] sm:text-[22px]">fullscreen_exit</span>
-                            </button>
-                        </div>
+                        <!-- 4. ADELANTE (Avanzar 5s) -->
+                        <button id="fs-next-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors active:scale-95 shrink-0" title="Avanzar 5s">
+                            <span class="material-symbols-outlined text-[22px] sm:text-[26px]">skip_next</span>
+                        </button>
+
+                        <div class="h-4 w-px bg-white/15 shrink-0"></div>
+
+                        <!-- 5. PANTALLA COMPLETA (SALIR) -->
+                        <button id="fs-fullscreen-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors active:scale-95 shrink-0" title="Salir de pantalla completa">
+                            <span class="material-symbols-outlined text-[20px] sm:text-[24px]">fullscreen_exit</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -541,16 +533,16 @@
                                 id="video-next-btn"><span
                                     class="material-symbols-outlined text-[20px]">skip_next</span></button>
 
-                            <!-- Control de volumen estilo Pelismaster -->
-                            <div class="flex items-center gap-2 pl-2 border-l border-white/5">
+                            <!-- Control de volumen estilo Pelismaster (adaptativo PC y Celular) -->
+                            <div class="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-white/5 shrink-0">
                                 <button
-                                    class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
+                                    class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors shrink-0"
                                     id="video-volume-btn" title="Silenciar / Activar sonido">
                                     <span class="material-symbols-outlined text-[20px]"
                                         id="video-volume-icon">volume_up</span>
                                 </button>
                                 <input type="range" id="video-volume-slider" min="0" max="1" step="0.05" value="1"
-                                    class="w-20 sm:w-24 cursor-pointer" title="Control de volumen">
+                                    class="w-16 sm:w-20 md:w-24 shrink-0 cursor-pointer" title="Control de volumen">
                             </div>
                         </div>
                     </div>
