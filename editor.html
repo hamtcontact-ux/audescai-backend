@@ -259,13 +259,14 @@
             opacity: 1;
         }
 
-        /* Control de volumen estilo Pelismaster (rojo con halo circular y pista bicolor, 20% más corto) */
+        /* Control de volumen estilo Pelismaster (rojo con halo circular y pista bicolor, ultra compacto) */
         #video-volume-slider,
         #fs-volume-slider {
             -webkit-appearance: none !important;
             appearance: none !important;
-            width: 72px !important;
-            max-width: 72px !important;
+            width: 44px !important;
+            max-width: 44px !important;
+            min-width: 44px !important;
             height: 4px !important;
             border-radius: 9999px !important;
             background: linear-gradient(to right, #e50914 0%, #e50914 100%, rgba(255, 255, 255, 0.25) 100%, rgba(255, 255, 255, 0.25) 100%) !important;
@@ -460,7 +461,7 @@
                                 <span class="material-symbols-outlined text-[22px] sm:text-[24px]" id="fs-volume-icon">volume_up</span>
                             </button>
                             <input type="range" id="fs-volume-slider" min="0" max="1" step="0.05" value="1"
-                                class="w-[72px] cursor-pointer" style="width: 72px;" title="Control de volumen">
+                                class="w-[44px] cursor-pointer" style="width: 44px; max-width: 44px; min-width: 44px;" title="Control de volumen">
                         </div>
 
                         <!-- 2. ATRÁS -->
@@ -533,7 +534,7 @@
                                         id="video-volume-icon">volume_up</span>
                                 </button>
                                 <input type="range" id="video-volume-slider" min="0" max="1" step="0.05" value="1"
-                                    class="w-[72px] cursor-pointer" style="width: 72px;" title="Control de volumen">
+                                    class="w-[44px] cursor-pointer" style="width: 44px; max-width: 44px; min-width: 44px;" title="Control de volumen">
                             </div>
                         </div>
                     </div>
@@ -1584,67 +1585,9 @@
             videoPrevBtn.addEventListener('click', () => { mainVideo.currentTime = Math.max(0, mainVideo.currentTime - SEEK_STEP); });
             videoNextBtn.addEventListener('click', () => { mainVideo.currentTime = Math.min(mainVideo.duration || 0, mainVideo.currentTime + SEEK_STEP); });
 
+            // Elementos del reproductor y controles de pantalla completa
             const videoVolumeSlider = document.getElementById('video-volume-slider');
             const undoBtn = document.getElementById('undo-btn');
-            let masterVolume = 1.0;
-
-            function updateVolumeSliderTrack(el, val) {
-                if (!el) return;
-                const pct = Math.round(Math.max(0, Math.min(1, val)) * 100);
-                el.style.background = `linear-gradient(to right, #e50914 0%, #e50914 ${pct}%, rgba(255, 255, 255, 0.25) ${pct}%, rgba(255, 255, 255, 0.25) 100%)`;
-            }
-
-            if (videoVolumeSlider) {
-                updateVolumeSliderTrack(videoVolumeSlider, masterVolume); if (fsVolumeSlider) updateVolumeSliderTrack(fsVolumeSlider, masterVolume);
-                videoVolumeSlider.addEventListener('input', (e) => {
-                    const val = parseFloat(e.target.value);
-                    masterVolume = val;
-                    updateVolumeSliderTrack(videoVolumeSlider, val); if (fsVolumeSlider) { fsVolumeSlider.value = val; updateVolumeSliderTrack(fsVolumeSlider, val); }
-                    if (val === 0) {
-                        mainVideo.muted = true;
-                        videoVolumeIcon.textContent = 'volume_off';
-                    } else {
-                        mainVideo.muted = false;
-                        mainVideo.volume = val * 0.4;
-                        videoVolumeIcon.textContent = val < 0.5 ? 'volume_down' : 'volume_up';
-                    }
-                    audioPool.forEach(a => {
-                        a.volume = val;
-                    });
-                });
-            }
-
-            videoVolumeBtn.addEventListener('click', () => {
-                mainVideo.muted = !mainVideo.muted;
-                if (mainVideo.muted) {
-                    videoVolumeIcon.textContent = 'volume_off';
-                    if (videoVolumeSlider) {
-                        videoVolumeSlider.value = 0;
-                        updateVolumeSliderTrack(videoVolumeSlider, 0); if (fsVolumeSlider) { fsVolumeSlider.value = 0; updateVolumeSliderTrack(fsVolumeSlider, 0); }
-                    }
-                    audioPool.forEach(a => { a.volume = 0; });
-                    showToast('Audio silenciado', 'info');
-                } else {
-                    const targetVol = masterVolume > 0 ? masterVolume : 1.0;
-                    masterVolume = targetVol;
-                    if (videoVolumeSlider) {
-                        videoVolumeSlider.value = targetVol;
-                        updateVolumeSliderTrack(videoVolumeSlider, targetVol); if (fsVolumeSlider) { fsVolumeSlider.value = targetVol; updateVolumeSliderTrack(fsVolumeSlider, targetVol); }
-                    }
-                    mainVideo.volume = targetVol * 0.4;
-                    videoVolumeIcon.textContent = targetVol < 0.5 ? 'volume_down' : 'volume_up';
-                    audioPool.forEach(a => { a.volume = targetVol; });
-                    showToast('Audio activado', 'info');
-                }
-            });
-
-            if (undoBtn) {
-                undoBtn.addEventListener('click', () => {
-                    undo();
-                });
-            }
-
-            // Gestión integral de Pantalla Completa y Reproductor Sincronizado
             const videoWrapper = document.getElementById('main-video-wrapper');
             const fsControlsBar = document.getElementById('fullscreen-controls-bar');
             const fsPlayBtn = document.getElementById('fs-play-btn');
@@ -1656,8 +1599,15 @@
             const fsVolumeSlider = document.getElementById('fs-volume-slider');
             const fsFullscreenBtn = document.getElementById('fs-fullscreen-btn');
 
+            let masterVolume = 1.0;
             let isFullscreenMode = false;
             let fsHideTimeout = null;
+
+            function updateVolumeSliderTrack(el, val) {
+                if (!el) return;
+                const pct = Math.round(Math.max(0, Math.min(1, val)) * 100);
+                el.style.background = `linear-gradient(to right, #e50914 0%, #e50914 ${pct}%, rgba(255, 255, 255, 0.25) ${pct}%, rgba(255, 255, 255, 0.25) 100%)`;
+            }
 
             function syncPlayIcons() {
                 const iconName = mainVideo.paused ? 'play_arrow' : 'pause';
@@ -1679,6 +1629,47 @@
                 if (fsVolumeIcon) fsVolumeIcon.textContent = iconName;
             }
 
+            if (videoVolumeSlider) {
+                updateVolumeSliderTrack(videoVolumeSlider, masterVolume);
+                if (fsVolumeSlider) updateVolumeSliderTrack(fsVolumeSlider, masterVolume);
+                videoVolumeSlider.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    masterVolume = val;
+                    if (val === 0) {
+                        mainVideo.muted = true;
+                        mainVideo.volume = 0;
+                    } else {
+                        mainVideo.muted = false;
+                        mainVideo.volume = val * 0.4;
+                    }
+                    audioPool.forEach(a => { a.volume = val; });
+                    syncVolumeUI(val, mainVideo.muted);
+                });
+            }
+
+            videoVolumeBtn?.addEventListener('click', () => {
+                mainVideo.muted = !mainVideo.muted;
+                if (mainVideo.muted) {
+                    audioPool.forEach(a => { a.volume = 0; });
+                    syncVolumeUI(0, true);
+                    showToast('Audio silenciado', 'info');
+                } else {
+                    const targetVol = masterVolume > 0 ? masterVolume : 1.0;
+                    masterVolume = targetVol;
+                    mainVideo.volume = targetVol * 0.4;
+                    audioPool.forEach(a => { a.volume = targetVol; });
+                    syncVolumeUI(targetVol, false);
+                    showToast('Audio activado', 'info');
+                }
+            });
+
+            // Botón Deshacer
+            if (undoBtn) {
+                undoBtn.addEventListener('click', () => {
+                    performUndo();
+                });
+            }
+
             function resetFsControlsTimer() {
                 if (!isFullscreenMode || !fsControlsBar) return;
                 fsControlsBar.classList.remove('opacity-0');
@@ -1697,14 +1688,14 @@
                 if (isMobile) {
                     isFullscreenMode = !isFullscreenMode;
                     if (isFullscreenMode) {
-                        videoWrapper.classList.add('fullscreen-active');
+                        videoWrapper?.classList.add('fullscreen-active');
                         document.body.classList.add('overflow-hidden');
                         if (fsControlsBar) fsControlsBar.classList.remove('hidden');
                         syncPlayIcons();
                         syncVolumeUI(masterVolume, mainVideo.muted);
                         resetFsControlsTimer();
                     } else {
-                        videoWrapper.classList.remove('fullscreen-active');
+                        videoWrapper?.classList.remove('fullscreen-active');
                         document.body.classList.remove('overflow-hidden');
                         if (fsControlsBar) {
                             fsControlsBar.classList.add('hidden');
@@ -1712,41 +1703,74 @@
                         }
                     }
                 } else {
-                    if (!document.fullscreenElement) {
-                        videoWrapper.requestFullscreen().then(() => {
+                    const docFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+                    if (!docFs) {
+                        const targetEl = videoWrapper || mainVideo;
+                        const req = targetEl.requestFullscreen || targetEl.webkitRequestFullscreen || targetEl.mozRequestFullScreen;
+                        if (req) {
+                            req.call(targetEl).then(() => {
+                                isFullscreenMode = true;
+                                if (fsControlsBar) fsControlsBar.classList.remove('hidden');
+                                syncPlayIcons();
+                                syncVolumeUI(masterVolume, mainVideo.muted);
+                                resetFsControlsTimer();
+                            }).catch(() => {
+                                isFullscreenMode = true;
+                                videoWrapper?.classList.add('fullscreen-active');
+                                document.body.classList.add('overflow-hidden');
+                                if (fsControlsBar) fsControlsBar.classList.remove('hidden');
+                                syncPlayIcons();
+                                syncVolumeUI(masterVolume, mainVideo.muted);
+                                resetFsControlsTimer();
+                            });
+                        } else {
                             isFullscreenMode = true;
+                            videoWrapper?.classList.add('fullscreen-active');
+                            document.body.classList.add('overflow-hidden');
                             if (fsControlsBar) fsControlsBar.classList.remove('hidden');
                             syncPlayIcons();
                             syncVolumeUI(masterVolume, mainVideo.muted);
                             resetFsControlsTimer();
-                        }).catch(() => {});
+                        }
                     } else {
-                        document.exitFullscreen().catch(() => {});
+                        const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+                        if (exit) exit.call(document).catch(() => {});
+                        videoWrapper?.classList.remove('fullscreen-active');
+                        document.body.classList.remove('overflow-hidden');
+                        if (fsControlsBar) {
+                            fsControlsBar.classList.add('hidden');
+                            fsControlsBar.classList.remove('opacity-0');
+                        }
+                        isFullscreenMode = false;
                     }
                 }
             }
 
-            document.addEventListener('fullscreenchange', () => {
-                isFullscreenMode = !!document.fullscreenElement;
-                if (isFullscreenMode) {
-                    if (fsControlsBar) fsControlsBar.classList.remove('hidden');
-                    syncPlayIcons();
-                    syncVolumeUI(masterVolume, mainVideo.muted);
-                    resetFsControlsTimer();
-                } else {
-                    videoWrapper.classList.remove('fullscreen-active');
-                    document.body.classList.remove('overflow-hidden');
-                    if (fsControlsBar) {
-                        fsControlsBar.classList.add('hidden');
-                        fsControlsBar.classList.remove('opacity-0');
+            ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'].forEach(evt => {
+                document.addEventListener(evt, () => {
+                    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+                    isFullscreenMode = isFs;
+                    if (isFullscreenMode) {
+                        videoWrapper?.classList.add('fullscreen-active');
+                        if (fsControlsBar) fsControlsBar.classList.remove('hidden');
+                        syncPlayIcons();
+                        syncVolumeUI(masterVolume, mainVideo.muted);
+                        resetFsControlsTimer();
+                    } else {
+                        videoWrapper?.classList.remove('fullscreen-active');
+                        document.body.classList.remove('overflow-hidden');
+                        if (fsControlsBar) {
+                            fsControlsBar.classList.add('hidden');
+                            fsControlsBar.classList.remove('opacity-0');
+                        }
                     }
-                }
+                });
             });
 
             videoFullscreenBtn?.addEventListener('click', toggleFullscreenView);
             fsFullscreenBtn?.addEventListener('click', toggleFullscreenView);
 
-            // Controles de Pantalla Completa sincronizados:
+            // Controles de Pantalla Completa sincronizados
             fsPlayBtn?.addEventListener('click', (e) => {
                 e.stopPropagation();
                 mainVideo.paused ? mainVideo.play() : mainVideo.pause();
@@ -1773,6 +1797,7 @@
                     masterVolume = val;
                     if (val === 0) {
                         mainVideo.muted = true;
+                        mainVideo.volume = 0;
                     } else {
                         mainVideo.muted = false;
                         mainVideo.volume = val * 0.4;
@@ -1801,9 +1826,9 @@
                 resetFsControlsTimer();
             });
 
-            videoWrapper.addEventListener('mousemove', resetFsControlsTimer);
-            videoWrapper.addEventListener('touchstart', resetFsControlsTimer, { passive: true });
-            videoWrapper.addEventListener('click', (e) => {
+            videoWrapper?.addEventListener('mousemove', resetFsControlsTimer);
+            videoWrapper?.addEventListener('touchstart', resetFsControlsTimer, { passive: true });
+            videoWrapper?.addEventListener('click', (e) => {
                 if (isFullscreenMode && e.target === mainVideo) {
                     mainVideo.paused ? mainVideo.play() : mainVideo.pause();
                     syncPlayIcons();
