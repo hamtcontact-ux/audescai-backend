@@ -10,6 +10,10 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.email.lower() == "editor.online.latam@gmail.com";
     }
 
+    function isEmailVerified() {
+      return isAuthenticated() && (request.auth.token.email_verified == true || isSuperAdmin());
+    }
+
     function isOwner(uid) {
       return isAuthenticated() && request.auth.uid == uid;
     }
@@ -61,16 +65,19 @@ service cloud.firestore {
         allow read, write: if isSuperAdmin();
       }
 
-      // Proyectos del usuario
+      // Proyectos del usuario: lectura si es dueño; escritura EXIGE cuenta de correo verificada
       match /proyectos/{proyectoId} {
-        allow read, write: if isOwner(uid) || isSuperAdmin();
+        allow read: if isOwner(uid) || isSuperAdmin();
+        allow write: if (isOwner(uid) && isEmailVerified()) || isSuperAdmin();
 
         match /bloques/{bloqueId} {
-          allow read, write: if isOwner(uid) || isSuperAdmin();
+          allow read: if isOwner(uid) || isSuperAdmin();
+          allow write: if (isOwner(uid) && isEmailVerified()) || isSuperAdmin();
         }
 
         match /copias_seguridad/{copiaId} {
-          allow read, write: if isOwner(uid) || isSuperAdmin();
+          allow read: if isOwner(uid) || isSuperAdmin();
+          allow write: if (isOwner(uid) && isEmailVerified()) || isSuperAdmin();
         }
       }
     }

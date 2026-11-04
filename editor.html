@@ -261,10 +261,9 @@
 
         /* Componente Modular de Control de Volumen Estilo PelisMaster / Plyr */
         :root {
-            --primary-color: #e50914;
-            --track-bg: #333333;
-            --icon-color: #ffffff;
-            --thumb-size: 12px;
+            --volume-primary: #e50914;
+            --volume-track-bg: #444444;
+            --volume-thumb-size: 12px;
         }
 
         .volume-container {
@@ -278,7 +277,7 @@
             border: 0;
             cursor: pointer;
             padding: 0;
-            color: var(--icon-color, #ffffff);
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -290,8 +289,8 @@
         }
 
         /* Slider de rango compacto: reducido 30% (48px de longitud) con relleno dinámico vía --value */
-        .volume-slider,
-        #video-volume-slider {
+        input[type="range"].volume-slider,
+        input[type="range"]#video-volume-slider {
             -webkit-appearance: none !important;
             -moz-appearance: none !important;
             appearance: none !important;
@@ -299,15 +298,15 @@
             max-width: 52px !important;
             min-width: 42px !important;
             height: 4px !important;
-            border-radius: 999px !important;
+            border-radius: 9999px !important;
             outline: none !important;
             border: 0 !important;
             background: linear-gradient(
                 to right,
-                var(--primary-color, #e50914) 0%,
-                var(--primary-color, #e50914) var(--value, 100%),
-                var(--track-bg, #333333) var(--value, 100%),
-                var(--track-bg, #333333) 100%
+                var(--volume-primary, #e50914) 0%,
+                var(--volume-primary, #e50914) var(--value, 100%),
+                var(--volume-track-bg, #444444) var(--value, 100%),
+                var(--volume-track-bg, #444444) 100%
             ) !important;
             cursor: pointer !important;
             touch-action: none !important;
@@ -315,80 +314,81 @@
             padding: 0 !important;
             display: inline-block !important;
             vertical-align: middle !important;
+            overflow: visible !important;
         }
 
         /* Webkit Track (Chrome, Safari, Edge, Android, iOS) */
-        .volume-slider::-webkit-slider-runnable-track,
-        #video-volume-slider::-webkit-slider-runnable-track {
+        input[type="range"].volume-slider::-webkit-slider-runnable-track,
+        input[type="range"]#video-volume-slider::-webkit-slider-runnable-track {
             -webkit-appearance: none !important;
             width: 100% !important;
             height: 4px !important;
             background: transparent !important;
-            border-radius: 999px !important;
+            border-radius: 9999px !important;
             border: none !important;
             cursor: pointer !important;
             margin: 0 !important;
             padding: 0 !important;
         }
 
-        /* Thumb Webkit - Centrado vertical exacto en la barra (4px track - 12px thumb) / 2 = -4px */
-        .volume-slider::-webkit-slider-thumb,
-        #video-volume-slider::-webkit-slider-thumb {
+        /* Thumb Webkit - Centrado vertical exacto en la barra: (4px track - 12px thumb) / 2 = -4px */
+        input[type="range"].volume-slider::-webkit-slider-thumb,
+        input[type="range"]#video-volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none !important;
             appearance: none !important;
-            width: var(--thumb-size, 12px) !important;
-            height: var(--thumb-size, 12px) !important;
+            width: var(--volume-thumb-size, 12px) !important;
+            height: var(--volume-thumb-size, 12px) !important;
             border-radius: 50% !important;
-            background: var(--primary-color, #e50914) !important;
+            background: var(--volume-primary, #e50914) !important;
             border: 0 !important;
             margin-top: -4px !important;
-            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.35) !important; /* Halo exterior semitransparente */
+            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.38) !important; /* Halo exterior semitransparente */
             transition: box-shadow 0.2s ease, transform 0.1s ease !important;
             cursor: pointer !important;
         }
 
-        .volume-slider:active::-webkit-slider-thumb,
-        .volume-slider:hover::-webkit-slider-thumb,
-        #video-volume-slider:active::-webkit-slider-thumb,
-        #video-volume-slider:hover::-webkit-slider-thumb {
+        input[type="range"].volume-slider:hover::-webkit-slider-thumb,
+        input[type="range"].volume-slider:active::-webkit-slider-thumb,
+        input[type="range"]#video-volume-slider:hover::-webkit-slider-thumb,
+        input[type="range"]#video-volume-slider:active::-webkit-slider-thumb {
             transform: scale(1.15) !important;
-            box-shadow: 0 0 0 6px rgba(229, 9, 20, 0.5) !important;
+            box-shadow: 0 0 0 6px rgba(229, 9, 20, 0.55) !important;
         }
 
         /* Firefox Track */
-        .volume-slider::-moz-range-track,
-        #video-volume-slider::-moz-range-track {
-            background: var(--track-bg, #333333) !important;
+        input[type="range"].volume-slider::-moz-range-track,
+        input[type="range"]#video-volume-slider::-moz-range-track {
+            background: var(--volume-track-bg, #444444) !important;
             height: 4px !important;
-            border-radius: 999px !important;
+            border-radius: 9999px !important;
             border: none !important;
         }
 
-        .volume-slider::-moz-range-progress,
-        #video-volume-slider::-moz-range-progress {
-            background: var(--primary-color, #e50914) !important;
+        input[type="range"].volume-slider::-moz-range-progress,
+        input[type="range"]#video-volume-slider::-moz-range-progress {
+            background: var(--volume-primary, #e50914) !important;
             height: 4px !important;
-            border-radius: 999px !important;
+            border-radius: 9999px !important;
         }
 
         /* Thumb Firefox */
-        .volume-slider::-moz-range-thumb,
-        #video-volume-slider::-moz-range-thumb {
-            width: var(--thumb-size, 12px) !important;
-            height: var(--thumb-size, 12px) !important;
+        input[type="range"].volume-slider::-moz-range-thumb,
+        input[type="range"]#video-volume-slider::-moz-range-thumb {
+            width: var(--volume-thumb-size, 12px) !important;
+            height: var(--volume-thumb-size, 12px) !important;
             border: 0 !important;
             border-radius: 50% !important;
-            background: var(--primary-color, #e50914) !important;
-            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.35) !important;
+            background: var(--volume-primary, #e50914) !important;
+            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.38) !important;
             cursor: pointer !important;
         }
 
-        .volume-slider:active::-moz-range-thumb,
-        .volume-slider:hover::-moz-range-thumb,
-        #video-volume-slider:active::-moz-range-thumb,
-        #video-volume-slider:hover::-moz-range-thumb {
+        input[type="range"].volume-slider:hover::-moz-range-thumb,
+        input[type="range"].volume-slider:active::-moz-range-thumb,
+        input[type="range"]#video-volume-slider:hover::-moz-range-thumb,
+        input[type="range"]#video-volume-slider:active::-moz-range-thumb {
             transform: scale(1.15) !important;
-            box-shadow: 0 0 0 6px rgba(229, 9, 20, 0.5) !important;
+            box-shadow: 0 0 0 6px rgba(229, 9, 20, 0.55) !important;
         }
 
         /* Pantalla completa inmersiva con reproductor visible abajo */
@@ -598,7 +598,7 @@
                                     max="1" 
                                     step="0.05" 
                                     value="1" 
-                                    style="--value: 100%;"
+                                    style="--value: 100%; background: linear-gradient(to right, #e50914 0%, #e50914 100%, #444444 100%, #444444 100%);"
                                     role="slider"
                                     aria-label="Volumen"
                                     aria-valuemin="0"
@@ -1692,7 +1692,7 @@
                 const safeVal = Math.max(0, Math.min(1, val));
                 const pct = Math.round(safeVal * 100);
                 el.style.setProperty('--value', pct + '%');
-                el.style.background = `linear-gradient(to right, #e50914 0%, #e50914 ${pct}%, #333333 ${pct}%, #333333 100%)`;
+                el.style.background = `linear-gradient(to right, #e50914 0%, #e50914 ${pct}%, #444444 ${pct}%, #444444 100%)`;
                 el.setAttribute('aria-valuenow', pct);
             }
 
