@@ -657,6 +657,13 @@ def optimizar_mp3_firefox(path_audio):
 
 # --- GENERACIÓN DE AUDIO (EDGE TTS) ---
 def generar_tts_robusto(texto, voz, path_salida, rate="+0%"):
+    if rate:
+        rate = str(rate).strip()
+    if not rate or rate in ["0%", "0", " 0%"]:
+        rate = "+0%"
+    elif not (rate.startswith("+") or rate.startswith("-")):
+        rate = f"+{rate}"
+
     if os.path.exists(path_salida) and os.path.getsize(path_salida) > 0:
         optimizar_mp3_firefox(path_salida)
         return True, ""
@@ -1668,6 +1675,10 @@ def api_tts():
     texto = request.args.get("text", "").strip()
     voz = request.args.get("voice", "es-ES-AlvaroNeural").strip()
     rate = request.args.get("rate", "+0%").strip()
+    if not rate or rate in ["0%", "0", " 0%"]:
+        rate = "+0%"
+    elif not (rate.startswith("+") or rate.startswith("-")):
+        rate = f"+{rate}" 
 
     if not texto:
         return "Texto no proporcionado", 400

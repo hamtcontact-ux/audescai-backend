@@ -528,22 +528,23 @@
     </div>
 
     
-    <!-- Delete Confirmation Modal -->
-    <div class="fixed inset-0 z-[60] hidden opacity-0 transition-opacity duration-300 ease-out" id="delete-modal">
-        <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" id="delete-backdrop"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
-            <div class="bg-surface-container w-full max-w-sm rounded-xl border border-white/10 shadow-2xl pointer-events-auto transform scale-95 transition-transform duration-300 ease-out flex flex-col" id="delete-modal-content">
-                <div class="p-lg flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500 border border-red-500/20">
-                        <span class="material-symbols-outlined text-[32px]">delete_forever</span>
-                    </div>
-                    <h2 class="font-title-lg text-title-lg text-on-surface mb-2">¿Eliminar Proyecto?</h2>
-                    <p class="font-label-md text-label-md text-on-surface-variant">Esta acción eliminará el proyecto permanentemente de tu base de datos y no se puede deshacer.</p>
+    <!-- Delete Confirmation Modal con Glassmorphism Unificado -->
+    <div class="fixed inset-0 z-[60] hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-4" id="delete-modal">
+        <div class="absolute inset-0 bg-black/75 backdrop-blur-md" id="delete-backdrop"></div>
+        <div class="relative glass-panel w-full max-w-md rounded-3xl border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] bg-surface-container/95 backdrop-blur-xl pointer-events-auto transform scale-95 transition-transform duration-300 ease-out flex flex-col overflow-hidden animate-fade-in" id="delete-modal-content">
+            <div class="p-6 pb-4 flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-4 text-red-400 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.15)] ring-4 ring-red-500/5">
+                    <span class="material-symbols-outlined text-[34px]">delete_forever</span>
                 </div>
-                <div class="p-md border-t border-white/10 flex justify-center gap-3 bg-surface-container-low/50 rounded-b-xl">
-                    <button class="px-5 py-2.5 rounded-lg text-on-surface font-label-md hover:bg-white/5 transition-colors border border-outline-variant/30 flex-1" id="cancel-delete-btn">Cancelar</button>
-                    <button class="px-5 py-2.5 rounded-lg bg-red-600 text-white font-label-md hover:bg-red-700 transition-colors flex-1 shadow-[0_0_15px_rgba(220,38,38,0.3)]" id="confirm-delete-btn">Eliminar</button>
-                </div>
+                <h2 class="text-xl font-bold text-white mb-2">¿Eliminar Proyecto?</h2>
+                <p class="text-xs text-zinc-400 leading-relaxed max-w-xs">Esta acción eliminará el proyecto y su miniatura permanentemente de tu base de datos y no se puede revertir.</p>
+            </div>
+            <div class="p-5 border-t border-white/10 flex justify-center gap-3 bg-white/[0.02]">
+                <button class="px-5 py-2.5 rounded-xl text-zinc-300 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all border border-white/10 flex-1" id="cancel-delete-btn">Cancelar</button>
+                <button class="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition-all flex-1 shadow-[0_0_20px_rgba(220,38,38,0.4)] flex items-center justify-center gap-1.5" id="confirm-delete-btn">
+                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                    <span>Eliminar</span>
+                </button>
             </div>
         </div>
     </div>
@@ -617,6 +618,23 @@
     </div>
 
     <script>
+        function showToast(msg, type = 'info') {
+            const ICONS = { info: 'info', success: 'check_circle', error: 'error', warn: 'warning' };
+            const ICON_COLORS = { info: 'text-cyan-400', success: 'text-emerald-400', error: 'text-rose-400', warn: 'text-amber-400' };
+            document.getElementById('_toast')?.remove();
+            const el = document.createElement('div');
+            el.id = '_toast';
+            el.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-zinc-950/90 text-white border border-white/15 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 backdrop-blur-md font-label-md text-xs sm:text-sm pointer-events-none transition-all duration-300 transform translate-y-0 opacity-100';
+            el.innerHTML = `<span class="material-symbols-outlined text-[20px] ${ICON_COLORS[type] || 'text-cyan-400'} shrink-0">${ICONS[type] || 'info'}</span><span class="whitespace-nowrap">${msg}</span>`;
+            document.body.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translate(-50%, 8px) scale(0.95)';
+                setTimeout(() => el.remove(), 300);
+            }, 3200);
+        }
+        window.showToast = showToast;
+
         document.addEventListener('DOMContentLoaded', () => {
             const FLASK_API = 'https://api.cineparaciegos.com';
 
@@ -1192,7 +1210,7 @@
 
                     const v = uploadVoiceSelect.value;
                     const txt = UPLOAD_VOICE_DEMOS[v] || 'Hola, esta es una prueba de voz para la audiodescripción.';
-                    const url = `${FLASK_API}/api/tts?text=${encodeURIComponent(txt)}&voice=${encodeURIComponent(v)}&rate=+0%`;
+                    const url = `${FLASK_API}/api/tts?text=${encodeURIComponent(txt)}&voice=${encodeURIComponent(v)}&rate=%2B0%`;
                     
                     uploadVoiceAudio = new Audio(url);
                     if (uploadTestVoiceIcon) uploadTestVoiceIcon.textContent = 'stop';
