@@ -8,6 +8,7 @@ import subprocess
 import sys
 import urllib.request
 import uuid
+import math
 from functools import wraps
 
 # Forzar actualización de dependencias críticas en el arranque
