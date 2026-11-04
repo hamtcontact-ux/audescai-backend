@@ -1557,63 +1557,15 @@
                                 }, 300);
                             }, 1000);
                         } else {
-                            updateProgressUI(85, 'Video en cola de IA (procesando)...');
-                            
-                            await new Promise((resolve, reject) => {
-                                const interval = setInterval(async () => {
-                                    try {
-                                        const statusRes = await fetch(`${FLASK_API}/fase1-status?proyecto_id=${projectId}`);
-                                        if (!statusRes.ok) return;
-                                        const statusData = await statusRes.json();
-                                        
-                                        if (statusData.status === "idle") {
-                                            clearInterval(interval);
-                                            updateProgressUI(90, 'Descargando guión de la IA...');
-                                            
-                                            const resultRes = await fetch(`${FLASK_API}/fase1-resultado?proyecto_id=${projectId}`);
-                                            if (!resultRes.ok) {
-                                                throw new Error("No se pudo obtener el resultado final.");
-                                            }
-                                            const resultData = await resultRes.json();
-                                            
-                                            if (resultData && resultData.bloques && Array.isArray(resultData.bloques)) {
-                                                updateProgressUI(95, 'Guardando guión en Firestore...');
-                                                const blocksBatch = db.batch();
-                                                resultData.bloques.forEach(b => {
-                                                    const blockDoc = projectRef.collection('bloques').doc(String(b.id));
-                                                    blocksBatch.set(blockDoc, b);
-                                                });
-                                                await blocksBatch.commit();
-                                                await projectRef.update({ status: 'Listo para editar' });
-                                                await syncTokensToFirestore(uid, resultData);
-                                                updateProgressUI(100, '¡Completado!');
-                                                setTimeout(() => {
-                                                    procOverlay.classList.add('opacity-0');
-                                                    setTimeout(() => {
-                                                        procOverlay.classList.add('hidden');
-                                                        window.location.href = `editor.html?project=${projectId}`;
-                                                    }, 300);
-                                                }, 1000);
-                                                resolve();
-                                            } else {
-                                                throw new Error("Formato de resultado inválido.");
-                                            }
-                                        } else if (statusData.status === "quota_exceeded") {
-                                            clearInterval(interval);
-                                            alert(statusData.error || "Has alcanzado el límite de tokens de tu plan mensual. Por favor adquiere un paquete adicional o solicita una recarga al administrador (editor.online.latam@gmail.com).");
-                                            procOverlay.classList.add('opacity-0');
-                                            setTimeout(() => procOverlay.classList.add('hidden'), 300);
-                                            return;
-                                        } else if (statusData.status === "error") {
-                                            clearInterval(interval);
-                                            reject(new Error(statusData.error || "Error en el worker de la IA"));
-                                        }
-                                    } catch (err) {
-                                        clearInterval(interval);
-                                        reject(err);
-                                    }
-                                }, 4000);
-                            });
+                            // Redirigir de inmediato al editor para que el usuario vea cómo se colocan las pistas en vivo
+                            updateProgressUI(100, '¡Video preparado! Abriendo el editor en vivo...');
+                            setTimeout(() => {
+                                procOverlay.classList.add('opacity-0');
+                                setTimeout(() => {
+                                    procOverlay.classList.add('hidden');
+                                    window.location.href = `editor.html?project=${projectId}&processing=true`;
+                                }, 250);
+                            }, 400);
                         }
                     } else {
                         alert("Error: Respuesta de inicialización inválida del servidor.");

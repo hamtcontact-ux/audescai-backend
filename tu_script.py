@@ -941,6 +941,21 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                 "audio_url": None
             })
 
+            # Notificar progreso incremental en Redis para visualización en tiempo real en el editor
+            progreso_stream = {
+                "status": "processing",
+                "current_scene": i + 1,
+                "total_scenes": len(huecos),
+                "percent": int(((i + 1) / max(1, len(huecos))) * 100),
+                "bloques": list(bloques_guion),
+                "last_added": bloques_guion[-1],
+                "last_used_key_name": last_used_key_name
+            }
+            try:
+                redis_client.set(f"fase1_progreso:{proyecto_id}", json.dumps(progreso_stream, ensure_ascii=False), ex=86400)
+            except Exception:
+                pass
+
         # 5. Acumular minutos y tokens de video (incluso si luego se borra el proyecto)
         nuevo_tokens_used = cur_tokens_used + tokens_reales_acumulados
         nuevo_minutes_used = round(cur_minutes_used + duracion_minutos, 2)
@@ -987,6 +1002,18 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
         }
         try:
             redis_client.set(f"fase1_resultado:{proyecto_id}", json.dumps(res_payload, ensure_ascii=False), ex=86400)
+            # Guardar fase1_progreso completado
+            progreso_final = {
+                "status": "idle",
+                "current_scene": len(bloques_guion),
+                "total_scenes": len(bloques_guion),
+                "percent": 100,
+                "bloques": bloques_guion,
+                "tokens_consumed": tokens_reales_acumulados,
+                "minutes_used": nuevo_minutes_used,
+                "last_used_key_name": last_used_key_name
+            }
+            redis_client.set(f"fase1_progreso:{proyecto_id}", json.dumps(progreso_final, ensure_ascii=False), ex=86400)
         except Exception as e_red:
             print(f"[Redis Error]: {e_red}")
 
@@ -1564,6 +1591,34 @@ def api_fase1():
         traceback.print_exc()
         return jsonify({"status": "error", "message": f"Error interno en el servidor: {err_msg}"}), 500
 
+@app.route('/fase1-progreso', methods=['GET'])
+def api_fase1_progreso():
+    """Retorna el progreso en tiempo real de la Fase 1 con los bloques generados hasta el momento."""
+    proyecto_id = request.args.get("proyecto_id")
+    if not proyecto_id:
+        return jsonify({"status": "error", "message": "Falta proyecto_id"}), 400
+
+    try:
+        raw = redis_client.get(f"fase1_progreso:{proyecto_id}")
+        if raw:
+            return jsonify(json.loads(raw.decode('utf-8'))), 200
+
+        # Si aún no hay progreso en Redis, checar fase1_status
+        raw_st = redis_client.get(f"fase1_status:{proyecto_id}")
+        if raw_st:
+            st = json.loads(raw_st.decode('utf-8'))
+            return jsonify({
+                "status": st.get("status", "processing"),
+                "current_scene": 0,
+                "total_scenes": 0,
+                "percent": 0,
+                "bloques": []
+            }), 200
+
+        return jsonify({"status": "processing", "current_scene": 0, "total_scenes": 0, "percent": 0, "bloques": []}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route('/fase1-status', methods=['GET'])
 def api_fase1_status():
     proyecto_id = request.args.get("proyecto_id")
@@ -1662,18 +1717,15 @@ def api_renderizar_audio_fase2():
             pistas_ad.append(ad_clip)
 
         if not pistas_ad:
-            audio_final = audio_original
+            return jsonify({"status": "error", "message": "No hay pistas de audiodescripción para renderizar."}), 400
         else:
-            audio_tracks = []
-            if audio_original is not None:
-                audio_tracks.append(audio_original.volumex(0.6))
-            audio_tracks.extend([a.volumex(1.4) for a in pistas_ad])
+            # PISTA PURA Y EXCLUSIVA DE AUDIODESCRIPCIÓN (Solo voz IA sincronizada, sin el audio del video)
+            duracion_total = video_original.duration if (video_original and video_original.duration) else 0
+            if not duracion_total or duracion_total <= 0:
+                duracion_total = max([float(b.get("end", 0)) for b in bloques_editados] + [10.0])
 
-            if audio_tracks:
-                audio_final = CompositeAudioClip(audio_tracks)
-                audio_final.duration = video_original.duration
-            else:
-                audio_final = audio_original
+            audio_final = CompositeAudioClip(pistas_ad)
+            audio_final.duration = duracion_total
 
         if audio_final is not None:
             audio_final.write_audiofile(ruta_mezcla_mp3, verbose=False, logger=None)
