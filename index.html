@@ -932,6 +932,56 @@
         </div>
     </div>
 
+    
+    <!-- Modal de Verificación de Correo (Nativo Firebase Auth) -->
+    <div id="verify-email-modal"
+        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" id="verify-modal-backdrop"></div>
+        <div
+            class="relative glass-panel w-full max-w-md rounded-3xl border border-white/15 shadow-[0_25px_70px_rgba(0,0,0,0.85)] bg-surface-container/95 backdrop-blur-xl p-6 sm:p-8 relative z-10 flex flex-col items-center text-center gap-5 animate-fade-in">
+            
+            <div class="w-16 h-16 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_25px_rgba(229,9,20,0.35)] animate-pulse">
+                <span class="material-symbols-outlined text-[36px]">mark_email_unread</span>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <h3 class="text-xl font-bold text-white">Revisa tu correo</h3>
+                <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                    Hemos enviado un enlace de confirmación a:
+                </p>
+                <div class="bg-surface-container-high/90 border border-white/10 rounded-xl px-3.5 py-2 text-xs font-semibold text-primary break-all" id="verify-user-email">
+                    usuario@correo.com
+                </div>
+                <p class="text-[11px] text-zinc-400 mt-1">
+                    Haz clic en el enlace del correo para activar tu cuenta y poder audiodescribir tus videos. Si no lo ves, revisa tu carpeta de <b>Spam</b> o <b>Correo no deseado</b>.
+                </p>
+            </div>
+
+            <div id="verify-modal-msg" class="hidden text-xs py-2 px-3 rounded-xl w-full"></div>
+
+            <div class="flex flex-col gap-2.5 w-full mt-1">
+                <button id="check-verified-btn"
+                    class="w-full bg-primary hover:bg-primary-hover text-white text-xs font-bold py-3 rounded-xl glow-btn transition-all shadow-lg flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">verified</span>
+                    Ya verifiqué mi cuenta
+                </button>
+
+                <button id="resend-verify-btn"
+                    class="w-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-xs font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all">
+                    <span class="material-symbols-outlined text-[16px]">forward_to_inbox</span>
+                    <span id="resend-btn-text">Reenviar correo</span>
+                </button>
+            </div>
+
+            <div class="pt-1">
+                <button id="close-verify-modal-btn"
+                    class="text-[11px] text-zinc-400 hover:text-white transition-colors underline">
+                    Cerrar sesión / Iniciar con otra cuenta
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Compra Simulado -->
     <div id="checkout-modal"
         class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-4">
@@ -1065,24 +1115,176 @@
                 }
             }
 
+            // Modal de Verificación de Correo (Nativo Firebase Auth)
+            const verifyModal = document.getElementById('verify-email-modal');
+            const verifyUserEmail = document.getElementById('verify-user-email');
+            const verifyModalMsg = document.getElementById('verify-modal-msg');
+            const checkVerifiedBtn = document.getElementById('check-verified-btn');
+            const resendVerifyBtn = document.getElementById('resend-verify-btn');
+            const resendBtnText = document.getElementById('resend-btn-text');
+            const closeVerifyModalBtn = document.getElementById('close-verify-modal-btn');
+
+            let resendCooldownTimer = null;
+            let cooldownSeconds = 0;
+
+            function openVerifyModal(email) {
+                if (verifyUserEmail) verifyUserEmail.textContent = email || (auth.currentUser ? auth.currentUser.email : '');
+                if (verifyModalMsg) {
+                    verifyModalMsg.classList.add('hidden');
+                    verifyModalMsg.textContent = '';
+                }
+                if (verifyModal) {
+                    verifyModal.classList.remove('hidden');
+                    void verifyModal.offsetWidth;
+                    verifyModal.classList.remove('opacity-0');
+                    verifyModal.classList.add('opacity-100');
+                }
+            }
+
+            function closeVerifyModal() {
+                if (verifyModal) {
+                    verifyModal.classList.remove('opacity-100');
+                    verifyModal.classList.add('opacity-0');
+                    setTimeout(() => {
+                        verifyModal.classList.add('hidden');
+                    }, 300);
+                }
+            }
+
+            function startResendCooldown(seconds = 60) {
+                if (resendCooldownTimer) clearInterval(resendCooldownTimer);
+                cooldownSeconds = seconds;
+                if (resendVerifyBtn) {
+                    resendVerifyBtn.disabled = true;
+                    resendVerifyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+
+                const updateBtnText = () => {
+                    if (resendBtnText) {
+                        resendBtnText.textContent = `Reenviar en ${cooldownSeconds}s`;
+                    }
+                };
+
+                updateBtnText();
+                resendCooldownTimer = setInterval(() => {
+                    cooldownSeconds--;
+                    if (cooldownSeconds <= 0) {
+                        clearInterval(resendCooldownTimer);
+                        resendCooldownTimer = null;
+                        if (resendVerifyBtn) {
+                            resendVerifyBtn.disabled = false;
+                            resendVerifyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                        if (resendBtnText) {
+                            resendBtnText.textContent = 'Reenviar correo de verificación';
+                        }
+                    } else {
+                        updateBtnText();
+                    }
+                }, 1000);
+            }
+
+            // Comprobar si el usuario pulsó el enlace en su correo
+            checkVerifiedBtn?.addEventListener('click', async () => {
+                const user = auth.currentUser;
+                if (!user) {
+                    closeVerifyModal();
+                    openAuthModal();
+                    return;
+                }
+
+                try {
+                    await user.reload();
+                    const isSuperAdmin = (user.email || '').toLowerCase().trim() === 'editor.online.latam@gmail.com';
+
+                    if (user.emailVerified || isSuperAdmin) {
+                        if (verifyModalMsg) {
+                            verifyModalMsg.className = 'text-xs py-2 px-3 rounded-xl w-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-semibold';
+                            verifyModalMsg.textContent = '¡Cuenta verificada exitosamente! Entrando...';
+                            verifyModalMsg.classList.remove('hidden');
+                        }
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 800);
+                    } else {
+                        if (verifyModalMsg) {
+                            verifyModalMsg.className = 'text-xs py-2 px-3 rounded-xl w-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-semibold';
+                            verifyModalMsg.textContent = 'Tu correo aún no figura como verificado. Revisa tu bandeja de entrada o spam y pulsa el enlace recibido.';
+                            verifyModalMsg.classList.remove('hidden');
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error al verificar estado:", err);
+                }
+            });
+
+            // Reenviar correo con temporizador de 60 segundos
+            resendVerifyBtn?.addEventListener('click', async () => {
+                const user = auth.currentUser;
+                if (!user || cooldownSeconds > 0) return;
+
+                try {
+                    await user.sendEmailVerification();
+                    if (verifyModalMsg) {
+                        verifyModalMsg.className = 'text-xs py-2 px-3 rounded-xl w-full bg-primary/20 border border-primary/40 text-white font-semibold';
+                        verifyModalMsg.textContent = 'Nuevo correo de verificación enviado.';
+                        verifyModalMsg.classList.remove('hidden');
+                    }
+                    startResendCooldown(60);
+                } catch (err) {
+                    if (verifyModalMsg) {
+                        verifyModalMsg.className = 'text-xs py-2 px-3 rounded-xl w-full bg-error-container/20 border border-error-container text-error font-semibold';
+                        verifyModalMsg.textContent = 'Por seguridad espera un momento antes de volver a solicitar un envío.';
+                        verifyModalMsg.classList.remove('hidden');
+                    }
+                }
+            });
+
+            // Cerrar / Cambiar de cuenta
+            closeVerifyModalBtn?.addEventListener('click', async () => {
+                await auth.signOut();
+                closeVerifyModal();
+                openAuthModal();
+            });
+
             authForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 authError.classList.add('hidden');
-                const email = authEmail.value;
+                const email = authEmail.value.trim();
                 const password = authPassword.value;
 
                 try {
                     let cred = null;
                     if (isSignUp) {
+                        // 1. Registro nativo con Firebase Auth
                         cred = await auth.createUserWithEmailAndPassword(email, password);
+                        if (cred && cred.user) {
+                            await ensureUserDoc(cred.user);
+                            // Enviar correo de verificación nativo inmediatamente
+                            await cred.user.sendEmailVerification();
+                        }
+                        closeAuthModal();
+                        // Redirigir a vista/modal de verificación con temporizador de 60s
+                        openVerifyModal(email);
+                        startResendCooldown(60);
+                        return; // NO iniciar sesión activa ni redirigir al dashboard aún
                     } else {
+                        // 2. Inicio de sesión con comprobación de correo verificado
                         cred = await auth.signInWithEmailAndPassword(email, password);
+                        if (cred && cred.user) {
+                            await ensureUserDoc(cred.user);
+                            await cred.user.reload();
+
+                            const isSuperAdmin = (cred.user.email || '').toLowerCase().trim() === 'editor.online.latam@gmail.com';
+                            if (!cred.user.emailVerified && !isSuperAdmin) {
+                                closeAuthModal();
+                                openVerifyModal(cred.user.email);
+                                return; // Impedir acceso al dashboard si no está verificado
+                            }
+                        }
+                        closeAuthModal();
+                        window.location.href = 'dashboard.html';
                     }
-                    if (cred && cred.user) {
-                        await ensureUserDoc(cred.user);
-                    }
-                    closeAuthModal();
-                    window.location.href = 'dashboard.html';
                 } catch (err) {
                     authError.textContent = err.message;
                     authError.classList.remove('hidden');

@@ -1088,12 +1088,20 @@
             const urlParams = new URLSearchParams(window.location.search);
             const id_proyecto = urlParams.get('project');
 
-            // Auth check
-            auth.onAuthStateChanged(user => {
+            // Auth check con protección estricta de correo verificado
+            auth.onAuthStateChanged(async (user) => {
                 if (!user) {
                     window.location.href = 'index.html';
                     return;
                 }
+                try {
+                    await user.reload();
+                    const isSuperAdmin = (user.email || '').toLowerCase().trim() === 'editor.online.latam@gmail.com';
+                    if (!user.emailVerified && !isSuperAdmin) {
+                        window.location.href = 'dashboard.html';
+                        return;
+                    }
+                } catch (_) {}
                 loadInitialData();
             });
 

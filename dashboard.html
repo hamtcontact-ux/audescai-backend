@@ -392,6 +392,56 @@
         </button>
     </main>
     <!-- Upload Modal Overlay Unificado con Glassmorphism (Más reducido y con selector de modo) -->
+    
+    <!-- Modal Guard de Verificación de Correo (Nativo Firebase Auth) -->
+    <div id="email-verify-guard-modal"
+        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/85 backdrop-blur-md"></div>
+        <div
+            class="relative glass-panel w-full max-w-md rounded-3xl border border-white/15 shadow-[0_25px_70px_rgba(0,0,0,0.85)] bg-surface-container/95 backdrop-blur-xl p-6 sm:p-8 relative z-10 flex flex-col items-center text-center gap-5 animate-fade-in pointer-events-auto">
+            
+            <div class="w-16 h-16 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.3)] animate-pulse">
+                <span class="material-symbols-outlined text-[36px]">mark_email_unread</span>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <h3 class="text-xl font-bold text-white">Confirma tu correo para continuar</h3>
+                <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                    Para acceder a la plataforma, subir videos y generar audiodescripciones, primero debes activar tu cuenta:
+                </p>
+                <div class="bg-surface-container-high/90 border border-white/10 rounded-xl px-3.5 py-2 text-xs font-semibold text-primary break-all" id="guard-user-email">
+                    usuario@correo.com
+                </div>
+                <p class="text-[11px] text-zinc-400 mt-1">
+                    Revisa tu bandeja de entrada o carpeta de <b>Spam</b> y haz clic en el enlace de verificación enviado por Firebase.
+                </p>
+            </div>
+
+            <div id="guard-modal-msg" class="hidden text-xs py-2 px-3 rounded-xl w-full"></div>
+
+            <div class="flex flex-col gap-2.5 w-full mt-1">
+                <button id="guard-check-verified-btn"
+                    class="w-full bg-primary hover:bg-primary-hover text-white text-xs font-bold py-3 rounded-xl glow-btn transition-all shadow-lg flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">verified</span>
+                    Ya verifiqué mi correo
+                </button>
+
+                <button id="guard-resend-btn"
+                    class="w-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-xs font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all">
+                    <span class="material-symbols-outlined text-[16px]">forward_to_inbox</span>
+                    <span id="guard-resend-btn-text">Reenviar correo de verificación</span>
+                </button>
+            </div>
+
+            <div class="pt-1">
+                <button id="guard-signout-btn"
+                    class="text-[11px] text-zinc-400 hover:text-white transition-colors underline">
+                    Cerrar sesión / Iniciar con otra cuenta
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-3 sm:p-4" id="upload-modal">
         <div class="absolute inset-0 bg-black/75 backdrop-blur-md" id="modal-backdrop"></div>
         <div class="relative glass-panel w-full max-w-md rounded-3xl border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] bg-surface-container/95 backdrop-blur-xl pointer-events-auto transform scale-95 transition-transform duration-300 ease-out flex flex-col overflow-hidden animate-fade-in"
@@ -894,6 +944,115 @@
                 }
             }
 
+            // Modal Guard de Verificación de Correo (Nativo Firebase Auth)
+            const emailGuardModal = document.getElementById('email-verify-guard-modal');
+            const guardUserEmail = document.getElementById('guard-user-email');
+            const guardModalMsg = document.getElementById('guard-modal-msg');
+            const guardCheckBtn = document.getElementById('guard-check-verified-btn');
+            const guardResendBtn = document.getElementById('guard-resend-btn');
+            const guardResendText = document.getElementById('guard-resend-btn-text');
+            const guardSignoutBtn = document.getElementById('guard-signout-btn');
+
+            let guardCooldownTimer = null;
+            let guardCooldownSeconds = 0;
+
+            function startGuardCooldown(sec = 60) {
+                if (guardCooldownTimer) clearInterval(guardCooldownTimer);
+                guardCooldownSeconds = sec;
+                if (guardResendBtn) {
+                    guardResendBtn.disabled = true;
+                    guardResendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                const updateText = () => {
+                    if (guardResendText) guardResendText.textContent = `Reenviar en ${guardCooldownSeconds}s`;
+                };
+                updateText();
+                guardCooldownTimer = setInterval(() => {
+                    guardCooldownSeconds--;
+                    if (guardCooldownSeconds <= 0) {
+                        clearInterval(guardCooldownTimer);
+                        guardCooldownTimer = null;
+                        if (guardResendBtn) {
+                            guardResendBtn.disabled = false;
+                            guardResendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                        if (guardResendText) guardResendText.textContent = 'Reenviar correo de verificación';
+                    } else {
+                        updateText();
+                    }
+                }, 1000);
+            }
+
+            function showEmailVerificationGuard(user) {
+                if (guardUserEmail) guardUserEmail.textContent = user.email || '';
+                if (emailGuardModal) {
+                    emailGuardModal.classList.remove('hidden');
+                    void emailGuardModal.offsetWidth;
+                    emailGuardModal.classList.remove('opacity-0');
+                    emailGuardModal.classList.add('opacity-100');
+                }
+                // Deshabilitar botones de subida / nuevo proyecto
+                const newProjectBtns = document.querySelectorAll('#btn-new-project, #mobile-fab-upload, #upload-banner-btn');
+                newProjectBtns.forEach(btn => {
+                    btn.classList.add('pointer-events-none', 'opacity-40');
+                });
+            }
+
+            guardCheckBtn?.addEventListener('click', async () => {
+                const user = auth.currentUser;
+                if (!user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                try {
+                    await user.reload();
+                    const isSuperAdmin = (user.email || "").toLowerCase().trim() === SUPERADMIN_EMAIL.toLowerCase();
+                    if (user.emailVerified || isSuperAdmin) {
+                        if (guardModalMsg) {
+                            guardModalMsg.className = 'text-xs py-2 px-3 rounded-xl w-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-semibold';
+                            guardModalMsg.textContent = '¡Correo verificado! Recargando dashboard...';
+                            guardModalMsg.classList.remove('hidden');
+                        }
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 700);
+                    } else {
+                        if (guardModalMsg) {
+                            guardModalMsg.className = 'text-xs py-2 px-3 rounded-xl w-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-semibold';
+                            guardModalMsg.textContent = 'Tu correo aún no está verificado. Revisa tu bandeja de entrada o spam y confirma tu cuenta.';
+                            guardModalMsg.classList.remove('hidden');
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error al refrescar usuario:", err);
+                }
+            });
+
+            guardResendBtn?.addEventListener('click', async () => {
+                const user = auth.currentUser;
+                if (!user || guardCooldownSeconds > 0) return;
+                try {
+                    await user.sendEmailVerification();
+                    if (guardModalMsg) {
+                        guardModalMsg.className = 'text-xs py-2 px-3 rounded-xl w-full bg-primary/20 border border-primary/40 text-white font-semibold';
+                        guardModalMsg.textContent = 'Correo de verificación reenviado con éxito.';
+                        guardModalMsg.classList.remove('hidden');
+                    }
+                    startGuardCooldown(60);
+                } catch (err) {
+                    if (guardModalMsg) {
+                        guardModalMsg.className = 'text-xs py-2 px-3 rounded-xl w-full bg-error-container/20 border border-error-container text-error font-semibold';
+                        guardModalMsg.textContent = 'Por seguridad espera un momento antes de volver a solicitar un reenvío.';
+                        guardModalMsg.classList.remove('hidden');
+                    }
+                }
+            });
+
+            guardSignoutBtn?.addEventListener('click', async () => {
+                await auth.signOut();
+                window.location.href = 'index.html';
+            });
+
             auth.onAuthStateChanged(async (user) => {
                 if (!user) {
                     window.location.href = 'index.html';
@@ -901,8 +1060,14 @@
                 }
                 userEmailDisplay.textContent = user.email;
 
-                // 1. Validar si es el Superadministrador Supremo
+                // 1. Validar si es el Superadministrador Supremo o si el correo está verificado
+                await user.reload();
                 const isSuperAdmin = (user.email || "").toLowerCase().trim() === SUPERADMIN_EMAIL.toLowerCase();
+
+                if (!user.emailVerified && !isSuperAdmin) {
+                    showEmailVerificationGuard(user);
+                    return;
+                }
                 const settingsNavItem = document.getElementById('settings-nav-item');
                 const mobileSettingsBtn = document.getElementById('mobile-settings-btn');
 
