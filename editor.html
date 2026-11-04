@@ -259,87 +259,121 @@
             opacity: 1;
         }
 
-        /* Control de volumen estilo Pelismaster (consistente en PC y Celular con halo rojo) */
-        input[type=range]#video-volume-slider,
+        /* Componente Modular de Control de Volumen Estilo PelisMaster / Plyr */
+        :root {
+            --primary-color: #e50914;
+            --track-bg: #333333;
+            --icon-color: #ffffff;
+            --thumb-size: 13px;
+        }
+
+        .volume-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-btn {
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            padding: 0;
+            color: var(--icon-color, #ffffff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s ease, color 0.15s ease;
+        }
+
+        .volume-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Slider de rango compacto (60px - 75px) con relleno dinámico vía --value */
+        .volume-slider,
         #video-volume-slider {
             -webkit-appearance: none !important;
             -moz-appearance: none !important;
             appearance: none !important;
-            height: 4px !important;
-            border-radius: 9999px !important;
-            background: linear-gradient(to right, #e50914 0%, #e50914 100%, #52525b 100%, #52525b 100%) !important;
+            width: 68px !important;
+            max-width: 75px !important;
+            min-width: 60px !important;
+            height: 5px !important;
+            border-radius: 999px !important;
             outline: none !important;
+            border: 0 !important;
+            background: linear-gradient(
+                to right,
+                var(--primary-color, #e50914) 0%,
+                var(--primary-color, #e50914) var(--value, 100%),
+                var(--track-bg, #333333) var(--value, 100%),
+                var(--track-bg, #333333) 100%
+            ) !important;
             cursor: pointer !important;
-            vertical-align: middle !important;
-            transition: background 0.05s ease !important;
+            touch-action: none !important;
             margin: 0 !important;
             padding: 0 !important;
-            border: none !important;
-            touch-action: none !important; /* Previene conflicto de gestos táctiles en celulares */
-        }
-
-        /* Webkit track (Chrome, Safari, Edge, Android, iOS) */
-        #video-volume-slider::-webkit-slider-runnable-track {
-            -webkit-appearance: none !important;
-            width: 100% !important;
-            height: 4px !important;
-            background: transparent !important;
-            border-radius: 9999px !important;
-            border: none !important;
-            cursor: pointer !important;
+            vertical-align: middle !important;
         }
 
         /* Thumb Webkit (Chrome, Safari, Edge, Android, iOS) */
+        .volume-slider::-webkit-slider-thumb,
         #video-volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none !important;
             appearance: none !important;
-            width: 14px !important;
-            height: 14px !important;
+            width: var(--thumb-size, 13px) !important;
+            height: var(--thumb-size, 13px) !important;
             border-radius: 50% !important;
-            background: #e50914 !important;
-            cursor: pointer !important;
+            background: var(--primary-color, #e50914) !important;
             border: 0 !important;
-            margin-top: -5px !important;
-            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.4) !important;
-            transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+            margin-top: -4px !important; /* Centrado vertical sobre track de 5px */
+            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.35) !important; /* Halo exterior semitransparente */
+            transition: box-shadow 0.2s ease, transform 0.1s ease !important;
+            cursor: pointer !important;
         }
 
-        #video-volume-slider::-webkit-slider-thumb:hover,
-        #video-volume-slider:active::-webkit-slider-thumb {
+        .volume-slider:active::-webkit-slider-thumb,
+        .volume-slider:hover::-webkit-slider-thumb,
+        #video-volume-slider:active::-webkit-slider-thumb,
+        #video-volume-slider:hover::-webkit-slider-thumb {
             transform: scale(1.15) !important;
-            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.55) !important;
+            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.5) !important;
+        }
+
+        /* Firefox Track */
+        .volume-slider::-moz-range-track,
+        #video-volume-slider::-moz-range-track {
+            background: var(--track-bg, #333333) !important;
+            height: 5px !important;
+            border-radius: 999px !important;
+            border: none !important;
+        }
+
+        .volume-slider::-moz-range-progress,
+        #video-volume-slider::-moz-range-progress {
+            background: var(--primary-color, #e50914) !important;
+            height: 5px !important;
+            border-radius: 999px !important;
         }
 
         /* Thumb Firefox */
+        .volume-slider::-moz-range-thumb,
         #video-volume-slider::-moz-range-thumb {
-            width: 14px !important;
-            height: 14px !important;
+            width: var(--thumb-size, 13px) !important;
+            height: var(--thumb-size, 13px) !important;
+            border: 0 !important;
             border-radius: 50% !important;
-            background: #e50914 !important;
+            background: var(--primary-color, #e50914) !important;
+            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.35) !important;
             cursor: pointer !important;
-            border: none !important;
-            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.4) !important;
-            transition: transform 0.15s ease, box-shadow 0.15s ease !important;
         }
 
-        #video-volume-slider::-moz-range-thumb:hover,
-        #video-volume-slider:active::-moz-range-thumb {
+        .volume-slider:active::-moz-range-thumb,
+        .volume-slider:hover::-moz-range-thumb,
+        #video-volume-slider:active::-moz-range-thumb,
+        #video-volume-slider:hover::-moz-range-thumb {
             transform: scale(1.15) !important;
-            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.55) !important;
-        }
-
-        /* Firefox track y progreso */
-        #video-volume-slider::-moz-range-track {
-            background: #52525b !important;
-            height: 4px !important;
-            border-radius: 9999px !important;
-            border: none !important;
-        }
-
-        #video-volume-slider::-moz-range-progress {
-            background: #e50914 !important;
-            height: 4px !important;
-            border-radius: 9999px !important;
+            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.5) !important;
         }
 
         /* Pantalla completa inmersiva con reproductor visible abajo */
@@ -533,16 +567,30 @@
                                 id="video-next-btn"><span
                                     class="material-symbols-outlined text-[20px]">skip_next</span></button>
 
-                            <!-- Control de volumen estilo Pelismaster (adaptativo PC y Celular) -->
-                            <div class="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-white/5 shrink-0">
+                            <!-- Control de volumen modular estilo PelisMaster / Plyr -->
+                            <div class="volume-container flex items-center gap-2 pl-2 border-l border-white/10 shrink-0">
                                 <button
-                                    class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors shrink-0"
-                                    id="video-volume-btn" title="Silenciar / Activar sonido">
+                                    class="volume-btn w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                                    id="video-volume-btn" aria-label="Silenciar / Activar sonido" title="Silenciar / Activar sonido">
                                     <span class="material-symbols-outlined text-[20px]"
                                         id="video-volume-icon">volume_up</span>
                                 </button>
-                                <input type="range" id="video-volume-slider" min="0" max="1" step="0.05" value="1"
-                                    class="w-16 sm:w-20 md:w-24 shrink-0 cursor-pointer" title="Control de volumen">
+                                <input 
+                                    type="range" 
+                                    class="volume-slider cursor-pointer shrink-0" 
+                                    id="video-volume-slider" 
+                                    min="0" 
+                                    max="1" 
+                                    step="0.05" 
+                                    value="1" 
+                                    style="--value: 100%;"
+                                    role="slider"
+                                    aria-label="Volumen"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    aria-valuenow="100"
+                                    title="Control de volumen"
+                                >
                             </div>
                         </div>
                     </div>
@@ -1622,10 +1670,15 @@
             let isFullscreenMode = false;
             let fsHideTimeout = null;
 
+            let prevVolume = masterVolume > 0 ? masterVolume : 0.8;
+
             function updateVolumeSliderTrack(el, val) {
                 if (!el) return;
-                const pct = Math.round(Math.max(0, Math.min(1, val)) * 100);
-                el.style.background = `linear-gradient(to right, #e50914 0%, #e50914 ${pct}%, #52525b ${pct}%, #52525b 100%)`;
+                const safeVal = Math.max(0, Math.min(1, val));
+                const pct = Math.round(safeVal * 100);
+                el.style.setProperty('--value', pct + '%');
+                el.style.background = `linear-gradient(to right, #e50914 0%, #e50914 ${pct}%, #333333 ${pct}%, #333333 100%)`;
+                el.setAttribute('aria-valuenow', pct);
             }
 
             function syncPlayIcons() {
@@ -1635,13 +1688,10 @@
             }
 
             function syncVolumeUI(val, isMuted) {
+                const currentVal = isMuted ? 0 : val;
                 if (videoVolumeSlider) {
-                    videoVolumeSlider.value = isMuted ? 0 : val;
-                    updateVolumeSliderTrack(videoVolumeSlider, isMuted ? 0 : val);
-                }
-                if (fsVolumeSlider) {
-                    fsVolumeSlider.value = isMuted ? 0 : val;
-                    updateVolumeSliderTrack(fsVolumeSlider, isMuted ? 0 : val);
+                    videoVolumeSlider.value = currentVal;
+                    updateVolumeSliderTrack(videoVolumeSlider, currentVal);
                 }
                 const iconName = isMuted || val === 0 ? 'volume_off' : (val < 0.5 ? 'volume_down' : 'volume_up');
                 if (videoVolumeIcon) videoVolumeIcon.textContent = iconName;
@@ -1650,10 +1700,10 @@
 
             if (videoVolumeSlider) {
                 updateVolumeSliderTrack(videoVolumeSlider, masterVolume);
-                if (fsVolumeSlider) updateVolumeSliderTrack(fsVolumeSlider, masterVolume);
                 videoVolumeSlider.addEventListener('input', (e) => {
                     const val = parseFloat(e.target.value);
                     masterVolume = val;
+                    if (val > 0) prevVolume = val;
                     if (val === 0) {
                         mainVideo.muted = true;
                         mainVideo.volume = 0;
@@ -1667,14 +1717,18 @@
             }
 
             videoVolumeBtn?.addEventListener('click', () => {
-                mainVideo.muted = !mainVideo.muted;
-                if (mainVideo.muted) {
+                const currentSliderVal = parseFloat(videoVolumeSlider?.value || masterVolume);
+                if (!mainVideo.muted && currentSliderVal > 0) {
+                    prevVolume = currentSliderVal || 0.8;
+                    mainVideo.muted = true;
+                    mainVideo.volume = 0;
                     audioPool.forEach(a => { a.volume = 0; });
                     syncVolumeUI(0, true);
                     showToast('Audio silenciado', 'info');
                 } else {
-                    const targetVol = masterVolume > 0 ? masterVolume : 1.0;
+                    const targetVol = prevVolume > 0 ? prevVolume : 0.8;
                     masterVolume = targetVol;
+                    mainVideo.muted = false;
                     mainVideo.volume = targetVol * 0.4;
                     audioPool.forEach(a => { a.volume = targetVol; });
                     syncVolumeUI(targetVol, false);
@@ -1682,7 +1736,6 @@
                 }
             });
 
-            // Botón Deshacer
             // Botones Deshacer, Rehacer y Eliminar Bloque en la barra de tiempo
             const redoBtn = document.getElementById('redo-btn');
             const timelineDeleteBtn = document.getElementById('timeline-delete-btn');
