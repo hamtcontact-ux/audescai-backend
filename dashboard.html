@@ -398,21 +398,22 @@
                         <span class="material-symbols-outlined text-[18px] mt-0.5">warning</span>
                         <span id="usage-warning-text">Estás cerca de tu límite mensual. Amplía tu plan para seguir procesando videos.</span>
                     </div>
-                </div>
             </section>
 
-            <!-- Project Grid -->
-            <div class="flex items-center justify-between pb-3 border-b border-white/5">
-                <div>
-                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-[22px]">video_library</span>
-                        Mis Proyectos
-                    </h2>
-                    <p class="text-xs text-zinc-400 mt-0.5">Tus producciones y audiodescripciones cinematográficas recientes.</p>
+            <!-- Project Grid Section (Alineado con el margen superior) -->
+            <div class="space-y-6">
+                <div class="flex items-center justify-between pb-3 border-b border-white/5">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[22px]">video_library</span>
+                            Mis Proyectos
+                        </h2>
+                        <p class="text-xs text-zinc-400 mt-0.5">Tus producciones y audiodescripciones cinematográficas recientes.</p>
+                    </div>
                 </div>
-            </div>
-            <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <!-- Se cargará dinámicamente desde Firestore -->
+                <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Se cargará dinámicamente desde Firestore -->
+                </div>
             </div>
         </div>
 
@@ -556,30 +557,60 @@
         </div>
     </div>
 
-    <!-- Processing Overlay with Simulated Loading Bar -->
+    <!-- VENTANA EMERGENTE DE ESPERA DINÁMICA CON ANIMACIÓN CONTINUA (ESTILO VIDEOJUEGO) -->
     <div id="processing-overlay"
-        class="fixed inset-0 z-50 hidden opacity-0 bg-background/90 backdrop-blur-md transition-all duration-300 flex flex-col items-center justify-center p-md text-center">
-        <div
-            class="w-80 bg-surface-container border border-white/10 rounded-xl p-6 shadow-2xl flex flex-col items-center">
-            <!-- Spinner / Circle Progress -->
-            <div class="w-24 h-24 relative mb-4">
-                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle class="text-white/5 stroke-current" stroke-width="5" fill="transparent" r="40" cx="50"
-                        cy="50" />
-                    <circle id="processing-progress-circle" class="text-primary stroke-current" stroke-width="5"
-                        stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round" fill="transparent"
-                        r="40" cx="50" cy="50" />
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center font-mono font-bold text-on-surface text-xl"
-                    id="processing-progress-text">0%</div>
+        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 pointer-events-none flex items-center justify-center p-4">
+        <!-- Fondo translúcido con desenfoque cinematográfico -->
+        <div class="absolute inset-0 bg-black/75 backdrop-blur-md"></div>
+
+        <!-- Tarjeta flotante interactiva -->
+        <div class="relative glass-panel rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] pointer-events-auto text-center space-y-6 animate-fade-in bg-surface-container/95 backdrop-blur-xl">
+            
+            <!-- CONTENEDOR DE ANIMACIÓN CONTINUA (DOBLE ANILLO + EQUALIZADOR VIVO) -->
+            <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
+                <!-- Anillo exterior con gradiente continuo que gira a 60fps -->
+                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-accent border-r-primary animate-spin" style="animation-duration: 1.2s;"></div>
+                
+                <!-- Anillo interior que gira en sentido contrario -->
+                <div class="absolute inset-2 rounded-full border-3 border-transparent border-b-accent border-l-primary/60 animate-spin" style="animation-duration: 2s; animation-direction: reverse;"></div>
+
+                <!-- Halo pulsante de fondo -->
+                <div class="absolute inset-4 rounded-full bg-accent/20 blur-md animate-pulse"></div>
+
+                <!-- Ecualizador de audio animado en el centro -->
+                <div class="relative z-10 flex items-center gap-1">
+                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse" style="animation-delay: 0.1s; animation-duration: 0.8s;"></span>
+                    <span class="w-1.5 h-6 bg-primary rounded-full animate-pulse" style="animation-delay: 0.3s; animation-duration: 0.7s;"></span>
+                    <span class="w-1.5 h-8 bg-accent rounded-full animate-pulse" style="animation-delay: 0.15s; animation-duration: 0.9s;"></span>
+                    <span class="w-1.5 h-5 bg-primary rounded-full animate-pulse" style="animation-delay: 0.4s; animation-duration: 0.75s;"></span>
+                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse" style="animation-delay: 0.2s; animation-duration: 0.85s;"></span>
+                </div>
             </div>
-            <h3 class="font-title-lg text-title-lg text-on-surface mb-1">Procesando Video</h3>
-            <p class="font-label-sm text-label-sm text-on-surface-variant mb-4 text-center">La Inteligencia Artificial
-                está analizando los diálogos y generando las audiodescripciones...</p>
-            <!-- Horizontal progress bar fallback -->
-            <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                <div id="processing-progress-bar" class="bg-primary h-full rounded-full transition-all duration-300"
-                    style="width: 0%"></div>
+
+            <!-- Textos y progreso en tiempo real -->
+            <div class="space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-xs font-bold">
+                    <span class="w-2 h-2 rounded-full bg-accent animate-ping"></span>
+                    <span id="processing-badge-text">Audiodescripción con IA</span>
+                </div>
+                <h3 class="text-lg font-black text-white" id="processing-title-text">Analizando Escenas y Sintetizando Voces</h3>
+                <p id="processing-progress-text" class="text-xs text-zinc-300 font-medium">
+                    Iniciando procesamiento...
+                </p>
+            </div>
+
+            <!-- Contador de etapas y barra de progreso continua -->
+            <div class="space-y-2 pt-2 border-t border-white/5">
+                <div class="flex items-center justify-between text-xs text-zinc-400 font-mono">
+                    <span id="processing-stage-text" class="font-bold text-accent">Preparando...</span>
+                    <span id="processing-percent-text" class="font-bold text-white">0%</span>
+                </div>
+                <!-- Barra con efecto de brillo continuo (shimmer) que se mueve siempre -->
+                <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5 border border-white/5 relative">
+                    <div id="processing-progress-bar" class="h-full bg-gradient-to-r from-primary via-accent to-accent-hover rounded-full transition-all duration-500 relative" style="width: 0%;">
+                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1270,21 +1301,21 @@
 
                 // Mostrar el overlay de procesamiento
                 const procOverlay = document.getElementById('processing-overlay');
-                const progressCircle = document.getElementById('processing-progress-circle');
-                const progressText = document.getElementById('processing-progress-text');
-                const progressBar = document.getElementById('processing-progress-bar');
-
                 procOverlay.classList.remove('hidden', 'opacity-0');
                 procOverlay.classList.add('opacity-100');
 
-                const updateProgressUI = (pct, customText) => {
-                    const offset = 251.2 - (pct / 100) * 251.2;
-                    progressCircle.style.strokeDashoffset = offset;
-                    progressText.textContent = customText || `${Math.round(pct)}%`;
-                    progressBar.style.width = `${pct}%`;
+                const updateProgressUI = (pct, customText, stageText) => {
+                    const pText = document.getElementById('processing-progress-text');
+                    const pPct = document.getElementById('processing-percent-text');
+                    const pBar = document.getElementById('processing-progress-bar');
+                    const pStage = document.getElementById('processing-stage-text');
+                    if (pText && customText) pText.textContent = customText;
+                    if (pPct) pPct.textContent = `${Math.round(pct)}%`;
+                    if (pBar) pBar.style.width = `${pct}%`;
+                    if (pStage && stageText) pStage.textContent = stageText;
                 };
 
-                updateProgressUI(0, 'Iniciando...');
+                updateProgressUI(0, 'Iniciando subida del video...', 'Subida');
 
                 try {
                     // 1. Crear documento del proyecto en Firestore
@@ -1311,7 +1342,7 @@
                                 xhr.upload.onprogress = (e) => {
                                     if (e.lengthComputable) {
                                         const uploadProgress = (e.loaded / e.total) * 70; // 10% a 80%
-                                        updateProgressUI(10 + uploadProgress, 'Subiendo video...');
+                                        updateProgressUI(10 + uploadProgress, 'Subiendo video...', 'Subiendo');
                                     }
                                 };
 
@@ -1364,7 +1395,7 @@
                                                 const overallPercent = (currentBytes / fileSize) * 70; // 10% a 80%
                                                 const mbUploaded = (currentBytes / (1024 * 1024)).toFixed(1);
                                                 const mbTotal = (fileSize / (1024 * 1024)).toFixed(1);
-                                                updateProgressUI(10 + overallPercent, `Subiendo video (${mbUploaded}MB / ${mbTotal}MB)...`);
+                                                updateProgressUI(10 + overallPercent, `Subiendo video (${mbUploaded}MB / ${mbTotal}MB)...`, 'Subiendo');
                                             }
                                         };
 
@@ -1464,114 +1495,106 @@
                     let backendError = null;
 
                     // A) Petición principal a FLASK_API (/procesar-fase1)
-                    try {
-                        const flaskRes = await fetch(`${FLASK_API}/procesar-fase1`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payloadData)
-                        });
+                    updateProgressUI(75, 'Iniciando procesamiento de audiodescripción...', 'Analizando con IA');
+                    const flaskRes = await fetch(`${FLASK_API}/procesar-fase1`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payloadData)
+                    });
 
-                        if (flaskRes.ok) {
-                            try {
-                                result = await flaskRes.json();
-                            } catch (_) {
-                                result = { status: "processing" };
-                            }
-                        } else {
-                            try {
-                                const errJson = await flaskRes.json();
-                                backendError = errJson.message || errJson.error;
-                            } catch (_) {
-                                try {
-                                    const errText = await flaskRes.text();
-                                    backendError = (errText && errText.length < 250 && !errText.includes('<!doctype'))
-                                        ? errText
-                                        : `Error del servidor (${flaskRes.status}). El administrador debe revisar la configuración.`;
-                                } catch (_) {
-                                    backendError = `Error HTTP ${flaskRes.status}`;
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        console.warn("Fallo contacto directo con FLASK_API:", e);
-                    }
-
-                    // B) Si el backend oficial no respondió pero tampoco hubo error 400/500 de cuota,
-                    // intentar webhook opcional de n8n
-                    if (!result && !backendError) {
+                    if (!flaskRes.ok) {
+                        let errMsg = `Error del servidor (${flaskRes.status})`;
                         try {
-                            const n8nUrl = 'https://n8n.cineparaciegos.com/webhook/procesar-video';
-                            const n8nRes = await fetch(n8nUrl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payloadData)
-                            });
-                            if (n8nRes.ok) {
-                                const rawText = await n8nRes.text();
-                                if (rawText && rawText.trim()) {
-                                    try {
-                                        result = JSON.parse(rawText);
-                                    } catch (_) {
-                                        result = { status: "processing" };
-                                    }
-                                } else {
-                                    // n8n respondió 200 pero cuerpo vacío: significa que encoló exitosamente
-                                    result = { status: "processing" };
-                                }
-                            }
-                        } catch (e) {
-                            console.warn("Fallo contacto con n8n:", e);
+                            const errJson = await flaskRes.json();
+                            errMsg = errJson.message || errMsg;
+                        } catch (_) {
+                            errMsg = await flaskRes.text();
                         }
+                        throw new Error(errMsg);
                     }
 
-                    // C) Si hubo un error explícito del backend (ej. falta de API key o cuota agotada)
-                    if (backendError) {
-                        alert(backendError);
+                    const result = await flaskRes.json();
+
+                    // B) Si el resultado trae los bloques directamente:
+                    if (result && result.bloques && Array.isArray(result.bloques)) {
+                        updateProgressUI(95, 'Guardando audiodescripciones...', 'Finalizando');
+                        const blocksBatch = db.batch();
+                        result.bloques.forEach(b => {
+                            const blockDoc = projectRef.collection('bloques').doc(String(b.id));
+                            blocksBatch.set(blockDoc, b);
+                        });
+                        await blocksBatch.commit();
+                        await projectRef.update({ status: 'Listo para editar' });
+                        await syncTokensToFirestore(uid, result);
+
+                        updateProgressUI(100, '¡Audiodescripción completada!', 'Listo');
+                        await new Promise(r => setTimeout(r, 600));
                         procOverlay.classList.add('opacity-0');
-                        setTimeout(() => procOverlay.classList.add('hidden'), 300);
-                        return;
-                    }
-
-                    // D) Si ningún servicio devolvió resultado, pero no hubo error fatal, asumir cola de procesamiento
-                    if (!result) {
-                        result = { status: "processing" };
-                    }
-
-                    if (result && (result.status === "processing" || result.status === "success" || (result.bloques && Array.isArray(result.bloques)))) {
-                        if (result.bloques && Array.isArray(result.bloques)) {
-                            updateProgressUI(95, 'Guardando guión...');
-                            const blocksBatch = db.batch();
-                            result.bloques.forEach(b => {
-                                const blockDoc = projectRef.collection('bloques').doc(String(b.id));
-                                blocksBatch.set(blockDoc, b);
-                            });
-                            await blocksBatch.commit();
-                            await projectRef.update({ status: 'Listo para editar' });
-                            await syncTokensToFirestore(uid, result);
-                            updateProgressUI(100, '¡Completado!');
-                            setTimeout(() => {
-                                procOverlay.classList.add('opacity-0');
-                                setTimeout(() => {
-                                    procOverlay.classList.add('hidden');
-                                    window.location.href = `editor.html?project=${projectId}`;
-                                }, 300);
-                            }, 1000);
-                        } else {
-                            // Redirigir de inmediato al editor para que el usuario vea cómo se colocan las pistas en vivo
-                            updateProgressUI(100, '¡Video preparado! Abriendo el editor en vivo...');
-                            setTimeout(() => {
-                                procOverlay.classList.add('opacity-0');
-                                setTimeout(() => {
-                                    procOverlay.classList.add('hidden');
-                                    window.location.href = `editor.html?project=${projectId}&processing=true`;
-                                }, 250);
-                            }, 400);
-                        }
+                        setTimeout(() => {
+                            procOverlay.classList.add('hidden');
+                            window.location.href = `editor.html?project=${projectId}`;
+                        }, 250);
                     } else {
-                        alert("Error: Respuesta de inicialización inválida del servidor.");
-                        procOverlay.classList.add('opacity-0');
-                        setTimeout(() => procOverlay.classList.add('hidden'), 300);
-                        return;
+                        // C) Si se encoló en Celery: esperar a que termine de generar todas las audiodescripciones
+                        updateProgressUI(80, 'Generando audiodescripciones con IA...', 'En proceso');
+
+                        await new Promise((resolve, reject) => {
+                            const pollInterval = setInterval(async () => {
+                                try {
+                                    // Consultar progreso incremental
+                                    const progRes = await fetch(`${FLASK_API}/fase1-progreso?proyecto_id=${projectId}`);
+                                    if (progRes.ok) {
+                                        const pData = await progRes.json();
+                                        if (pData.current_scene && pData.total_scenes) {
+                                            const pct = Math.max(80, Math.min(96, Math.round((pData.current_scene / pData.total_scenes) * 100)));
+                                            updateProgressUI(pct, `Generando audiodescripción: Escena ${pData.current_scene} de ${pData.total_scenes}...`, `Escena ${pData.current_scene}/${pData.total_scenes}`);
+                                        }
+                                        if (pData.status === 'idle' || (pData.total_scenes > 0 && pData.current_scene >= pData.total_scenes)) {
+                                            clearInterval(pollInterval);
+                                            // Obtener resultado final y guardar
+                                            const resRes = await fetch(`${FLASK_API}/fase1-resultado?proyecto_id=${projectId}`);
+                                            const resData = resRes.ok ? await resRes.json() : pData;
+                                            const bloquesFinales = resData.bloques || pData.bloques || [];
+
+                                            updateProgressUI(98, 'Guardando pistas en el proyecto...', 'Guardando');
+                                            const blocksBatch = db.batch();
+                                            bloquesFinales.forEach(b => {
+                                                const blockDoc = projectRef.collection('bloques').doc(String(b.id));
+                                                blocksBatch.set(blockDoc, b);
+                                            });
+                                            await blocksBatch.commit();
+                                            await projectRef.update({ status: 'Listo para editar' });
+                                            await syncTokensToFirestore(uid, resData);
+
+                                            updateProgressUI(100, '¡Audiodescripción completada con éxito!', 'Completado');
+                                            await new Promise(r => setTimeout(r, 600));
+                                            procOverlay.classList.add('opacity-0');
+                                            setTimeout(() => {
+                                                procOverlay.classList.add('hidden');
+                                                window.location.href = `editor.html?project=${projectId}`;
+                                            }, 250);
+                                            resolve();
+                                            return;
+                                        }
+                                    }
+
+                                    // Checar estado por si hubo error o cuota agotada
+                                    const stRes = await fetch(`${FLASK_API}/fase1-status?proyecto_id=${projectId}`);
+                                    if (stRes.ok) {
+                                        const stData = await stRes.json();
+                                        if (stData.status === 'error') {
+                                            clearInterval(pollInterval);
+                                            reject(new Error(stData.error || 'Error en el procesamiento del video'));
+                                        } else if (stData.status === 'quota_exceeded') {
+                                            clearInterval(pollInterval);
+                                            reject(new Error(stData.error || 'Límite de minutos o tokens agotado.'));
+                                        }
+                                    }
+                                } catch (pollErr) {
+                                    console.warn("Poll warning:", pollErr);
+                                }
+                            }, 2000);
+                        });
                     }
 
                 } catch (err) {

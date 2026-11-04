@@ -250,6 +250,16 @@
             border-top-right-radius: 4px;
             border-bottom-right-radius: 4px;
         }
+            @keyframes blockCascade {
+            0% {
+                opacity: 0;
+                transform: translateY(16px) scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
     </style>
 </head>
 
@@ -573,13 +583,11 @@
             </div>
         </div>
     </aside>
-</body>
 
-</html>
-    <!-- VENTANA EMERGENTE DE ESPERA DINÁMICA CON ANIMACIÓN CONTINUA DE VIDEOJUEGO -->
+    <!-- VENTANA EMERGENTE DE ESPERA DINÁMICA CON ANIMACIÓN CONTINUA (ESTILO VIDEOJUEGO) -->
     <div id="ai-stream-overlay" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 pointer-events-none flex items-center justify-center p-4">
-        <!-- Fondo translúcido sutil que deja ver la línea de tiempo y el video detrás -->
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-[3px]"></div>
+        <!-- Fondo translúcido con desenfoque cinematográfico -->
+        <div class="absolute inset-0 bg-black/75 backdrop-blur-md"></div>
 
         <!-- Tarjeta flotante interactiva -->
         <div class="relative glass-panel rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] pointer-events-auto text-center space-y-6 animate-fade-in bg-surface-container/95 backdrop-blur-xl">
@@ -609,48 +617,82 @@
             <div class="space-y-2">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-xs font-bold">
                     <span class="w-2 h-2 rounded-full bg-accent animate-ping"></span>
-                    <span>Generando Audiodescripciones en Vivo</span>
+                    <span id="stream-badge-text">Audiodescripción con IA</span>
                 </div>
-                <h3 class="text-lg font-black text-white">Analizando Escenas y Sintetizando Voces</h3>
-                <p id="stream-status-text" class="text-xs text-zinc-300 leading-relaxed max-w-sm mx-auto">
-                    La IA está analizando el video fotograma a fotograma. Puedes ver cómo las pistas se van agregando a la línea de tiempo en tiempo real...
+                <h3 class="text-lg font-black text-white" id="stream-title-text">Analizando Escenas y Sintetizando Voces</h3>
+                <p id="stream-status-text" class="text-xs text-zinc-300 font-medium">
+                    Sincronizando pistas de audiodescripción...
                 </p>
             </div>
 
             <!-- Contador de pistas y barra de progreso continua -->
             <div class="space-y-2 pt-2 border-t border-white/5">
                 <div class="flex items-center justify-between text-xs text-zinc-400 font-mono">
-                    <span id="stream-blocks-count" class="font-bold text-accent">0 pistas colocadas</span>
-                    <span id="stream-percent" class="font-bold text-white">10%</span>
+                    <span id="stream-blocks-count" class="font-bold text-accent">Preparando pistas...</span>
+                    <span id="stream-percent" class="font-bold text-white">0%</span>
                 </div>
                 <!-- Barra con efecto de brillo continuo (shimmer) que se mueve siempre -->
                 <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5 border border-white/5 relative">
-                    <div id="stream-progress-bar" class="h-full bg-gradient-to-r from-primary via-accent to-accent-hover rounded-full transition-all duration-500 relative" style="width: 10%;">
+                    <div id="stream-progress-bar" class="h-full bg-gradient-to-r from-primary via-accent to-accent-hover rounded-full transition-all duration-500 relative" style="width: 0%;">
                         <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
                     </div>
                 </div>
-                <p class="text-[10px] text-zinc-500">Mira el fondo: cada bloque de audio se sincroniza y aparece en cuanto la IA lo genera.</p>
             </div>
         </div>
     </div>
 
-<!-- Rendering Overlay -->
-<div id="render-overlay"
-    class="fixed inset-0 z-50 hidden opacity-0 bg-background/90 backdrop-blur-md transition-all duration-300 flex flex-col items-center justify-center p-md text-center">
-    <div class="w-24 h-24 relative mb-lg">
-        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-            <circle class="text-white/5 stroke-current" stroke-width="4" fill="transparent" r="40" cx="50" cy="50" />
-            <circle id="render-progress-circle" class="text-primary stroke-current" stroke-width="4"
-                stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round" fill="transparent" r="40"
-                cx="50" cy="50" />
-        </svg>
-        <div class="absolute inset-0 flex items-center justify-center font-mono font-bold text-on-surface text-xl"
-            id="render-progress-text">0%</div>
+    <!-- RENDERING OVERLAY CON ANIMACIÓN CONTINUA -->
+    <div id="render-overlay"
+        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 pointer-events-none flex items-center justify-center p-4">
+        <!-- Fondo translúcido con desenfoque cinematográfico -->
+        <div class="absolute inset-0 bg-black/75 backdrop-blur-md"></div>
+
+        <!-- Tarjeta flotante interactiva -->
+        <div class="relative glass-panel rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] pointer-events-auto text-center space-y-6 animate-fade-in bg-surface-container/95 backdrop-blur-xl">
+            
+            <!-- CONTENEDOR DE ANIMACIÓN CONTINUA (DOBLE ANILLO + EQUALIZADOR VIVO) -->
+            <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-accent border-r-primary animate-spin" style="animation-duration: 1.2s;"></div>
+                <div class="absolute inset-2 rounded-full border-3 border-transparent border-b-accent border-l-primary/60 animate-spin" style="animation-duration: 2s; animation-direction: reverse;"></div>
+                <div class="absolute inset-4 rounded-full bg-accent/20 blur-md animate-pulse"></div>
+
+                <div class="relative z-10 flex items-center gap-1">
+                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse" style="animation-delay: 0.1s; animation-duration: 0.8s;"></span>
+                    <span class="w-1.5 h-6 bg-primary rounded-full animate-pulse" style="animation-delay: 0.3s; animation-duration: 0.7s;"></span>
+                    <span class="w-1.5 h-8 bg-accent rounded-full animate-pulse" style="animation-delay: 0.15s; animation-duration: 0.9s;"></span>
+                    <span class="w-1.5 h-5 bg-primary rounded-full animate-pulse" style="animation-delay: 0.4s; animation-duration: 0.75s;"></span>
+                    <span class="w-1.5 h-3 bg-accent rounded-full animate-pulse" style="animation-delay: 0.2s; animation-duration: 0.85s;"></span>
+                </div>
+            </div>
+
+            <!-- Textos y progreso -->
+            <div class="space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-xs font-bold">
+                    <span class="w-2 h-2 rounded-full bg-accent animate-ping"></span>
+                    <span>Renderizado de Audio en Proceso</span>
+                </div>
+                <h3 class="text-lg font-black text-white">Consolidando y Mezclando Audio IA</h3>
+                <p class="text-xs text-zinc-300 font-medium">Exportando pistas maestras sincronizadas con precisión de milisegundos...</p>
+            </div>
+
+            <!-- Barra de progreso -->
+            <div class="space-y-2 pt-2 border-t border-white/5">
+                <div class="flex items-center justify-between text-xs text-zinc-400 font-mono">
+                    <span class="font-bold text-accent">Renderizando</span>
+                    <span id="render-progress-text" class="font-bold text-white">0%</span>
+                </div>
+                <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden p-0.5 border border-white/5 relative">
+                    <div id="render-progress-bar" class="h-full bg-gradient-to-r from-primary via-accent to-accent-hover rounded-full transition-all duration-500 relative" style="width: 0%;">
+                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Elemento oculto para retrocompatibilidad con scripts que referencien render-progress-circle -->
+            <div id="render-progress-circle" class="hidden" style="stroke-dashoffset: 251.2;"></div>
+        </div>
     </div>
-    <h3 class="font-headline-md text-headline-md text-on-surface mb-2">Mezclando y Renderizando Audio IA
-    </h3>
-    <p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Consolidando pistas de
-        <!-- Settings Modal Overlay -->
+
+    <!-- Settings Modal Overlay -->
     <div class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out" id="settings-modal">
         <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" id="settings-backdrop"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
@@ -1091,6 +1133,10 @@
 
                     console.log("[loadInitialData] Contenido final de blocks (antes de ordenar):", JSON.stringify(blocks));
                     blocks.sort((a, b) => a.start - b.start);
+
+                    // Activar animación escalonada para que el usuario vea cómo se colocan las pistas
+                    window._initialCascadeAnimation = true;
+                    setTimeout(() => { window._initialCascadeAnimation = false; }, 2500);
 
                     // Fuerza la ejecución de renderTimeline y selectBlock inmediatamente
                     renderTimeline();
@@ -1540,8 +1586,10 @@
 
                     const el = document.createElement('div');
 
-                    // Renderizado normal sin estado de conflicto (siempre colores normales)
+                    // Renderizado con animación escalonada de entrada si es carga inicial
+                    const entranceDelay = (window._initialCascadeAnimation && !active) ? Math.min(blocks.indexOf(b) * 0.08, 1.8) : 0;
                     el.className = `audio-block absolute h-16 top-4 rounded cursor-pointer flex flex-col justify-center px-2 shadow-md border transition-all ${active ? `${color.activeBg} ${color.activeBorder}` : `${color.bg} ${color.border} hover:brightness-125`}`;
+                    if (entranceDelay > 0) el.style.animation = `blockCascade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${entranceDelay}s both`;
                     el.style.backgroundImage = '';
 
                     // Posicionamiento absoluto inicial gobernado por el estado maestro
@@ -2281,8 +2329,10 @@
 
             function setRenderProgress(pct) {
                 const offset = 251.2 - (pct / 100) * 251.2;
-                renderProgressCircle.style.strokeDashoffset = offset;
-                renderProgressText.textContent = `${Math.round(pct)}%`;
+                if (renderProgressCircle) renderProgressCircle.style.strokeDashoffset = offset;
+                if (renderProgressText) renderProgressText.textContent = `${Math.round(pct)}%`;
+                const rBar = document.getElementById('render-progress-bar');
+                if (rBar) rBar.style.width = `${pct}%`;
             }
 
             function animateProgressTo(from, to, ms) {
