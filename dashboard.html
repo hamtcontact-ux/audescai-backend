@@ -1510,72 +1510,28 @@
                     const projectRef = db.collection('usuarios').doc(uid).collection('proyectos').doc();
                     const projectId = projectRef.id;
 
-                    // 2. Subir video a Cloudinary con soporte de archivos grandes y subida por fragmentos (Chunked Upload)
-                    const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dm9uhr1be/video/upload';
-                    const uploadPreset = 'audescai_preset';
+                    // 2. Subida ultra robusta y sin límite de tamaño o duración
+                    // Los videos > 80MB (e.g. 100MB, 300MB, 514MB, 1GB+) se suben por fragmentos DIRECTAMENTE al servidor propio
+                    // eliminando para siempre el tope de 100MB de cuentas gratuitas externas.
+                    const uploadToBackendChunks = async (videoFile) => {
+                        const fileSize = videoFile.size;
+                        const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB por fragmento
+                        const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
+                        const uploadId = 'aud_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+                        let finalResult = null;
 
-                    const uploadToCloudinary = async () => {
-                        const fileSize = file.size;
-                        const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB por fragmento (Cloudinary requiere >= 5MB para chunks)
-
-                        // A) Para videos pequeños (<= 10MB): subida directa estándar
-                        if (fileSize <= 10 * 1024 * 1024) {
-                            return new Promise((resolve, reject) => {
-                                const xhr = new XMLHttpRequest();
-                                xhr.open('POST', cloudinaryUrl, true);
-                                const formData = new FormData();
-                                formData.append('file', file);
-                                formData.append('upload_preset', uploadPreset);
-
-                                xhr.upload.onprogress = (e) => {
-                                    if (e.lengthComputable) {
-                                        const uploadProgress = (e.loaded / e.total) * 70; // 10% a 80%
-                                        updateProgressUI(10 + uploadProgress, 'Subiendo video...', 'Subiendo');
-                                    }
-                                };
-
-                                xhr.onload = () => {
-                                    if (xhr.status >= 200 && xhr.status < 300) {
-                                        try {
-                                            const response = JSON.parse(xhr.responseText);
-                                            resolve(response.secure_url);
-                                        } catch (err) {
-                                            reject(new Error('Error al procesar respuesta del servidor'));
-                                        }
-                                    } else {
-                                        try {
-                                            const errObj = JSON.parse(xhr.responseText);
-                                            reject(new Error(errObj.error?.message || xhr.statusText));
-                                        } catch (_) {
-                                            reject(new Error('Fallo la subida a Cloudinary: ' + xhr.statusText));
-                                        }
-                                    }
-                                };
-
-                                xhr.onerror = () => reject(new Error('Error de red en la subida a Cloudinary'));
-                                xhr.send(formData);
-                            });
-                        }
-
-                        // B) Para videos medianos y grandes (> 10MB, ej: videos de 3+ minutos o 100MB+):
-                        // Subida por fragmentos nativa (Chunked Upload) con reintentos automáticos
-                        const uniqueUploadId = 'aud_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-                        let start = 0;
-                        let lastResponse = null;
-
-                        while (start < fileSize) {
+                        for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+                            const start = chunkIdx * CHUNK_SIZE;
                             const end = Math.min(start + CHUNK_SIZE, fileSize);
-                            const chunk = file.slice(start, end);
-                            let chunkSuccess = false;
-                            let lastChunkErr = null;
+                            const chunkBlob = videoFile.slice(start, end);
+                            let success = false;
+                            let lastErr = null;
 
-                            for (let attempt = 0; attempt < 3 && !chunkSuccess; attempt++) {
+                            for (let attempt = 0; attempt < 4 && !success; attempt++) {
                                 try {
-                                    lastResponse = await new Promise((resolveChunk, rejectChunk) => {
+                                    finalResult = await new Promise((resolveChunk, rejectChunk) => {
                                         const xhr = new XMLHttpRequest();
-                                        xhr.open('POST', cloudinaryUrl, true);
-                                        xhr.setRequestHeader('X-Unique-Upload-Id', uniqueUploadId);
-                                        xhr.setRequestHeader('Content-Range', `bytes ${start}-${end - 1}/${fileSize}`);
+                                        xhr.open('POST', `${FLASK_API}/api/upload-video`, true);
 
                                         xhr.upload.onprogress = (e) => {
                                             if (e.lengthComputable) {
@@ -1590,16 +1546,17 @@
                                         xhr.onload = () => {
                                             if (xhr.status >= 200 && xhr.status < 300) {
                                                 try {
-                                                    resolveChunk(JSON.parse(xhr.responseText));
+                                                    const res = JSON.parse(xhr.responseText);
+                                                    resolveChunk(res);
                                                 } catch (err) {
                                                     rejectChunk(new Error('Respuesta no válida del servidor'));
                                                 }
                                             } else {
                                                 try {
                                                     const errObj = JSON.parse(xhr.responseText);
-                                                    rejectChunk(new Error(errObj.error?.message || xhr.statusText));
+                                                    rejectChunk(new Error(errObj.message || xhr.statusText));
                                                 } catch (_) {
-                                                    rejectChunk(new Error('Fallo en fragmento: ' + xhr.statusText));
+                                                    rejectChunk(new Error('Error en fragmento (' + xhr.status + ')'));
                                                 }
                                             }
                                         };
@@ -1607,34 +1564,97 @@
                                         xhr.onerror = () => rejectChunk(new Error('Error de conexión en fragmento'));
 
                                         const formData = new FormData();
-                                        formData.append('file', chunk);
-                                        formData.append('upload_preset', uploadPreset);
+                                        formData.append('file', chunkBlob, videoFile.name || 'video.mp4');
+                                        formData.append('upload_id', uploadId);
+                                        formData.append('chunk_index', chunkIdx);
+                                        formData.append('total_chunks', totalChunks);
+                                        formData.append('filename', videoFile.name || 'video.mp4');
                                         xhr.send(formData);
                                     });
-                                    chunkSuccess = true;
+                                    success = true;
                                 } catch (err) {
-                                    lastChunkErr = err;
-                                    console.warn(`Reintento de fragmento (${attempt + 1}/3)...`, err);
-                                    await new Promise(r => setTimeout(r, 1500));
+                                    lastErr = err;
+                                    console.warn(`Reintento de fragmento ${chunkIdx + 1}/${totalChunks} (intento ${attempt + 1})...`, err);
+                                    await new Promise(r => setTimeout(r, 1200 * (attempt + 1)));
                                 }
                             }
 
-                            if (!chunkSuccess) {
-                                throw new Error('Error al subir video grande: ' + (lastChunkErr?.message || 'Error de red persistente'));
+                            if (!success) {
+                                throw new Error('Error al subir video: ' + (lastErr?.message || 'Error de conexión'));
                             }
-
-                            start = end;
                         }
 
-                        if (!lastResponse || !lastResponse.secure_url) {
-                            throw new Error('El servidor no retornó la URL del video.');
+                        if (!finalResult || (!finalResult.secure_url && !finalResult.video_url)) {
+                            throw new Error('El servidor no retornó la URL del video ensamblado.');
                         }
 
-                        return lastResponse.secure_url;
+                        return finalResult.secure_url || finalResult.video_url;
+                    };
+
+                    const uploadToCloudinary = async (videoFile) => {
+                        const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dm9uhr1be/video/upload';
+                        const uploadPreset = 'audescai_preset';
+
+                        return new Promise((resolve, reject) => {
+                            const xhr = new XMLHttpRequest();
+                            xhr.open('POST', cloudinaryUrl, true);
+                            const formData = new FormData();
+                            formData.append('file', videoFile);
+                            formData.append('upload_preset', uploadPreset);
+
+                            xhr.upload.onprogress = (e) => {
+                                if (e.lengthComputable) {
+                                    const uploadProgress = (e.loaded / e.total) * 70;
+                                    const mbUploaded = (e.loaded / (1024 * 1024)).toFixed(1);
+                                    const mbTotal = (e.total / (1024 * 1024)).toFixed(1);
+                                    updateProgressUI(10 + uploadProgress, `Subiendo video (${mbUploaded}MB / ${mbTotal}MB)...`, 'Subiendo');
+                                }
+                            };
+
+                            xhr.onload = () => {
+                                if (xhr.status >= 200 && xhr.status < 300) {
+                                    try {
+                                        const response = JSON.parse(xhr.responseText);
+                                        resolve(response.secure_url);
+                                    } catch (err) {
+                                        reject(new Error('Error al procesar respuesta del servidor'));
+                                    }
+                                } else {
+                                    try {
+                                        const errObj = JSON.parse(xhr.responseText);
+                                        reject(new Error(errObj.error?.message || xhr.statusText));
+                                    } catch (_) {
+                                        reject(new Error('Fallo la subida: ' + xhr.statusText));
+                                    }
+                                }
+                            };
+
+                            xhr.onerror = () => reject(new Error('Error de red en la subida'));
+                            xhr.send(formData);
+                        });
+                    };
+
+                    // Estrategia inteligente y resiliente:
+                    // Si el video es mayor a 80MB (3 min pesado, 15 min, etc.), sube DIRECTO al servidor por fragmentos sin límites
+                    // Si es <= 80MB, intenta Cloudinary y ante cualquier fallo o limitación, cae automáticamente al servidor
+                    const uploadVideoResilient = async () => {
+                        const fileSize = file.size;
+                        const isCloudinaryViable = fileSize <= 80 * 1024 * 1024;
+
+                        if (!isCloudinaryViable) {
+                            return await uploadToBackendChunks(file);
+                        }
+
+                        try {
+                            return await uploadToCloudinary(file);
+                        } catch (cErr) {
+                            console.warn('Subida alternativa activada debido a limitación de servicio externo:', cErr);
+                            return await uploadToBackendChunks(file);
+                        }
                     };
 
                     const thumbnailCapturePromise = captureVideoThumbnail(file);
-                    const videoUrl = await uploadToCloudinary();
+                    const videoUrl = await uploadVideoResilient();
                     updateProgressUI(80, 'Preparando análisis con IA...');
 
                     let clientThumb = null;

@@ -9,6 +9,9 @@ import sys
 import urllib.request
 import uuid
 import math
+import shutil
+import re
+import traceback
 from functools import wraps
 
 # Forzar actualización de dependencias críticas en el arranque
@@ -96,7 +99,7 @@ PLAN_CUSTOM_TOKENS = int(os.environ.get("PLAN_CUSTOM_TOKENS", str(int(600 * 7220
 PLAN_CUSTOM_PRICE_USD = float(os.environ.get("PLAN_CUSTOM_PRICE_USD", "99"))
 PLAN_OVERAGE_PRICE_PER_MIN = float(os.environ.get("PLAN_OVERAGE_PRICE_PER_MIN", "0.19"))
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory, Response
 from flask_cors import CORS
 from openai import OpenAI
 import httpx
@@ -372,11 +375,21 @@ def encode_image(image_path):
 # Función para descargar un archivo de internet con User-Agent y soporte de streaming
 def descargar_video(url, dest_path):
     print(f"[Info] Descargando video desde {url} hacia {dest_path}")
+    # OPTIMIZACIÓN LOCAL: Si el video ya está en TEMP_DIR (subido directamente vía /api/upload-video), reutilizarlo inmediatamente
+    if "/videos/" in url:
+        local_filename = url.split("/videos/")[-1].split("?")[0]
+        local_candidate = os.path.join(TEMP_DIR, local_filename)
+        if os.path.exists(local_candidate):
+            if os.path.abspath(local_candidate) != os.path.abspath(dest_path):
+                shutil.copy2(local_candidate, dest_path)
+            print(f"[Info] Video obtenido directamente de almacenamiento local ({os.path.getsize(dest_path)} bytes).")
+            return
+
     req = urllib.request.Request(
         url,
         headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     )
-    with urllib.request.urlopen(req, timeout=120) as resp, open(dest_path, "wb") as f_out:
+    with urllib.request.urlopen(req, timeout=300) as resp, open(dest_path, "wb") as f_out:
         while True:
             chunk = resp.read(1024 * 1024)
             if not chunk:
@@ -456,7 +469,7 @@ def obtener_huecos_silencio(video_path, min_gap=2.2, max_intervalo=6.0):
     # 1. Intentar extracción directa con FFmpeg (más tolerante a códecs de celulares que MoviePy)
     try:
         cmd_ff = ["ffmpeg", "-y", "-i", video_path, "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", audio_temp]
-        res_ff = subprocess.run(cmd_ff, capture_output=True, text=True, timeout=30)
+        res_ff = subprocess.run(cmd_ff, capture_output=True, text=True, timeout=120)
         if res_ff.returncode == 0 and os.path.exists(audio_temp) and os.path.getsize(audio_temp) > 1000:
             audio_extraido = True
     except Exception as e_ff:
@@ -1926,6 +1939,101 @@ def descargar_audio():
     if not os.path.exists(ruta_mp3):
         return jsonify({"status": "error", "message": "No hay mezcla de audio disponible para este proyecto. Renderiza primero."}), 404
     return send_file(ruta_mp3, as_attachment=True, download_name="audiodescripcion_final.mp3", mimetype="audio/mpeg")
+
+@app.route('/api/upload-video', methods=['POST', 'OPTIONS'])
+def api_upload_video():
+    """
+    Subida robusta de videos por fragmentos (Chunked Upload).
+    Permite subir videos de CUALQUIER tamaño y duración (15 min, 1 hora, 500MB, 1GB+) sin límites de servicios externos.
+    """
+    if request.method == 'OPTIONS':
+        resp = Response()
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = '*'
+        return resp
+
+    try:
+        file_obj = request.files.get('file')
+        if not file_obj:
+            return jsonify({"status": "error", "message": "No se recibió archivo de video"}), 400
+
+        upload_id = request.form.get('upload_id')
+        if not upload_id:
+            upload_id = 'vid_' + str(int(time.time())) + '_' + uuid.uuid4().hex[:8]
+
+        # Sanitizar upload_id para seguridad
+        upload_id = re.sub(r'[^a-zA-Z0-9_\-]', '', upload_id)
+
+        chunk_index = int(request.form.get('chunk_index', 0))
+        total_chunks = int(request.form.get('total_chunks', 1))
+        orig_filename = request.form.get('filename', 'video.mp4')
+        _, ext = os.path.splitext(orig_filename)
+        ext = ext.lower() if ext else '.mp4'
+        if not ext.startswith('.'):
+            ext = '.' + ext
+
+        os.makedirs(TEMP_DIR, exist_ok=True)
+        part_file = os.path.join(TEMP_DIR, f"{upload_id}.part")
+        final_filename = f"{upload_id}{ext}"
+        final_file = os.path.join(TEMP_DIR, final_filename)
+
+        # Si es el primer fragmento, crear/truncar archivo temporal; si es subsiguiente, agregar (append)
+        mode = "wb" if chunk_index == 0 else "ab"
+        with open(part_file, mode) as f:
+            file_obj.save(f)
+
+        # Si se completaron todos los fragmentos, ensamblar archivo final
+        if chunk_index >= total_chunks - 1:
+            if os.path.exists(final_file):
+                try: os.remove(final_file)
+                except Exception: pass
+            os.rename(part_file, final_file)
+
+            final_size = os.path.getsize(final_file)
+            video_url = f"https://api.cineparaciegos.com/videos/{final_filename}"
+            print(f"[Upload Video] Video final ensamblado exitosamente: {final_filename} ({final_size} bytes)")
+
+            return jsonify({
+                "status": "success",
+                "completed": True,
+                "secure_url": video_url,
+                "video_url": video_url,
+                "filename": final_filename,
+                "size": final_size
+            }), 200
+
+        return jsonify({
+            "status": "success",
+            "completed": False,
+            "chunk_index": chunk_index,
+            "total_chunks": total_chunks,
+            "upload_id": upload_id
+        }), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": f"Error al procesar fragmento de video: {str(e)}"}), 500
+
+@app.route('/videos/<path:filename>', methods=['GET', 'HEAD', 'OPTIONS'])
+def serve_video_stream(filename):
+    """
+    Transmisión de video con soporte nativo de HTTP 206 Partial Content (Byte-Range requests).
+    Permite reproducción inmediata, streaming y salto instantáneo a cualquier segundo en el editor.
+    """
+    if request.method == 'OPTIONS':
+        resp = Response()
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = '*'
+        return resp
+
+    safe_name = os.path.basename(filename)
+    resp = send_from_directory(TEMP_DIR, safe_name, conditional=True)
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    resp.headers['Access-Control-Expose-Headers'] = 'Content-Range, Content-Length, Accept-Ranges'
+    resp.headers['Accept-Ranges'] = 'bytes'
+    return resp
 
 if __name__ == '__main__':
     port = int(os.environ.get("FLASK_PORT", 5000))
