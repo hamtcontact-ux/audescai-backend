@@ -542,14 +542,14 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
     palabras = max(15, int(duracion_max * 2.2))
     
     if modo == "texto_a_voz":
-        prompt_sistema = """Eres un sistema especializado de transcripción y lectura de texto en pantalla a voz (OCR visual de video a voz) para personas con discapacidad visual.
-Tu ÚNICA labor es encontrar cualquier texto visible en la imagen (carteles, letreros, mensajes de texto, títulos, subtítulos, créditos, rótulos o avisos) y transcribirlo con precisión para ser locutado.
-REGLAS ESTRICTAS PARA MODO TEXTO A VOZ:
-1. Si encuentras texto legible en la imagen, transcríbelo directamente para locución (ej: 'En pantalla se lee: [texto]' o simplemente el contenido del cartel/texto).
-2. Si NO hay ningún texto visible o legible en la imagen, responde ÚNICAMENTE la palabra: 'SILENCIO'.
-3. NO describas acciones de personajes, ni ropa, ni iluminación, ni paisajes. Tu función exclusiva es convertir el TEXTO de la imagen a VOZ."""
-        prompt_usuario = f"""Examina minuciosamente la imagen adjunta. ¿Hay algún texto, rótulo, título, subtítulo o cartel visible?
-Si hay texto, léelo/transcríbelo fielmente para que sea narrado. Si NO hay texto visible, responde exclusivamente: SILENCIO"""
+        prompt_sistema = """Eres un transcriptor estricto y literal de texto en pantalla para convertir letreros, títulos, subtítulos y carteles de video a voz (OCR visual de video a voz).
+Tu ÚNICA labor es transcribir exactamente el TEXTO visible que esté escrito en la imagen, y NADA MÁS QUE EL TEXTO (sin descripciones, sin explicaciones, sin añadir nada que no esté escrito).
+REGLAS ESTRICTAS:
+1. Si hay texto escrito visible en la imagen (subtítulos, carteles, títulos, letreros, mensajes de chat, avisos o créditos), transcribe ÚNICAMENTE el texto exacto tal cual está escrito.
+2. PROHIBIDO agregar introducciones como 'En pantalla se lee', 'Dice el texto', 'Un cartel indica', 'Se observa un cartel', ni nada parecido. SOLO escribe el texto puro.
+3. Si NO hay ningún texto visible o legible en la imagen, responde ÚNICAMENTE la palabra: 'SILENCIO'.
+4. PROHIBIDO describir acciones de personajes, ropa, iluminación, paisajes, caras o escenas. Tu función es CERO audiodescripción, ÚNICAMENTE extraer el TEXTO para ser locutado."""
+        prompt_usuario = f"""Examina minuciosamente la imagen adjunta. Transcribe ÚNICAMENTE el texto legible que esté escrito en pantalla. Si no hay ningún texto escrito, responde exclusivamente: SILENCIO"""
     else:
         instruccion_escena = (
             "OBLIGATORIO: Al ser la primera escena del video, DEBES empezar tu descripción indicando el LUGAR (y DÍA/NOCHE solo si es inconfundible), seguido de la acción (ej: 'CALLE. El hombre...', o 'NOCHE, EXTERIOR.')." 
@@ -641,8 +641,8 @@ Genera UNA SOLA oracion corta (max {palabras} palabras) sobre la imagen. Aplica 
         pass
 
     if modo == "texto_a_voz":
-        clean_res = resultado.strip().strip('"').strip("'").upper()
-        if clean_res in ["SILENCIO", "SILENCIO.", "NINGUNO", "NINGUNO.", "NO HAY TEXTO", "NO HAY TEXTO.", "NO HAY TEXTO VISIBLE."]:
+        clean_res = resultado.strip().strip('"').strip("'").strip(".").strip().upper()
+        if clean_res in ["SILENCIO", "NINGUNO", "NO HAY TEXTO", "NO HAY TEXTO VISIBLE", "SIN TEXTO", "NO TEXT", "NO", "NADA"]:
             print(f"   [Fase 1 OCR] Escena {indice_escena}: Sin texto en pantalla. Silencio. (Tokens: {tokens_spent})")
             return "", tokens_spent
 
@@ -876,7 +876,7 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                     try:
                         ai_client, model_name = crear_cliente_ia_para_clave(curr_key)
                         texto, tokens_escena = analizar_con_openai(
-                            ai_client, video_path, inicio, fin, i, historial_ad, model_name=model_name
+                            ai_client, video_path, inicio, fin, i, historial_ad, model_name=model_name, modo=modo
                         )
                         scene_success = True
                         last_used_key_name = curr_key.get("name", "Clave Gratuita")
@@ -907,7 +907,7 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                         print("[Failover Universal] Utilizando OpenAI Server Key como salvamento final.")
                         fb_client = OpenAI(api_key=OPENAI_API_KEY, http_client=http_client)
                         texto, tokens_escena = analizar_con_openai(
-                            fb_client, video_path, inicio, fin, i, historial_ad, model_name="gpt-4o-mini"
+                            fb_client, video_path, inicio, fin, i, historial_ad, model_name="gpt-4o-mini", modo=modo
                         )
                         last_used_key_name = "OpenAI Servidor (Salvamento)"
                         scene_success = True
