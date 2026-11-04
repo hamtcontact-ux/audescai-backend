@@ -197,14 +197,7 @@
             </button>
         </div>
 
-        <!-- BOTÓN PRINCIPAL NUEVO PROYECTO -->
-        <div class="mb-6">
-            <button id="nav-upload-btn"
-                class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn shadow-lg">
-                <span class="material-symbols-outlined text-[18px]">cloud_upload</span>
-                <span>+ Nuevo Proyecto</span>
-            </button>
-        </div>
+
 
         <!-- LISTA DE NAVEGACIÓN -->
         <ul class="flex-1 space-y-1.5">
@@ -284,36 +277,33 @@
     </nav>
     <!-- Main Content -->
     <main class="md:ml-64 min-h-screen pb-xl">
-        <!-- Header -->
+        <!-- Header con Botón Nuevo Proyecto y Buscador Integrado -->
         <header
-            class="sticky top-0 z-30 glass-panel border-b-0 border-white/5 px-md md:px-lg h-20 flex justify-between items-center">
-            <div class="flex items-center">
+            class="sticky top-0 z-30 glass-panel border-b-0 border-white/5 px-md md:px-lg h-20 flex justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
                 <button id="mobile-sidebar-toggle"
-                    class="md:hidden text-on-surface hover:text-primary transition-colors p-2 mr-2">
+                    class="md:hidden text-on-surface hover:text-primary transition-colors p-2 mr-1">
                     <span class="material-symbols-outlined text-[28px]">menu</span>
                 </button>
-                <h2 class="font-headline-md text-headline-md text-on-surface">Mis Proyectos</h2>
+                <!-- Botón Principal Nuevo Proyecto (Reemplaza a 'Mis Proyectos' y 'Subir Nuevo Video') -->
+                <button
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn shadow-lg"
+                    id="main-upload-btn">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    <span>Nuevo Proyecto</span>
+                </button>
             </div>
-            <div class="flex items-center gap-xs sm:gap-lg">
-                <div class="relative hidden sm:block">
+            <div class="flex items-center gap-3 flex-1 max-w-md justify-end">
+                <!-- Buscador de proyectos por coincidencia de texto (%BUSQUEDA%) -->
+                <div class="relative w-full max-w-xs sm:max-w-sm">
                     <span
-                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-[20px]">search</span>
                     <input
-                        class="w-64 bg-surface-container-high border border-outline-variant rounded-full py-2 pl-10 pr-4 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-on-surface-variant font-label-md text-label-md"
+                        id="project-search-input"
+                        class="w-full bg-surface-container-high border border-outline-variant/50 rounded-full py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-zinc-500"
                         placeholder="Buscar proyectos..." type="text" />
                 </div>
-                <button
-                    class="hidden sm:flex items-center gap-xs px-6 py-2.5 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all glow-btn"
-                    id="main-upload-btn">
-                    <span class="material-symbols-outlined text-[20px]">cloud_upload</span>
-                    + Subir Nuevo Video
-                </button>
 
-                <!-- Botón de Búsqueda Móvil -->
-                <button
-                    class="sm:hidden w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
-                    <span class="material-symbols-outlined text-[22px]">search</span>
-                </button>
                 <!-- Botón de Configuración Móvil -->
                 <button id="mobile-settings-btn"
                     class="hidden md:hidden w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
@@ -333,8 +323,8 @@
                 <div class="absolute -right-20 -top-20 w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                <!-- FILA 1: CABECERA DEL PLAN & ACCIONES -->
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-white/5 relative z-10">
+                <!-- ESTADO DE TU SUSCRIPCIÓN -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
                     <div>
                         <div class="flex items-center gap-2 mb-2">
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -369,35 +359,6 @@
                         </button>
                     </div>
                 </div>
-
-                <!-- FILA 2: MINUTOS DE VIDEO DISPONIBLES -->
-                <div class="pt-6 relative z-10">
-                    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-3">
-                        <div>
-                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">Minutos de video disponibles</p>
-                            <div class="flex items-baseline gap-2 mt-1">
-                                <h3 class="text-3xl font-black text-white font-mono"><span id="usage-minutes-available">10.0</span></h3>
-                                <span class="text-sm text-zinc-500 font-mono">/ <span id="usage-minutes-total">10.0</span> min totales</span>
-                                <span id="usage-percent" class="text-xs font-bold text-accent ml-2">0% usado</span>
-                            </div>
-                        </div>
-                        <div class="sm:text-right">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">Consumo de video</p>
-                            <p id="usage-minutes" class="text-xl font-black text-accent mt-0.5">0.0 min usados</p>
-                        </div>
-                    </div>
-
-                    <!-- Barra de progreso -->
-                    <div class="w-full h-3 rounded-full bg-surface-container-highest overflow-hidden mb-2 border border-white/5 p-0.5">
-                        <div id="usage-progress" class="h-full bg-gradient-to-r from-accent to-accent-hover rounded-full transition-all duration-500" style="width: 0%;"></div>
-                    </div>
-                </div>
-
-                <!-- Alerta de límite mensual -->
-                    <div id="usage-warning" class="hidden mt-4 bg-amber-500/10 border border-amber-500/20 text-amber-300 px-4 py-3 rounded-xl text-xs flex items-start gap-2">
-                        <span class="material-symbols-outlined text-[18px] mt-0.5">warning</span>
-                        <span id="usage-warning-text">Estás cerca de tu límite mensual. Amplía tu plan para seguir procesando videos.</span>
-                    </div>
             </section>
 
             <!-- Project Grid Section (Alineado con el margen superior) -->
@@ -624,7 +585,7 @@
             const modal = document.getElementById('upload-modal');
             const modalContent = document.getElementById('modal-content');
             const modalBackdrop = document.getElementById('modal-backdrop');
-            const openBtns = [document.getElementById('main-upload-btn'), document.getElementById('nav-upload-btn'), document.getElementById('mobile-fab-upload')];
+            const openBtns = [document.getElementById('main-upload-btn'), document.getElementById('nav-upload-btn'), document.getElementById('mobile-fab-upload')].filter(Boolean);
             const closeBtns = [document.getElementById('close-modal-btn'), document.getElementById('cancel-upload-btn')];
 
             const dropZone = document.getElementById('drop-zone');
@@ -784,12 +745,12 @@
                         planPrice.textContent = '$0 / mes';
                         planBadgeLarge.textContent = 'FREE';
                         planBadgeLarge.className = 'px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700';
-                        planDescription.textContent = '10 minutos de video gratis para audiodescripción. Usa el pool de claves gratuitas del servidor con failover automático.';
+                        planDescription.textContent = '10 minutos de video disponibles para audiodescripción con IA.';
                         if (planFeatures) {
                             planFeatures.innerHTML = `
                                 <li class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[11px]"><span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Editor completo y subtítulos SRT</li>
-                                <li class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[11px]"><span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Sin tarjeta requerida</li>
-                                <li class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[11px]"><span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Modelos OpenRouter Free</li>`;
+                                <li class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[11px]"><span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Descarga de audio</li>
+                                <li class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[11px]"><span class="material-symbols-outlined text-[14px] text-emerald-400">check_circle</span>Sin tarjeta requerida</li>`;
                         }
                         planUpgradeBtn.textContent = 'Mejorar a Pro — $29/mes';
                         planUpgradeBtn.onclick = () => window.location.href = 'index.html#pricing';
@@ -1162,79 +1123,119 @@
                 }
             });
 
-            // Real-time Projects loader
+            // Real-time Projects loader & Search Engine (%BUSQUEDA%)
+            let allUserProjects = [];
+
+            function renderProjectsList(searchTerm = '') {
+                projectGrid.innerHTML = '';
+                const term = searchTerm.toLowerCase().trim();
+                
+                // Filtrado por coincidencia de subcadena insensible a mayúsculas/minúsculas
+                const filtered = allUserProjects.filter(p => {
+                    if (!term) return true;
+                    const name = (p.name || '').toLowerCase();
+                    return name.includes(term);
+                });
+
+                if (filtered.length === 0) {
+                    if (allUserProjects.length === 0) {
+                        projectGrid.innerHTML = `
+                            <div class="col-span-full flex flex-col items-center justify-center p-8 rounded-2xl border border-white/10 text-center max-w-lg mx-auto mt-12 animate-fade-in shadow-2xl bg-surface-container-high/40 backdrop-blur-md">
+                                <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 text-primary ring-4 ring-primary/5">
+                                    <span class="material-symbols-outlined text-[36px]">video_library</span>
+                                </div>
+                                <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Comienza tu viaje cinematográfico</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant mb-6">Aún no has creado ningún proyecto. Sube tu primer video y deja que nuestra IA genere audiodescripciones profesionales en segundos.</p>
+                                <button onclick="document.getElementById('mobile-fab-upload').click() || document.getElementById('main-upload-btn').click()" class="px-6 py-3 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all glow-btn flex items-center justify-center gap-2 mx-auto">
+                                    <span class="material-symbols-outlined text-[20px]">add</span>
+                                    Nuevo Proyecto
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        projectGrid.innerHTML = `
+                            <div class="col-span-full flex flex-col items-center justify-center p-12 rounded-2xl border border-white/10 text-center max-w-lg mx-auto mt-6 animate-fade-in shadow-xl bg-surface-container-high/30 backdrop-blur-md">
+                                <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 text-zinc-400">
+                                    <span class="material-symbols-outlined text-[28px]">search_off</span>
+                                </div>
+                                <h3 class="text-white font-bold text-base mb-1">Sin coincidencias</h3>
+                                <p class="text-xs text-zinc-400">No encontramos ningún proyecto que contenga "${searchTerm}".</p>
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+
+                filtered.forEach(proj => {
+                    const card = document.createElement('article');
+                    card.className = 'cursor-pointer group bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col relative';
+                    card.addEventListener('click', () => {
+                        window.location.href = `editor.html?project=${proj.id}`;
+                    });
+
+                    let statusClass = 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
+                    let dotClass = 'bg-orange-400 animate-pulse';
+                    if (proj.status === 'Listo para editar') {
+                        statusClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                        dotClass = 'bg-emerald-400';
+                    } else if (proj.status === 'Renderizado') {
+                        statusClass = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+                        dotClass = 'bg-blue-400';
+                    }
+
+                    card.innerHTML = `
+                        <button class="delete-project-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/50 hover:text-emerald-400 hover:bg-emerald-400/10 hover:border-emerald-400/30 active:text-red-500 active:bg-red-500/20 active:border-red-500/50 transition-all duration-200" data-id="${proj.id}">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                        <div class="aspect-video w-full bg-surface-container-highest relative overflow-hidden flex items-center justify-center">
+                            ${proj.thumbnailUrl 
+                                ? `<img src="${proj.thumbnailUrl}" alt="${proj.name || 'Proyecto'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />`
+                                : `<div class="w-full h-full bg-gradient-to-br from-indigo-950/60 to-slate-900 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-primary/40 group-hover:scale-110 transition-transform duration-500">movie</span></div>`
+                            }
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                        </div>
+                        <div class="p-md flex flex-col flex-1">
+                            <h3 class="font-title-lg text-title-lg text-on-surface mb-2 truncate pr-6">${proj.name || 'Proyecto sin nombre'}</h3>
+                            <div class="flex items-center justify-between mt-auto pt-4">
+                                <span class="font-label-md text-label-md text-on-surface-variant">${new Date(proj.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}</span>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                    <span class="w-1.5 h-1.5 rounded-full ${dotClass} mr-1.5"></span>
+                                    ${proj.status}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const deleteBtn = card.querySelector('.delete-project-btn');
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        window.openDeleteModal(proj.id);
+                    });
+                    
+                    projectGrid.appendChild(card);
+                });
+            }
+
             function loadProjects(uid) {
                 db.collection('usuarios').doc(uid).collection('proyectos')
                     .orderBy('createdAt', 'desc')
                     .onSnapshot(snapshot => {
-                        projectGrid.innerHTML = '';
-                        if (snapshot.empty) {
-                            projectGrid.innerHTML = `
-                                <div class="col-span-full flex flex-col items-center justify-center p-8 rounded-2xl border border-white/10 text-center max-w-lg mx-auto mt-12 animate-fade-in shadow-2xl bg-surface-container-high/40 backdrop-blur-md">
-                                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 text-primary ring-4 ring-primary/5">
-                                        <span class="material-symbols-outlined text-[36px]">video_library</span>
-                                    </div>
-                                    <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Comienza tu viaje cinematográfico</h3>
-                                    <p class="font-body-md text-body-md text-on-surface-variant mb-6">Aún no has creado ningún proyecto. Sube tu primer video y deja que nuestra IA genere audiodescripciones profesionales en segundos.</p>
-                                    <button onclick="document.getElementById('mobile-fab-upload').click() || document.getElementById('main-upload-btn').click()" class="px-6 py-3 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all glow-btn flex items-center justify-center gap-xs mx-auto">
-                                        <span class="material-symbols-outlined text-[20px]">cloud_upload</span>
-                                        Subir Nuevo Video
-                                    </button>
-                                </div>
-                            `;
-                            return;
-                        }
+                        allUserProjects = [];
                         snapshot.forEach(doc => {
-                            const proj = doc.data();
-                            const card = document.createElement('article');
-                            card.className = 'cursor-pointer group bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col relative';
-                            card.addEventListener('click', () => {
-                                window.location.href = `editor.html?project=${doc.id}`;
-                            });
-
-                            let statusClass = 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
-                            let dotClass = 'bg-orange-400 animate-pulse';
-                            if (proj.status === 'Listo para editar') {
-                                statusClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-                                dotClass = 'bg-emerald-400';
-                            } else if (proj.status === 'Renderizado') {
-                                statusClass = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
-                                dotClass = 'bg-blue-400';
-                            }
-
-                            card.innerHTML = `
-                                <button class="delete-project-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/50 hover:text-emerald-400 hover:bg-emerald-400/10 hover:border-emerald-400/30 active:text-red-500 active:bg-red-500/20 active:border-red-500/50 transition-all duration-200" data-id="${doc.id}">
-                                    <span class="material-symbols-outlined text-[18px]">delete</span>
-                                </button>
-                                <div class="aspect-video w-full bg-surface-container-highest relative overflow-hidden flex items-center justify-center">
-                                    ${proj.thumbnailUrl 
-                                        ? `<img src="${proj.thumbnailUrl}" alt="${proj.name || 'Proyecto'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />`
-                                        : `<div class="w-full h-full bg-gradient-to-br from-indigo-950/60 to-slate-900 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-primary/40 group-hover:scale-110 transition-transform duration-500">movie</span></div>`
-                                    }
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
-                                </div>
-                                <div class="p-md flex flex-col flex-1">
-                                    <h3 class="font-title-lg text-title-lg text-on-surface mb-2 truncate pr-6">${proj.name || 'Proyecto sin nombre'}</h3>
-                                    <div class="flex items-center justify-between mt-auto pt-4">
-                                        <span class="font-label-md text-label-md text-on-surface-variant">${new Date(proj.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}</span>
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}">
-                                            <span class="w-1.5 h-1.5 rounded-full ${dotClass} mr-1.5"></span>
-                                            ${proj.status}
-                                        </span>
-                                    </div>
-                                </div>
-                            `;
-                            
-                            // Prevent click on trash from redirecting to editor
-                            const deleteBtn = card.querySelector('.delete-project-btn');
-                            deleteBtn.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                window.openDeleteModal(doc.id);
-                            });
-                            
-                            projectGrid.appendChild(card);
+                            allUserProjects.push({ id: doc.id, ...doc.data() });
                         });
+                        const searchInput = document.getElementById('project-search-input');
+                        const currentTerm = searchInput ? searchInput.value : '';
+                        renderProjectsList(currentTerm);
                     });
+            }
+
+            // Escuchar cambios en el input de búsqueda para filtrar al escribir
+            const projectSearchInput = document.getElementById('project-search-input');
+            if (projectSearchInput) {
+                projectSearchInput.addEventListener('input', (e) => {
+                    renderProjectsList(e.target.value);
+                });
             }
 
             // Sincroniza el consumo real que devuelve el backend con Firestore.
