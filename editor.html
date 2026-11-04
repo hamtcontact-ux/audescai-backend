@@ -1193,6 +1193,8 @@
                     console.error("Error persistiendo datos en Firestore:", err);
                 }
             }
+            const saveBlocksToFirestore = persistData;
+            window.saveBlocksToFirestore = persistData;
 
             // --- COPIS DE SEGURIDAD AUTOMÁTICAS CON ROTACIÓN ---
             let backupTimeout = null;
@@ -2186,7 +2188,7 @@
                     }
 
                     // 2. Persistir bloques actuales en Firestore
-                    await saveBlocksToFirestore();
+                    await persistData();
 
                     // 3. Enviar al backend los bloques editados actualmente
                     const payload = {

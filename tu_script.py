@@ -100,7 +100,8 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from openai import OpenAI
 import httpx
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
+from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip, AudioClip
+import numpy as np
 from celery import Celery
 
 # Autoinstalación de dependencias críticas
@@ -1720,16 +1721,25 @@ def api_renderizar_audio_fase2():
         if not pistas_ad:
             return jsonify({"status": "error", "message": "No hay pistas de audiodescripción para renderizar."}), 400
         else:
-            # PISTA PURA Y EXCLUSIVA DE AUDIODESCRIPCIÓN (Solo voz IA sincronizada, sin el audio del video)
+            # PISTA PURA Y EXCLUSIVA DE AUDIODESCRIPCIÓN (Solo voz IA sincronizada, con silencios digitales continuos)
             duracion_total = video_original.duration if (video_original and video_original.duration) else 0
             if not duracion_total or duracion_total <= 0:
                 duracion_total = max([float(b.get("end", 0)) for b in bloques_editados] + [10.0])
 
-            audio_final = CompositeAudioClip(pistas_ad)
+            def generar_silencio_digital(t):
+                if isinstance(t, np.ndarray):
+                    return np.zeros((len(t), 2))
+                return np.zeros(2)
+
+            pista_base_silencio = AudioClip(generar_silencio_digital, duration=duracion_total)
+            pista_base_silencio.fps = 44100
+
+            audio_final = CompositeAudioClip([pista_base_silencio] + pistas_ad)
             audio_final.duration = duracion_total
+            audio_final.fps = 44100
 
         if audio_final is not None:
-            audio_final.write_audiofile(ruta_mezcla_mp3, verbose=False, logger=None)
+            audio_final.write_audiofile(ruta_mezcla_mp3, fps=44100, verbose=False, logger=None)
         else:
             return jsonify({"status": "error", "message": "No se pudo generar la mezcla de audio."}), 500
 
