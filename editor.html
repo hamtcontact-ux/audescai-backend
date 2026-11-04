@@ -264,7 +264,7 @@
             --primary-color: #e50914;
             --track-bg: #333333;
             --icon-color: #ffffff;
-            --thumb-size: 13px;
+            --thumb-size: 12px;
         }
 
         .volume-container {
@@ -289,16 +289,16 @@
             transform: scale(1.1);
         }
 
-        /* Slider de rango compacto (60px - 75px) con relleno dinámico vía --value */
+        /* Slider de rango compacto: reducido 30% (48px de longitud) con relleno dinámico vía --value */
         .volume-slider,
         #video-volume-slider {
             -webkit-appearance: none !important;
             -moz-appearance: none !important;
             appearance: none !important;
-            width: 68px !important;
-            max-width: 75px !important;
-            min-width: 60px !important;
-            height: 5px !important;
+            width: 48px !important;
+            max-width: 52px !important;
+            min-width: 42px !important;
+            height: 4px !important;
             border-radius: 999px !important;
             outline: none !important;
             border: 0 !important;
@@ -313,21 +313,36 @@
             touch-action: none !important;
             margin: 0 !important;
             padding: 0 !important;
+            display: inline-block !important;
             vertical-align: middle !important;
         }
 
-        /* Thumb Webkit (Chrome, Safari, Edge, Android, iOS) */
+        /* Webkit Track (Chrome, Safari, Edge, Android, iOS) */
+        .volume-slider::-webkit-slider-runnable-track,
+        #video-volume-slider::-webkit-slider-runnable-track {
+            -webkit-appearance: none !important;
+            width: 100% !important;
+            height: 4px !important;
+            background: transparent !important;
+            border-radius: 999px !important;
+            border: none !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Thumb Webkit - Centrado vertical exacto en la barra (4px track - 12px thumb) / 2 = -4px */
         .volume-slider::-webkit-slider-thumb,
         #video-volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none !important;
             appearance: none !important;
-            width: var(--thumb-size, 13px) !important;
-            height: var(--thumb-size, 13px) !important;
+            width: var(--thumb-size, 12px) !important;
+            height: var(--thumb-size, 12px) !important;
             border-radius: 50% !important;
             background: var(--primary-color, #e50914) !important;
             border: 0 !important;
-            margin-top: -4px !important; /* Centrado vertical sobre track de 5px */
-            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.35) !important; /* Halo exterior semitransparente */
+            margin-top: -4px !important;
+            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.35) !important; /* Halo exterior semitransparente */
             transition: box-shadow 0.2s ease, transform 0.1s ease !important;
             cursor: pointer !important;
         }
@@ -337,14 +352,14 @@
         #video-volume-slider:active::-webkit-slider-thumb,
         #video-volume-slider:hover::-webkit-slider-thumb {
             transform: scale(1.15) !important;
-            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.5) !important;
+            box-shadow: 0 0 0 6px rgba(229, 9, 20, 0.5) !important;
         }
 
         /* Firefox Track */
         .volume-slider::-moz-range-track,
         #video-volume-slider::-moz-range-track {
             background: var(--track-bg, #333333) !important;
-            height: 5px !important;
+            height: 4px !important;
             border-radius: 999px !important;
             border: none !important;
         }
@@ -352,19 +367,19 @@
         .volume-slider::-moz-range-progress,
         #video-volume-slider::-moz-range-progress {
             background: var(--primary-color, #e50914) !important;
-            height: 5px !important;
+            height: 4px !important;
             border-radius: 999px !important;
         }
 
         /* Thumb Firefox */
         .volume-slider::-moz-range-thumb,
         #video-volume-slider::-moz-range-thumb {
-            width: var(--thumb-size, 13px) !important;
-            height: var(--thumb-size, 13px) !important;
+            width: var(--thumb-size, 12px) !important;
+            height: var(--thumb-size, 12px) !important;
             border: 0 !important;
             border-radius: 50% !important;
             background: var(--primary-color, #e50914) !important;
-            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.35) !important;
+            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.35) !important;
             cursor: pointer !important;
         }
 
@@ -373,7 +388,7 @@
         #video-volume-slider:active::-moz-range-thumb,
         #video-volume-slider:hover::-moz-range-thumb {
             transform: scale(1.15) !important;
-            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.5) !important;
+            box-shadow: 0 0 0 6px rgba(229, 9, 20, 0.5) !important;
         }
 
         /* Pantalla completa inmersiva con reproductor visible abajo */
@@ -2234,10 +2249,10 @@
                         }
                     });
 
-                    // Evento de selección directa (Click)
+                    // Evento de selección directa (Click en bloque de audio)
                     el.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        selectBlock(b.id);
+                        selectBlock(b.id, false, true);
                     });
 
                     timelineAudioTrack.appendChild(el);
@@ -2516,7 +2531,7 @@
             // ═══════════════════════════════════════════════════════════
             //  GESTIÓN DE CO-CREACIÓN Y FORMULARIO
             // ═══════════════════════════════════════════════════════════
-            function selectBlock(id, skipRender = false) {
+            function selectBlock(id, skipRender = false, focusText = false) {
                 activeBlockId = id;
                 const block = blocks.find(b => b.id === id);
 
@@ -2555,6 +2570,19 @@
                 adText.value = block.text || '';
                 refreshDurationDisplay();
                 checkTextLength();
+
+                // En modo PC (no celular), enfocar automáticamente el bloque editor adText con cursor al final
+                if (focusText && window.innerWidth >= 768) {
+                    if (editSidebar) editSidebar.classList.remove('hidden');
+                    setTimeout(() => {
+                        if (adText) {
+                            adText.focus();
+                            const len = adText.value.length;
+                            adText.setSelectionRange(len, len);
+                            adText.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    }, 50);
+                }
             }
 
             function refreshDurationDisplay() {
@@ -3238,8 +3266,8 @@
 
                 // Also need to hook into selectBlock
                 const originalSelectBlock = selectBlock;
-                selectBlock = function (id, skipRender = false) {
-                    originalSelectBlock(id, skipRender);
+                selectBlock = function (id, skipRender = false, focusText = false) {
+                    originalSelectBlock(id, skipRender, focusText);
                     updateDynamicButtonState();
                 };
 

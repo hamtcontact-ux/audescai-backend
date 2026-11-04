@@ -1148,7 +1148,9 @@
                         }, 5000);
 
                         video.onloadedmetadata = () => {
-                            video.currentTime = Math.min(1.0, (video.duration || 1) / 2);
+                            const dur = video.duration || 0;
+                            // Captura a mitad exacta de la duración del video para evitar fotogramas negros al inicio
+                            video.currentTime = dur > 0 ? (dur / 2) : 1.0;
                         };
 
                         video.onseeked = () => {
@@ -1637,7 +1639,7 @@
 
                     let clientThumb = null;
                     try { clientThumb = await thumbnailCapturePromise; } catch (_) {}
-                    const fallbackThumb = videoUrl ? videoUrl.replace(/\.[a-zA-Z0-9]+$/, '.jpg') : null;
+                    const fallbackThumb = videoUrl ? (videoUrl.includes('/upload/') ? videoUrl.replace(/\/upload\//, '/upload/so_50p/').replace(/\.[a-zA-Z0-9]+$/, '.jpg') : videoUrl.replace(/\.[a-zA-Z0-9]+$/, '.jpg')) : null;
                     const finalThumbnail = clientThumb || fallbackThumb;
 
                     // 3. Guardar metadata inicial en Firestore con miniatura, voz y modo exclusivo
