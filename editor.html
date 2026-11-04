@@ -259,22 +259,32 @@
             opacity: 1;
         }
 
-        /* Control de volumen estilo Pelismaster (rojo con halo circular y pista bicolor, ultra compacto) */
+        /* Control de volumen estilo Pelismaster (rojo con halo circular, pista bicolor y ancho fluido) */
         #video-volume-slider,
         #fs-volume-slider {
             -webkit-appearance: none !important;
             appearance: none !important;
-            width: 44px !important;
-            max-width: 44px !important;
-            min-width: 44px !important;
             height: 4px !important;
             border-radius: 9999px !important;
-            background: linear-gradient(to right, #e50914 0%, #e50914 100%, rgba(255, 255, 255, 0.25) 100%, rgba(255, 255, 255, 0.25) 100%) !important;
+            background: linear-gradient(to right, #e50914 0%, #e50914 100%, #52525b 100%, #52525b 100%) !important;
             outline: none !important;
             cursor: pointer !important;
             vertical-align: middle !important;
             accent-color: #e50914 !important;
             transition: background 0.05s ease !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Webkit track */
+        #video-volume-slider::-webkit-slider-runnable-track,
+        #fs-volume-slider::-webkit-slider-runnable-track {
+            width: 100% !important;
+            height: 4px !important;
+            background: transparent !important;
+            border-radius: 9999px !important;
+            border: none !important;
+            cursor: pointer !important;
         }
 
         /* Thumb Webkit (Chrome, Safari, Edge, Android) */
@@ -288,14 +298,17 @@
             background: #e50914 !important;
             cursor: pointer !important;
             border: none !important;
-            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.35) !important;
+            margin-top: -5px !important;
+            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.4) !important;
             transition: transform 0.15s ease, box-shadow 0.15s ease !important;
         }
 
         #video-volume-slider::-webkit-slider-thumb:hover,
-        #fs-volume-slider::-webkit-slider-thumb:hover {
+        #fs-volume-slider::-webkit-slider-thumb:hover,
+        #video-volume-slider:active::-webkit-slider-thumb,
+        #fs-volume-slider:active::-webkit-slider-thumb {
             transform: scale(1.15) !important;
-            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.5) !important;
+            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.55) !important;
         }
 
         /* Thumb Firefox */
@@ -307,20 +320,22 @@
             background: #e50914 !important;
             cursor: pointer !important;
             border: none !important;
-            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.35) !important;
+            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.4) !important;
             transition: transform 0.15s ease, box-shadow 0.15s ease !important;
         }
 
         #video-volume-slider::-moz-range-thumb:hover,
-        #fs-volume-slider::-moz-range-thumb:hover {
+        #fs-volume-slider::-moz-range-thumb:hover,
+        #video-volume-slider:active::-moz-range-thumb,
+        #fs-volume-slider:active::-moz-range-thumb {
             transform: scale(1.15) !important;
-            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.5) !important;
+            box-shadow: 0 0 0 7px rgba(229, 9, 20, 0.55) !important;
         }
 
         /* Firefox track y progreso */
         #video-volume-slider::-moz-range-track,
         #fs-volume-slider::-moz-range-track {
-            background: rgba(255, 255, 255, 0.25) !important;
+            background: #52525b !important;
             height: 4px !important;
             border-radius: 9999px !important;
             border: none !important;
@@ -450,39 +465,40 @@
                         <span id="video-timecode">00:00.00 / 00:00.00</span>
                     </div>
 
-                    <!-- BARRA DE REPRODUCTOR EN PANTALLA COMPLETA -->
-                    <!-- Orden requerido: VOLUMEN, ATRAS, PLAY, ADELANTE, PANTALLA COMPLETA -->
+                    <!-- BARRA DE REPRODUCTOR EN PANTALLA COMPLETA (ELEVADA Y PLAY CENTRADO) -->
                     <div id="fullscreen-controls-bar"
-                        class="hidden absolute bottom-0 left-0 right-0 z-50 px-4 py-4 sm:py-6 bg-gradient-to-t from-black/95 via-black/75 to-transparent flex items-center justify-center gap-4 sm:gap-7 pointer-events-auto transition-opacity duration-300">
+                        class="hidden absolute bottom-12 sm:bottom-16 md:bottom-20 left-4 right-4 sm:left-auto sm:right-auto sm:w-[92%] sm:max-w-xl sm:left-1/2 sm:-translate-x-1/2 z-50 px-5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between pointer-events-auto transition-opacity duration-300 bg-black/75 backdrop-blur-xl rounded-2xl border border-white/15 shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
                         
-                        <!-- 1. VOLUMEN -->
-                        <div class="flex items-center gap-2">
-                            <button id="fs-volume-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors" title="Silenciar / Activar sonido">
-                                <span class="material-symbols-outlined text-[22px] sm:text-[24px]" id="fs-volume-icon">volume_up</span>
+                        <!-- Lado izquierdo: VOLUMEN estilo Pelismaster -->
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-1 justify-start">
+                            <button id="fs-volume-btn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors" title="Silenciar / Activar sonido">
+                                <span class="material-symbols-outlined text-[20px] sm:text-[22px]" id="fs-volume-icon">volume_up</span>
                             </button>
                             <input type="range" id="fs-volume-slider" min="0" max="1" step="0.05" value="1"
-                                class="w-[44px] cursor-pointer" style="width: 44px; max-width: 44px; min-width: 44px;" title="Control de volumen">
+                                class="w-16 sm:w-24 cursor-pointer" title="Control de volumen">
                         </div>
 
-                        <!-- 2. ATRÁS -->
-                        <button id="fs-prev-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors" title="Retroceder 5s">
-                            <span class="material-symbols-outlined text-[24px] sm:text-[26px]">skip_previous</span>
-                        </button>
+                        <!-- Centro: ATRÁS - PLAY (PERFECTAMENTE CENTRADO) - ADELANTE -->
+                        <div class="flex items-center justify-center gap-3 sm:gap-5 flex-shrink-0">
+                            <button id="fs-prev-btn" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors active:scale-95" title="Retroceder 5s">
+                                <span class="material-symbols-outlined text-[22px] sm:text-[26px]">skip_previous</span>
+                            </button>
 
-                        <!-- 3. PLAY -->
-                        <button id="fs-play-btn" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30" title="Reproducir / Pausar">
-                            <span class="material-symbols-outlined text-[28px] sm:text-[34px]" id="fs-play-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </button>
+                            <button id="fs-play-btn" class="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-600/40 active:scale-95" title="Reproducir / Pausar">
+                                <span class="material-symbols-outlined text-[26px] sm:text-[32px]" id="fs-play-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                            </button>
 
-                        <!-- 4. ADELANTE -->
-                        <button id="fs-next-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors" title="Avanzar 5s">
-                            <span class="material-symbols-outlined text-[24px] sm:text-[26px]">skip_next</span>
-                        </button>
+                            <button id="fs-next-btn" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors active:scale-95" title="Avanzar 5s">
+                                <span class="material-symbols-outlined text-[22px] sm:text-[26px]">skip_next</span>
+                            </button>
+                        </div>
 
-                        <!-- 5. PANTALLA COMPLETA (SALIR) -->
-                        <button id="fs-fullscreen-btn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors" title="Salir de pantalla completa">
-                            <span class="material-symbols-outlined text-[22px] sm:text-[24px]">fullscreen_exit</span>
-                        </button>
+                        <!-- Lado derecho: PANTALLA COMPLETA (SALIR) -->
+                        <div class="flex items-center justify-end flex-1">
+                            <button id="fs-fullscreen-btn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors" title="Salir de pantalla completa">
+                                <span class="material-symbols-outlined text-[20px] sm:text-[22px]">fullscreen_exit</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -534,19 +550,25 @@
                                         id="video-volume-icon">volume_up</span>
                                 </button>
                                 <input type="range" id="video-volume-slider" min="0" max="1" step="0.05" value="1"
-                                    class="w-[44px] cursor-pointer" style="width: 44px; max-width: 44px; min-width: 44px;" title="Control de volumen">
+                                    class="w-20 sm:w-24 cursor-pointer" title="Control de volumen">
                             </div>
                         </div>
                     </div>
 
                     <!-- Fila 2: En vista vertical de celular debajo con separadores | En PC a la derecha en la misma fila -->
                     <div
-                        class="flex items-center justify-around md:justify-end gap-3 sm:gap-4 w-full md:w-auto pt-2 md:pt-0 border-t border-white/5 md:border-t-0 md:border-l md:border-white/5 md:pl-4">
-                        <!-- Deshacer -->
+                        class="flex items-center justify-around md:justify-end gap-2 sm:gap-3 w-full md:w-auto pt-2 md:pt-0 border-t border-white/5 md:border-t-0 md:border-l md:border-white/5 md:pl-3">
+                        <!-- Deshacer (Undo) -->
                         <button
-                            class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors"
+                            class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors active:scale-95"
                             id="undo-btn" title="Deshacer (Ctrl + Z)">
                             <span class="material-symbols-outlined text-[18px]">undo</span>
+                        </button>
+                        <!-- Rehacer (Redo) -->
+                        <button
+                            class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors active:scale-95"
+                            id="redo-btn" title="Rehacer (Ctrl + Y)">
+                            <span class="material-symbols-outlined text-[18px]">redo</span>
                         </button>
                         <div class="h-4 w-px bg-white/10"></div>
                         <!-- Zoom -->
@@ -565,6 +587,12 @@
                             </button>
                         </div>
                         <div class="h-4 w-px bg-white/10"></div>
+                        <!-- Botón Borrar bloque seleccionado (icono de tacho junto a pantalla completa) -->
+                        <button
+                            class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 transition-colors active:scale-95"
+                            id="timeline-delete-btn" title="Eliminar bloque seleccionado (Supr)">
+                            <span class="material-symbols-outlined text-[19px]">delete</span>
+                        </button>
                         <!-- Pantalla Completa -->
                         <button
                             class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors"
@@ -685,12 +713,11 @@
                                 <option value="es-US-PalomaNeural">Paloma</option>
                             </select>
                             <button
-                                class="w-full bg-[#1a1b1e] border border-white/10 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:bg-white/5 transition-colors focus:outline-none focus:border-primary"
+                                class="w-full bg-[#1a1b1e] border border-white/10 rounded-lg px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors focus:outline-none focus:border-primary"
                                 id="voice-dropdown-btn">
-                                <span class="font-label-md text-on-surface truncate" id="voice-dropdown-label">Álvaro -
-                                    Voz Masculina (España)</span>
+                                <span class="font-label-md text-on-surface truncate text-center flex-1 font-semibold" id="voice-dropdown-label">Álvaro</span>
                                 <span
-                                    class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
+                                    class="material-symbols-outlined text-on-surface-variant text-[18px] ml-1 shrink-0">expand_more</span>
                             </button>
                             <div class="hidden absolute top-full left-0 w-full mt-1 bg-[#1a1b1e] border border-white/10 rounded-lg shadow-2xl z-50 max-h-64 overflow-y-auto py-2"
                                 id="voice-dropdown-menu">
@@ -1606,7 +1633,7 @@
             function updateVolumeSliderTrack(el, val) {
                 if (!el) return;
                 const pct = Math.round(Math.max(0, Math.min(1, val)) * 100);
-                el.style.background = `linear-gradient(to right, #e50914 0%, #e50914 ${pct}%, rgba(255, 255, 255, 0.25) ${pct}%, rgba(255, 255, 255, 0.25) 100%)`;
+                el.style.background = `linear-gradient(to right, #e50914 0%, #e50914 ${pct}%, #52525b ${pct}%, #52525b 100%)`;
             }
 
             function syncPlayIcons() {
@@ -1664,9 +1691,29 @@
             });
 
             // Botón Deshacer
+            // Botones Deshacer, Rehacer y Eliminar Bloque en la barra de tiempo
+            const redoBtn = document.getElementById('redo-btn');
+            const timelineDeleteBtn = document.getElementById('timeline-delete-btn');
+
             if (undoBtn) {
                 undoBtn.addEventListener('click', () => {
                     performUndo();
+                });
+            }
+
+            if (redoBtn) {
+                redoBtn.addEventListener('click', () => {
+                    performRedo();
+                });
+            }
+
+            if (timelineDeleteBtn) {
+                timelineDeleteBtn.addEventListener('click', () => {
+                    if (activeBlockId === null) {
+                        showToast('Selecciona un bloque para eliminar', 'warn');
+                        return;
+                    }
+                    eliminarBloqueActivo();
                 });
             }
 
@@ -2128,9 +2175,10 @@
 
                     const textSpanClass = `truncate ${active ? `${color.text} font-bold` : 'text-on-surface-variant'}`;
 
+                    const displayName = (b.text && b.text.trim()) ? b.text : (VOICE_CLEAN_NAMES[b.voice] || 'Audio');
                     el.innerHTML = `
                                     <div class="resize-handle-left"></div>
-                                    <span class="${textSpanClass}">${b.text || ''}</span>
+                                    <span class="${textSpanClass} text-center w-full block truncate px-1">${displayName}</span>
                                     <div class="resize-handle-right"></div>
                                 `;
 
@@ -2169,6 +2217,7 @@
                         ],
                         onstart: function (event) {
                             isInteractingBlock = true;
+                            window._preResizeSnapshot = JSON.stringify(blocks);
                             const target = event.target;
                             const blockId = parseInt(target.getAttribute('data-id'));
                             const block = blocks.find(x => x.id === blockId);
@@ -2277,22 +2326,33 @@
                             const target = event.target;
                             const blockId = parseInt(target.getAttribute('data-id'));
                             const block = blocks.find(x => x.id === blockId);
+                            let changed = false;
                             if (block) {
                                 const tempStart = target.getAttribute('data-temp-start');
                                 const tempEnd = target.getAttribute('data-temp-end');
                                 if (tempStart !== null && tempEnd !== null) {
-                                    block.start = parseFloat(parseFloat(tempStart).toFixed(2));
-                                    block.end = parseFloat(parseFloat(tempEnd).toFixed(2));
+                                    const newS = parseFloat(parseFloat(tempStart).toFixed(2));
+                                    const newE = parseFloat(parseFloat(tempEnd).toFixed(2));
+                                    if (Math.abs(newS - originalStart) > 0.01 || Math.abs(newE - originalEnd) > 0.01) {
+                                        changed = true;
+                                        if (window._preResizeSnapshot) {
+                                            undoStack.push(window._preResizeSnapshot);
+                                            redoStack = [];
+                                            if (undoStack.length > 50) undoStack.shift();
+                                        }
+                                        block.start = newS;
+                                        block.end = newE;
+                                    }
                                 }
                             }
+                            window._preResizeSnapshot = null;
 
                             target.style.transform = '';
                             target.style.opacity = '1';
                             target.style.zIndex = '';
                             target.classList.add('transition-all');
 
-                            saveState();
-                            persistData();
+                            if (changed) persistData();
                             renderTimeline();
                             preloadAudioPool();
                         }
@@ -2309,6 +2369,7 @@
 
                         onstart: function (event) {
                             isInteractingBlock = true;
+                            window._preDragSnapshot = JSON.stringify(blocks);
                             const target = event.target;
                             const blockId = parseInt(target.getAttribute('data-id'));
 
@@ -2370,9 +2431,20 @@
                                 finalStart = snappedStart;
                             }
 
+                            const newStart = parseFloat(Math.max(0, finalStart).toFixed(2));
+                            const newEnd = parseFloat((finalStart + duration).toFixed(2));
+                            const moved = Math.abs(newStart - block.start) > 0.01;
+
+                            if (moved && window._preDragSnapshot) {
+                                undoStack.push(window._preDragSnapshot);
+                                redoStack = [];
+                                if (undoStack.length > 50) undoStack.shift();
+                            }
+                            window._preDragSnapshot = null;
+
                             // 4. Consolidar el estado maestro de la APP de forma limpia
-                            block.start = parseFloat(Math.max(0, finalStart).toFixed(2));
-                            block.end = parseFloat((finalStart + duration).toFixed(2));
+                            block.start = newStart;
+                            block.end = newEnd;
 
                             // Recalcular conflictos
                             blocks.forEach(b => {
@@ -2380,15 +2452,16 @@
                                 b.conflict = reqDur > (b.end - b.start);
                             });
 
-                            // 5. Resetear transformaciones estéticas de GPU
+                            // 5. Resetear transformaciones estáticas de GPU
                             target.style.transform = '';
                             target.style.opacity = '1';
                             target.style.zIndex = '';
                             target.classList.add('transition-all');
 
-                            // 6. Transacción limpia: Guardar historial, persistir a Flask y re-renderizar
-                            saveState();
-                            persistData();
+                            // 6. Transacción limpia: persistir y re-renderizar si hubo cambio
+                            if (moved) {
+                                persistData();
+                            }
                             renderTimeline();
                             preloadAudioPool();
                         }
@@ -3005,12 +3078,12 @@
 
                 function renderMenuOptions(currentVal) {
                     menu.innerHTML = optionsData.map(opt => `
-                        <div class="custom-option px-4 py-2 hover:bg-white/5 cursor-pointer transition-colors flex flex-col gap-1 border-b border-white/5 last:border-0" data-val="${opt.val}">
-                            <div class="flex items-center justify-between">
-                                <span class="font-label-md text-on-surface ${opt.val === currentVal ? 'text-green-500' : ''}">${opt.title}</span>
-                                ${opt.val === currentVal ? '<div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>' : ''}
+                        <div class="custom-option px-4 py-2.5 hover:bg-white/5 cursor-pointer transition-colors flex flex-col items-center justify-center gap-0.5 border-b border-white/5 last:border-0 text-center" data-val="${opt.val}">
+                            <div class="flex items-center justify-center gap-2 w-full text-center">
+                                <span class="font-label-md text-on-surface font-semibold text-center ${opt.val === currentVal ? 'text-green-500' : ''}">${opt.title}</span>
+                                ${opt.val === currentVal ? '<div class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></div>' : ''}
                             </div>
-                            <span class="text-[10px] text-on-surface-variant/70">${opt.sub}</span>
+                            <span class="text-[10px] text-on-surface-variant/70 text-center">${opt.sub}</span>
                         </div>
                     `).join('');
                 }
