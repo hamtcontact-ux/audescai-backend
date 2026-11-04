@@ -528,9 +528,9 @@ def obtener_huecos_silencio(video_path, min_gap=2.2, max_intervalo=6.0):
     return huecos_subdivididos
 
 # --- 2. ANÁLISIS CON OPENAI / OPENROUTER ---
-def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, historial, model_name="gpt-4o-mini", ocr_enabled=True):
+def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, historial, model_name="gpt-4o-mini", ocr_enabled=True, modo="audiodescripcion"):
     duracion_max = fin - inicio
-    print(f"   [Info] Analizando escena {indice_escena} ({model_name}): {inicio:.1f}s a {fin:.1f}s")
+    print(f"   [Info] Analizando escena {indice_escena} ({model_name}, modo={modo}): {inicio:.1f}s a {fin:.1f}s")
     
     frame_path = os.path.join(TEMP_DIR, f"frame_desc_{uuid.uuid4().hex}.jpg")
     t_frame = max(0.05, inicio + 0.5)
@@ -541,20 +541,28 @@ def analizar_con_openai(openai_client, video_path, inicio, fin, indice_escena, h
 
     palabras = max(15, int(duracion_max * 2.2))
     
-    instruccion_escena = (
-        "OBLIGATORIO: Al ser la primera escena del video, DEBES empezar tu descripción indicando el LUGAR (y DÍA/NOCHE solo si es inconfundible), seguido de la acción (ej: 'CALLE. El hombre...', o 'NOCHE, EXTERIOR.')." 
-        if indice_escena == 0 else 
-        "PROHIBIDO NOMBRAR EL LUGAR O CLIMA si estás en el mismo entorno del HISTORIAL. Ve directo a la acción. SOLO si el LUGAR cambia drásticamente respecto al historial, menciónalo al principio."
-    )
-    historial_str = " | ".join(historial[-3:]) if historial else "Ninguno"
-    
-    ocr_prompt_extra = "\nINSTRUCCIÓN ESPECIAL 'DE TEXTO A VOZ' ACTIVADA: Si en la imagen aparece cualquier texto relevante en pantalla (letreros, carteles, títulos, mensajes de texto, créditos o rótulos), DEBES leerlo y describirlo explícitamente dentro de la audiodescripción de manera natural (ej: 'En pantalla se lee...', 'Un cartel indica...')." if ocr_enabled else ""
-
-    prompt_sistema = f"""Eres un audiodescriptor profesional experto en sintesis.
+    if modo == "texto_a_voz":
+        prompt_sistema = """Eres un sistema especializado de transcripción y lectura de texto en pantalla a voz (OCR visual de video a voz) para personas con discapacidad visual.
+Tu ÚNICA labor es encontrar cualquier texto visible en la imagen (carteles, letreros, mensajes de texto, títulos, subtítulos, créditos, rótulos o avisos) y transcribirlo con precisión para ser locutado.
+REGLAS ESTRICTAS PARA MODO TEXTO A VOZ:
+1. Si encuentras texto legible en la imagen, transcríbelo directamente para locución (ej: 'En pantalla se lee: [texto]' o simplemente el contenido del cartel/texto).
+2. Si NO hay ningún texto visible o legible en la imagen, responde ÚNICAMENTE la palabra: 'SILENCIO'.
+3. NO describas acciones de personajes, ni ropa, ni iluminación, ni paisajes. Tu función exclusiva es convertir el TEXTO de la imagen a VOZ."""
+        prompt_usuario = f"""Examina minuciosamente la imagen adjunta. ¿Hay algún texto, rótulo, título, subtítulo o cartel visible?
+Si hay texto, léelo/transcríbelo fielmente para que sea narrado. Si NO hay texto visible, responde exclusivamente: SILENCIO"""
+    else:
+        instruccion_escena = (
+            "OBLIGATORIO: Al ser la primera escena del video, DEBES empezar tu descripción indicando el LUGAR (y DÍA/NOCHE solo si es inconfundible), seguido de la acción (ej: 'CALLE. El hombre...', o 'NOCHE, EXTERIOR.')." 
+            if indice_escena == 0 else 
+            "PROHIBIDO NOMBRAR EL LUGAR O CLIMA si estás en el mismo entorno del HISTORIAL. Ve directo a la acción. SOLO si el LUGAR cambia drásticamente respecto al historial, menciónalo al principio."
+        )
+        historial_str = " | ".join(historial[-3:]) if historial else "Ninguno"
+        
+        prompt_sistema = f"""Eres un audiodescriptor profesional experto en sintesis.
 MANUAL DE REGLAS:
 {REGLAS_PROFESIONALES}
-CONTEXTO DE ESCENA: {instruccion_escena}{ocr_prompt_extra}"""
-    prompt_usuario = f"""EJEMPLOS:
+CONTEXTO DE ESCENA: {instruccion_escena}"""
+        prompt_usuario = f"""EJEMPLOS:
 {EJEMPLOS_ESTILO}
 HISTORIAL RECIENTE: {historial_str}
 Genera UNA SOLA oracion corta (max {palabras} palabras) sobre la imagen. Aplica las reglas. IMPORTANTE: ¡NO repitas el lugar ni la hora si el historial dice que ya estamos ahí! Termina con punto."""
@@ -631,6 +639,12 @@ Genera UNA SOLA oracion corta (max {palabras} palabras) sobre la imagen. Aplica 
             os.remove(frame_path)
     except:
         pass
+
+    if modo == "texto_a_voz":
+        clean_res = resultado.strip().strip('"').strip("'").upper()
+        if clean_res in ["SILENCIO", "SILENCIO.", "NINGUNO", "NINGUNO.", "NO HAY TEXTO", "NO HAY TEXTO.", "NO HAY TEXTO VISIBLE."]:
+            print(f"   [Fase 1 OCR] Escena {indice_escena}: Sin texto en pantalla. Silencio. (Tokens: {tokens_spent})")
+            return "", tokens_spent
 
     return resultado, tokens_spent
 
@@ -752,7 +766,8 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
     user_tokens_used = kwargs.get("user_tokens_used") or (args[3] if len(args) > 3 else 0)
     user_tokens_total = kwargs.get("user_tokens_total") or (args[4] if len(args) > 4 else PLAN_FREE_TOKENS)
     selected_voice = kwargs.get("voice") or "es-ES-AlvaroNeural"
-    ocr_enabled = kwargs.get("ocr_enabled", True)
+    modo = kwargs.get("modo") or "audiodescripcion"
+    ocr_enabled = kwargs.get("ocr_enabled") if "ocr_enabled" in kwargs else (modo == "texto_a_voz")
     print(f"[Celery] Iniciando Fase 1: proyecto={proyecto_id}, user={user_email}, role={role}")
     guardar_fase1_status(proyecto_id, "processing")
     video_path = os.path.join(TEMP_DIR, f"{proyecto_id}_original.mp4")
@@ -920,11 +935,14 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                     model_to_use = "gpt-4o-mini"
 
                 texto, tokens_escena = analizar_con_openai(
-                    ai_client, video_path, inicio, fin, i, historial_ad, model_name=model_to_use, ocr_enabled=ocr_enabled
+                    ai_client, video_path, inicio, fin, i, historial_ad, model_name=model_to_use, ocr_enabled=ocr_enabled, modo=modo
                 )
                 last_used_key_name = "OpenAI Cuenta Pro" if role == "premium" else "OpenAI Superadmin"
 
             tokens_reales_acumulados += tokens_escena
+            if modo == "texto_a_voz" and not texto:
+                # En modo exclusivo Texto a Voz, las escenas sin texto no crean pista de audio
+                continue
             historial_ad.append(texto)
             if len(historial_ad) > 6:
                 historial_ad.pop(0)
@@ -1561,13 +1579,14 @@ def api_fase1():
         # Encolar en Celery con auto-recuperación en caso de VersionMismatch de redis
         enqueued = False
         selected_voice = data.get("voice", "es-ES-AlvaroNeural")
-        ocr_enabled = bool(data.get("ocr_enabled", True))
+        modo = data.get("modo", "audiodescripcion")
+        ocr_enabled = bool(data.get("ocr_enabled", modo == "texto_a_voz"))
 
         for attempt in range(2):
             try:
                 procesar_video_task.apply_async(
                     args=[video_url, api_key, proyecto_id, user_email, uid, role, tokens_used, tokens_total],
-                    kwargs={"voice": selected_voice, "ocr_enabled": ocr_enabled}
+                    kwargs={"voice": selected_voice, "ocr_enabled": ocr_enabled, "modo": modo}
                 )
                 enqueued = True
                 break

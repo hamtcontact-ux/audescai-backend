@@ -253,8 +253,8 @@
             </li>
         </ul>
 
-        <!-- ÁREA INFERIOR: PERFIL DE USUARIO Y CONSUMO -->
-        <div class="mt-auto pt-4 border-t border-white/5 space-y-3">
+        <!-- ÁREA INFERIOR: PERFIL DE USUARIO Y CONSUMO (Posicionado más arriba en móvil + flecha atrás) -->
+        <div class="mt-auto pt-4 border-t border-white/5 space-y-2.5 mb-2 md:mb-0">
             <div id="user-profile-btn"
                 class="flex items-center gap-3 p-2 rounded-xl bg-surface-container-high/60 border border-white/5 hover:border-white/10 transition-colors">
                 <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20 flex-shrink-0">
@@ -276,6 +276,14 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Botón con flecha hacia atrás para esconder la barra lateral en celular -->
+            <button id="mobile-sidebar-back-btn"
+                class="md:hidden w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white transition-all text-xs font-semibold shadow-sm"
+                onclick="closeSidebar()">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                <span>Ocultar menú</span>
+            </button>
         </div>
     </nav>
     <!-- Main Content -->
@@ -349,12 +357,12 @@
                 </div>
             </section>
 
-            <!-- Barra de Búsqueda de Proyectos (%BUSQUEDA%) situada entre Suscripción y Mis Proyectos -->
+            <!-- Barra de Búsqueda de Proyectos con lupa a la izquierda -->
             <div class="relative w-full max-w-xl">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-[22px]">search</span>
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-[20px] pointer-events-none select-none z-10 flex items-center">search</span>
                 <input
                     id="project-search-input"
-                    class="w-full bg-surface-container/90 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-xs text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-500 shadow-md backdrop-blur-md"
+                    class="w-full bg-surface-container/90 border border-white/10 rounded-2xl py-2.5 pl-11 pr-4 text-xs text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-500 shadow-md backdrop-blur-md"
                     placeholder="Buscar proyectos..." type="text" />
             </div>
 
@@ -381,99 +389,108 @@
             <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">add</span>
         </button>
     </main>
-    <!-- Upload Modal Overlay Unificado con Glassmorphism -->
-    <div class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-4" id="upload-modal">
+    <!-- Upload Modal Overlay Unificado con Glassmorphism (Más reducido y con selector de modo) -->
+    <div class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 ease-out flex items-center justify-center p-3 sm:p-4" id="upload-modal">
         <div class="absolute inset-0 bg-black/75 backdrop-blur-md" id="modal-backdrop"></div>
-        <div class="relative glass-panel w-full max-w-lg rounded-3xl border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] bg-surface-container/95 backdrop-blur-xl pointer-events-auto transform scale-95 transition-transform duration-300 ease-out flex flex-col overflow-hidden animate-fade-in"
+        <div class="relative glass-panel w-full max-w-md rounded-3xl border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] bg-surface-container/95 backdrop-blur-xl pointer-events-auto transform scale-95 transition-transform duration-300 ease-out flex flex-col overflow-hidden animate-fade-in"
             id="modal-content">
-            <div class="flex justify-between items-center p-6 border-b border-white/10">
+            <div class="flex justify-between items-center px-5 py-4 border-b border-white/10">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        <span class="material-symbols-outlined text-[20px]">video_file</span>
+                    <div class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[18px]">video_file</span>
                     </div>
-                    <h2 class="text-lg font-bold text-white">Subir Video</h2>
+                    <h2 class="text-base font-bold text-white">Subir Video</h2>
                 </div>
                 <button
-                    class="text-zinc-400 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
+                    class="text-zinc-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
                     id="close-modal-btn">
-                    <span class="material-symbols-outlined text-[20px]">close</span>
+                    <span class="material-symbols-outlined text-[18px]">close</span>
                 </button>
             </div>
-            <div class="p-6">
-                <!-- Drop Zone -->
-                <div class="border-2 border-dashed border-white/15 hover:border-primary/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-white/[0.02] hover:bg-white/[0.04] group relative overflow-hidden"
+            <div class="p-4 sm:p-5 space-y-3.5">
+                <!-- Drop Zone Reducida -->
+                <div class="border-2 border-dashed border-white/15 hover:border-primary/50 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-white/[0.02] hover:bg-white/[0.04] group relative overflow-hidden"
                     id="drop-zone">
                     <input accept=".mp4,.mkv,.mov" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         id="file-input" type="file" />
                     <div
-                        class="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 text-primary group-hover:scale-110 transition-transform shadow-lg">
-                        <span class="material-symbols-outlined text-[32px]">cloud_upload</span>
+                        class="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-2 text-primary group-hover:scale-110 transition-transform shadow-md">
+                        <span class="material-symbols-outlined text-[24px]">cloud_upload</span>
                     </div>
-                    <p class="text-sm font-bold text-white mb-1">Arrastra y suelta tu video aquí</p>
-                    <p class="text-xs text-zinc-400">o haz clic para explorar en tu dispositivo</p>
-                    <p class="text-[10px] text-zinc-500 mt-4">Formatos soportados: .mp4, .mkv, .mov (Hasta 2GB)</p>
+                    <p class="text-xs font-bold text-white mb-0.5">Arrastra y suelta tu video aquí</p>
+                    <p class="text-[11px] text-zinc-400">o haz clic para explorar (.mp4, .mkv, .mov)</p>
                 </div>
                 <!-- Alerts -->
-                <div class="hidden mt-4 bg-error-container/20 border border-error-container text-error px-4 py-3 rounded-xl flex items-start gap-3"
+                <div class="hidden mt-2 bg-error-container/20 border border-error-container text-error px-3 py-2 rounded-xl flex items-start gap-2.5"
                     id="error-alert">
-                    <span class="material-symbols-outlined text-[20px] mt-0.5">error</span>
-                    <p class="text-xs">Error: Solo se admiten formatos de video (.mp4, .mkv, .mov)</p>
+                    <span class="material-symbols-outlined text-[18px] mt-0.5">error</span>
+                    <p class="text-xs">Solo se admiten formatos de video (.mp4, .mkv, .mov)</p>
                 </div>
-                <div class="hidden mt-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-xl flex items-start gap-3"
+                <div class="hidden mt-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-2 rounded-xl flex items-start gap-2.5"
                     id="success-alert">
-                    <span class="material-symbols-outlined text-[20px] mt-0.5">check_circle</span>
+                    <span class="material-symbols-outlined text-[18px] mt-0.5">check_circle</span>
                     <p class="text-xs font-semibold">Archivo listo para procesar</p>
                 </div>
 
-                <!-- Configuración Pre-Audiodescripción: Voz y Texto a Voz -->
-                <div class="mt-5 pt-4 border-t border-white/10 space-y-4">
-                    <!-- Selector de Voz de Audiodescripción con Prueba de Audio -->
-                    <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold text-white flex items-center gap-2">
-                                <span class="material-symbols-outlined text-primary text-[18px]">record_voice_over</span>
-                                Voz de Audiodescripción
-                            </label>
-                            <button type="button" id="upload-test-voice-btn" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[11px] font-bold transition-all shadow-sm">
-                                <span class="material-symbols-outlined text-[15px]" id="upload-test-voice-icon">play_arrow</span>
-                                <span id="upload-test-voice-text">Probar voz</span>
-                            </button>
+                <!-- Modo de Procesamiento Exclusivo (Audiodescribir vs De texto a Voz) -->
+                <div class="space-y-1.5 pt-1">
+                    <label class="text-[11px] font-bold text-white flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-primary text-[15px]">tune</span>
+                        Modo de procesamiento
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <!-- Opción 1: Audiodescribir -->
+                        <div id="mode-card-ad" class="relative flex flex-col p-2.5 rounded-xl border cursor-pointer transition-all border-primary/60 bg-primary/10 text-white shadow-sm">
+                            <input type="radio" name="processing-mode" value="audiodescripcion" class="sr-only" checked id="mode-ad-radio">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="material-symbols-outlined text-[18px] text-primary" id="mode-ad-icon">visibility</span>
+                                <span class="w-2 h-2 rounded-full bg-primary" id="mode-ad-dot"></span>
+                            </div>
+                            <span class="text-xs font-bold">Audiodescribir</span>
+                            <span class="text-[10px] text-zinc-400 mt-0.5 leading-tight">Narra escenas y acciones</span>
                         </div>
-                        <select id="upload-voice-select" class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all cursor-pointer">
-                            <option value="es-ES-AlvaroNeural" selected>Álvaro (España - Masculina)</option>
-                            <option value="es-ES-ElviraNeural">Elvira (España - Femenina)</option>
-                            <option value="es-MX-JorgeNeural">Jorge (México - Masculina)</option>
-                            <option value="es-MX-DaliaNeural">Dalia (México - Femenina)</option>
-                            <option value="es-US-AlonsoNeural">Alonso (EE.UU. - Masculina)</option>
-                            <option value="es-US-PalomaNeural">Paloma (EE.UU. - Femenina)</option>
-                        </select>
-                    </div>
 
-                    <!-- Opción De Texto a Voz -->
-                    <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all flex items-center justify-between gap-4">
-                        <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 mt-0.5">
-                                <span class="material-symbols-outlined text-[18px]">subtitles</span>
+                        <!-- Opción 2: De texto a voz -->
+                        <div id="mode-card-ocr" class="relative flex flex-col p-2.5 rounded-xl border cursor-pointer transition-all border-white/10 bg-white/[0.02] text-zinc-300 hover:border-white/20">
+                            <input type="radio" name="processing-mode" value="texto_a_voz" class="sr-only" id="mode-ocr-radio">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="material-symbols-outlined text-[18px] text-zinc-400" id="mode-ocr-icon">subtitles</span>
+                                <span class="w-2 h-2 rounded-full bg-transparent" id="mode-ocr-dot"></span>
                             </div>
-                            <div>
-                                <label for="upload-ocr-toggle" class="text-xs font-bold text-white cursor-pointer select-none">De texto a voz</label>
-                                <p class="text-[11px] text-zinc-400 leading-relaxed select-none">Si existe texto en pantalla será audiodescrito</p>
-                            </div>
+                            <span class="text-xs font-bold">De texto a voz</span>
+                            <span class="text-[10px] text-zinc-400 mt-0.5 leading-tight">Locuta solo texto en video</span>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input type="checkbox" id="upload-ocr-toggle" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
                     </div>
                 </div>
+
+                <!-- Selector de Voz Compacto con Prueba de Audio -->
+                <div class="p-3 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-bold text-white flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-primary text-[16px]">record_voice_over</span>
+                            Voz de Locución
+                        </label>
+                        <button type="button" id="upload-test-voice-btn" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[10px] font-bold transition-all shadow-sm">
+                            <span class="material-symbols-outlined text-[14px]" id="upload-test-voice-icon">play_arrow</span>
+                            <span id="upload-test-voice-text">Probar voz</span>
+                        </button>
+                    </div>
+                    <select id="upload-voice-select" class="w-full bg-surface-container-high border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all cursor-pointer">
+                        <option value="es-ES-AlvaroNeural" selected>Álvaro (España - Masculina)</option>
+                        <option value="es-ES-ElviraNeural">Elvira (España - Femenina)</option>
+                        <option value="es-MX-JorgeNeural">Jorge (México - Masculina)</option>
+                        <option value="es-MX-DaliaNeural">Dalia (México - Femenina)</option>
+                        <option value="es-US-AlonsoNeural">Alonso (EE.UU. - Masculina)</option>
+                        <option value="es-US-PalomaNeural">Paloma (EE.UU. - Femenina)</option>
+                    </select>
+                </div>
             </div>
-            <div
-                class="p-6 border-t border-white/10 flex justify-end gap-3 bg-surface-container-low/50">
+            <div class="px-5 py-3 border-t border-white/10 flex justify-end gap-2.5 bg-surface-container-low/50">
                 <button
-                    class="px-5 py-2.5 rounded-xl text-zinc-300 text-xs font-bold hover:bg-white/5 transition-colors border border-white/10"
+                    class="px-4 py-2 rounded-xl text-zinc-300 text-xs font-bold hover:bg-white/5 transition-colors border border-white/10"
                     id="cancel-upload-btn">Cancelar</button>
                 <button
-                    class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn opacity-50 cursor-not-allowed shadow-lg"
+                    class="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all glow-btn opacity-50 cursor-not-allowed shadow-lg"
                     id="process-btn">Procesar Video</button>
             </div>
         </div>
@@ -1190,6 +1207,45 @@
                 'es-US-PalomaNeural': 'Hola, soy Paloma. Esta es una demostración de mi voz para la audiodescripción de tus videos.'
             };
 
+            // Lógica de selección exclusiva de modo de procesamiento
+            const modeCardAd = document.getElementById('mode-card-ad');
+            const modeCardOcr = document.getElementById('mode-card-ocr');
+            const modeAdRadio = document.getElementById('mode-ad-radio');
+            const modeOcrRadio = document.getElementById('mode-ocr-radio');
+            const modeAdDot = document.getElementById('mode-ad-dot');
+            const modeOcrDot = document.getElementById('mode-ocr-dot');
+            const modeAdIcon = document.getElementById('mode-ad-icon');
+            const modeOcrIcon = document.getElementById('mode-ocr-icon');
+
+            function setProcessingMode(mode) {
+                if (mode === 'audiodescripcion') {
+                    if (modeAdRadio) modeAdRadio.checked = true;
+                    modeCardAd?.classList.add('border-primary/60', 'bg-primary/10', 'text-white', 'shadow-sm');
+                    modeCardAd?.classList.remove('border-white/10', 'bg-white/[0.02]', 'text-zinc-300');
+                    modeAdDot?.classList.replace('bg-transparent', 'bg-primary');
+                    modeAdIcon?.classList.replace('text-zinc-400', 'text-primary');
+
+                    modeCardOcr?.classList.remove('border-primary/60', 'bg-primary/10', 'text-white', 'shadow-sm');
+                    modeCardOcr?.classList.add('border-white/10', 'bg-white/[0.02]', 'text-zinc-300');
+                    modeOcrDot?.classList.replace('bg-primary', 'bg-transparent');
+                    modeOcrIcon?.classList.replace('text-primary', 'text-zinc-400');
+                } else {
+                    if (modeOcrRadio) modeOcrRadio.checked = true;
+                    modeCardOcr?.classList.add('border-primary/60', 'bg-primary/10', 'text-white', 'shadow-sm');
+                    modeCardOcr?.classList.remove('border-white/10', 'bg-white/[0.02]', 'text-zinc-300');
+                    modeOcrDot?.classList.replace('bg-transparent', 'bg-primary');
+                    modeOcrIcon?.classList.replace('text-zinc-400', 'text-primary');
+
+                    modeCardAd?.classList.remove('border-primary/60', 'bg-primary/10', 'text-white', 'shadow-sm');
+                    modeCardAd?.classList.add('border-white/10', 'bg-white/[0.02]', 'text-zinc-300');
+                    modeAdDot?.classList.replace('bg-primary', 'bg-transparent');
+                    modeAdIcon?.classList.replace('text-primary', 'text-zinc-400');
+                }
+            }
+
+            modeCardAd?.addEventListener('click', () => setProcessingMode('audiodescripcion'));
+            modeCardOcr?.addEventListener('click', () => setProcessingMode('texto_a_voz'));
+
             let uploadVoiceAudio = null;
             const uploadTestVoiceBtn = document.getElementById('upload-test-voice-btn');
             const uploadVoiceSelect = document.getElementById('upload-voice-select');
@@ -1582,11 +1638,11 @@
                     const fallbackThumb = videoUrl ? videoUrl.replace(/\.[a-zA-Z0-9]+$/, '.jpg') : null;
                     const finalThumbnail = clientThumb || fallbackThumb;
 
-                    // 3. Guardar metadata inicial en Firestore con miniatura, voz seleccionada y opción de texto a voz
+                    // 3. Guardar metadata inicial en Firestore con miniatura, voz y modo exclusivo
                     const uploadVoiceSelPre = document.getElementById('upload-voice-select');
-                    const uploadOcrTglPre = document.getElementById('upload-ocr-toggle');
                     const preSelectedVoice = uploadVoiceSelPre ? uploadVoiceSelPre.value : 'es-ES-AlvaroNeural';
-                    const preOcrEnabled = uploadOcrTglPre ? uploadOcrTglPre.checked : true;
+                    const preSelectedMode = document.querySelector('input[name="processing-mode"]:checked')?.value || 'audiodescripcion';
+                    const preOcrEnabled = (preSelectedMode === 'texto_a_voz');
 
                     await projectRef.set({
                         id: projectId,
@@ -1595,6 +1651,7 @@
                         video_url: videoUrl,
                         thumbnailUrl: finalThumbnail,
                         voice: preSelectedVoice,
+                        modo: preSelectedMode,
                         ocr_enabled: preOcrEnabled,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
@@ -1614,9 +1671,9 @@
                     }
 
                     const uploadVoiceSel = document.getElementById('upload-voice-select');
-                    const uploadOcrTgl = document.getElementById('upload-ocr-toggle');
                     const selectedVoice = uploadVoiceSel ? uploadVoiceSel.value : 'es-ES-AlvaroNeural';
-                    const ocrEnabled = uploadOcrTgl ? uploadOcrTgl.checked : true;
+                    const selectedMode = document.querySelector('input[name="processing-mode"]:checked')?.value || 'audiodescripcion';
+                    const isOcrOnly = (selectedMode === 'texto_a_voz');
 
                     const payloadData = {
                         video_url: videoUrl,
@@ -1630,7 +1687,8 @@
                         tokens_total: currentUserProfile?.tokens_total || FREE_TOKENS,
                         api_key: localKey,
                         voice: selectedVoice,
-                        ocr_enabled: ocrEnabled
+                        modo: selectedMode,
+                        ocr_enabled: isOcrOnly
                     };
 
                     let result = null;

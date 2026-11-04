@@ -303,6 +303,22 @@
             border: none;
         }
 
+        /* Pantalla completa inmersiva móvil (sin mensaje nativo del sistema) */
+        .mobile-theater-fullscreen {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            z-index: 99999 !important;
+            background: #000 !important;
+            object-fit: contain !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+        }
+
         @keyframes blockCascade {
             0% {
                 opacity: 0;
@@ -330,7 +346,7 @@
                     <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
                 </a>
                 <div class="h-6 w-px bg-white/10 mx-xs"></div>
-                <h1 class="font-title-lg text-title-lg text-on-surface tracking-tight">Clase de Historia - Lec 1</h1>
+                <h1 class="font-title-lg text-title-lg text-on-surface tracking-tight"> Editor </h1>
             </div>
             <div class="flex items-center gap-md">
                 <button
@@ -402,9 +418,11 @@
                             id="video-scrubber" max="100" min="0" step="0.001"
                             style="height: 6px; outline: none; margin: 0;" type="range" value="0" /></div>
                 </div>
-                <div class="bg-surface-container border-b border-white/5 flex flex-col md:flex-row md:items-center px-3 sm:px-4 py-2 md:py-0 md:h-12 gap-2 md:gap-4 shrink-0">
+                <div
+                    class="bg-surface-container border-b border-white/5 flex flex-col md:flex-row md:items-center px-3 sm:px-4 py-2 md:py-0 md:h-12 gap-2 md:gap-4 shrink-0">
                     <!-- Fila 1: Botón Editar/Añadir + Controles de Reproducción y Volumen Pelismaster -->
-                    <div class="flex items-center justify-between md:justify-start gap-2 sm:gap-4 w-full md:w-auto flex-1">
+                    <div
+                        class="flex items-center justify-between md:justify-start gap-2 sm:gap-4 w-full md:w-auto flex-1">
                         <div class="flex items-center shrink-0 border-r border-white/5 pr-2 sm:pr-4">
                             <button
                                 class="px-3 sm:px-4 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center gap-1.5 sm:gap-2 w-24 sm:w-28 shadow-sm"
@@ -419,29 +437,31 @@
                                     class="material-symbols-outlined text-[20px]">skip_previous</span></button>
                             <button
                                 class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
-                                id="video-play-btn"><span class="material-symbols-outlined text-[24px]" id="video-play-icon"
+                                id="video-play-btn"><span class="material-symbols-outlined text-[24px]"
+                                    id="video-play-icon"
                                     style="font-variation-settings: 'FILL' 1;">play_arrow</span></button>
                             <button
                                 class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
                                 id="video-next-btn"><span
                                     class="material-symbols-outlined text-[20px]">skip_next</span></button>
-                            
+
                             <!-- Control de volumen estilo Pelismaster -->
                             <div class="flex items-center gap-2 pl-2 border-l border-white/5">
                                 <button
                                     class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
                                     id="video-volume-btn" title="Silenciar / Activar sonido">
-                                    <span class="material-symbols-outlined text-[20px]" id="video-volume-icon">volume_up</span>
+                                    <span class="material-symbols-outlined text-[20px]"
+                                        id="video-volume-icon">volume_up</span>
                                 </button>
                                 <input type="range" id="video-volume-slider" min="0" max="1" step="0.05" value="1"
-                                    class="w-16 sm:w-24 cursor-pointer"
-                                    title="Control de volumen">
+                                    class="w-16 sm:w-24 cursor-pointer" title="Control de volumen">
                             </div>
                         </div>
                     </div>
 
                     <!-- Fila 2: En vista vertical de celular debajo con separadores | En PC a la derecha en la misma fila -->
-                    <div class="flex items-center justify-around md:justify-end gap-3 sm:gap-4 w-full md:w-auto pt-2 md:pt-0 border-t border-white/5 md:border-t-0 md:border-l md:border-white/5 md:pl-4">
+                    <div
+                        class="flex items-center justify-around md:justify-end gap-3 sm:gap-4 w-full md:w-auto pt-2 md:pt-0 border-t border-white/5 md:border-t-0 md:border-l md:border-white/5 md:pl-4">
                         <!-- Deshacer -->
                         <button
                             class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors"
@@ -456,7 +476,8 @@
                                 id="zoom-out-btn" title="Alejar zoom">
                                 <span class="material-symbols-outlined text-[18px]">zoom_out</span>
                             </button>
-                            <span class="text-xs text-red-500 font-mono font-bold w-12 text-center" id="zoom-level">150%</span>
+                            <span class="text-xs text-red-500 font-mono font-bold w-12 text-center"
+                                id="zoom-level">150%</span>
                             <button
                                 class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors"
                                 id="zoom-in-btn" title="Acercar zoom">
@@ -532,7 +553,8 @@
             </div>
         </main>
     </div>
-    <aside class="hidden lg:flex fixed inset-y-0 right-0 w-full sm:w-[380px] lg:w-[320px] lg:relative lg:inset-auto border-l border-white/10 bg-surface flex-col shrink-0 overflow-y-auto h-full z-50 shadow-2xl lg:shadow-none animate-fade-in"
+    <aside
+        class="hidden lg:flex fixed inset-y-0 right-0 w-full sm:w-[380px] lg:w-[320px] lg:relative lg:inset-auto border-l border-white/10 bg-surface flex-col shrink-0 overflow-y-auto h-full z-50 shadow-2xl lg:shadow-none animate-fade-in"
         id="editSidebar">
         <div
             class="p-md border-b border-white/10 flex justify-between items-center sticky top-0 bg-surface/90 backdrop-blur-sm z-10">
@@ -540,9 +562,9 @@
                 <span class="material-symbols-outlined text-primary">edit_note</span>
                 Edición Asistida
             </h2>
-            <button class="text-zinc-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5 lg:hidden flex items-center justify-center"
-                id="close-sidebar-x-btn"
-                onclick="document.getElementById('editSidebar').classList.add('hidden')">
+            <button
+                class="text-zinc-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5 lg:hidden flex items-center justify-center"
+                id="close-sidebar-x-btn" onclick="document.getElementById('editSidebar').classList.add('hidden')">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
         </div>
@@ -568,8 +590,7 @@
             <div class="hidden" id="duration-display"></div>
             <!-- AI Voice Selector -->
             <div class="flex flex-col gap-xs mt-sm">
-                <label class="font-label-sm text-label-sm text-on-surface-variant">Voz de IA (Catálogo
-                    Cloud)</label>
+                <label class="font-label-sm text-label-sm text-on-surface-variant">Voz con IA</label>
                 <div class="flex gap-2">
                     <div class="relative flex-1">
                         <span
@@ -586,8 +607,8 @@
                             <button
                                 class="w-full bg-[#1a1b1e] border border-white/10 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:bg-white/5 transition-colors focus:outline-none focus:border-primary"
                                 id="voice-dropdown-btn">
-                                <span class="font-label-md text-on-surface truncate"
-                                    id="voice-dropdown-label">Álvaro - Voz Masculina (España)</span>
+                                <span class="font-label-md text-on-surface truncate" id="voice-dropdown-label">Álvaro -
+                                    Voz Masculina (España)</span>
                                 <span
                                     class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
                             </button>
@@ -640,10 +661,14 @@
                 </div>
             </div>
             <!-- Text Area con cuadro de esquinas redondeadas -->
-            <div class="flex flex-col gap-2 relative p-3.5 rounded-2xl bg-surface-container-high/40 border border-white/10 shadow-sm">
+            <div
+                class="flex flex-col gap-2 relative p-3.5 rounded-2xl bg-surface-container-high/40 border border-white/10 shadow-sm">
                 <div class="flex justify-between items-center">
-                    <label class="font-label-sm text-label-sm text-on-surface-variant font-medium">Texto de Audiodescripción</label>
-                    <button class="text-primary hover:text-primary-container transition-colors p-1 rounded-lg hover:bg-white/5" title="Generar con IA">
+                    <label class="font-label-sm text-label-sm text-on-surface-variant font-medium">Texto de
+                        Audiodescripción</label>
+                    <button
+                        class="text-primary hover:text-primary-container transition-colors p-1 rounded-lg hover:bg-white/5"
+                        title="Generar con IA">
                         <span class="material-symbols-outlined text-[18px]">magic_button</span>
                     </button>
                 </div>
@@ -676,8 +701,7 @@
             <!-- Botón Cerrar Edición Asistida (Solo visible en celular) -->
             <button
                 class="w-full mt-2.5 py-2.5 rounded-xl bg-surface-container-high hover:bg-white/10 border border-white/10 text-white font-semibold text-xs transition-all flex justify-center items-center gap-2 lg:hidden shadow-sm"
-                id="close-sidebar-mobile-btn"
-                onclick="document.getElementById('editSidebar').classList.add('hidden')">
+                id="close-sidebar-mobile-btn" onclick="document.getElementById('editSidebar').classList.add('hidden')">
                 <span class="material-symbols-outlined text-[18px]">expand_more</span>
                 <span>Cerrar Edición</span>
             </button>
@@ -1541,8 +1565,37 @@
                 });
             }
 
+            let isCustomFullscreen = false;
             videoFullscreenBtn.addEventListener('click', () => {
-                !document.fullscreenElement ? mainVideo.requestFullscreen() : document.exitFullscreen();
+                const isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                if (isMobile) {
+                    isCustomFullscreen = !isCustomFullscreen;
+                    if (isCustomFullscreen) {
+                        mainVideo.classList.add('mobile-theater-fullscreen');
+                        document.body.classList.add('overflow-hidden');
+                        let exitBtn = document.getElementById('custom-exit-fs-btn');
+                        if (!exitBtn) {
+                            exitBtn = document.createElement('button');
+                            exitBtn.id = 'custom-exit-fs-btn';
+                            exitBtn.className = 'fixed top-4 right-4 z-[100000] p-2.5 rounded-full bg-black/75 text-white backdrop-blur-md border border-white/20 shadow-2xl flex items-center justify-center';
+                            exitBtn.innerHTML = '<span class="material-symbols-outlined text-[24px]">fullscreen_exit</span>';
+                            exitBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                isCustomFullscreen = false;
+                                mainVideo.classList.remove('mobile-theater-fullscreen');
+                                document.body.classList.remove('overflow-hidden');
+                                exitBtn.remove();
+                            };
+                            document.body.appendChild(exitBtn);
+                        }
+                    } else {
+                        mainVideo.classList.remove('mobile-theater-fullscreen');
+                        document.body.classList.remove('overflow-hidden');
+                        document.getElementById('custom-exit-fs-btn')?.remove();
+                    }
+                } else {
+                    !document.fullscreenElement ? mainVideo.requestFullscreen().catch(() => {}) : document.exitFullscreen().catch(() => {});
+                }
             });
 
             // ═══════════════════════════════════════════════════════════
@@ -1620,7 +1673,7 @@
             function buildTimelineRuler(totalDur) {
                 totalDur = totalDur || (mainVideo?.duration || 300);
                 const playhead = document.getElementById('timeline-playhead');
-                timelineRuler.innerHTML = ''; 
+                timelineRuler.innerHTML = '';
                 if (playhead) timelineRuler.appendChild(playhead);
                 const canvas = document.getElementById('timeline-canvas');
                 if (canvas) canvas.style.width = `${Math.ceil(totalDur * PX_PER_SEC) + 400}px`;
