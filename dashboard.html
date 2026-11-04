@@ -253,10 +253,10 @@
             </li>
         </ul>
 
-        <!-- ÁREA INFERIOR: PERFIL DE USUARIO Y CONSUMO (Posicionado más arriba en móvil + flecha atrás) -->
-        <div class="mt-auto pt-4 border-t border-white/5 space-y-2.5 mb-2 md:mb-0">
+        <!-- ÁREA INFERIOR: PERFIL DE USUARIO Y CONSUMO (Posicionado más arriba en móvil + flecha hacia atrás debajo) -->
+        <div class="mt-auto pt-4 border-t border-white/5 space-y-3 mb-8 md:mb-0">
             <div id="user-profile-btn"
-                class="flex items-center gap-3 p-2 rounded-xl bg-surface-container-high/60 border border-white/5 hover:border-white/10 transition-colors">
+                class="flex items-center gap-3 p-2.5 rounded-xl bg-surface-container-high/70 border border-white/10 hover:border-white/20 transition-colors shadow-sm">
                 <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20 flex-shrink-0">
                     <span class="material-symbols-outlined text-[20px]">person</span>
                 </div>
@@ -277,11 +277,11 @@
                 </div>
             </div>
 
-            <!-- Botón con flecha hacia atrás para esconder la barra lateral en celular -->
+            <!-- Flecha con símbolo hacia atrás para esconder la barra menú lateral en celular -->
             <button id="mobile-sidebar-back-btn"
-                class="md:hidden w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white transition-all text-xs font-semibold shadow-sm"
-                onclick="closeSidebar()">
-                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                class="md:hidden w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white transition-all text-xs font-semibold shadow-md active:scale-95"
+                onclick="window.closeSidebar && window.closeSidebar()">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
                 <span>Ocultar menú</span>
             </button>
         </div>
@@ -357,9 +357,11 @@
                 </div>
             </section>
 
-            <!-- Barra de Búsqueda de Proyectos con lupa a la izquierda -->
-            <div class="relative w-full max-w-xl">
-                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-[20px] pointer-events-none select-none z-10 flex items-center">search</span>
+            <!-- Barra de Búsqueda de Proyectos con lupa como icono al inicio (a la izquierda) -->
+            <div class="relative w-full max-w-xl group">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
+                    <span class="material-symbols-outlined text-zinc-400 group-focus-within:text-primary text-[20px] transition-colors">search</span>
+                </div>
                 <input
                     id="project-search-input"
                     class="w-full bg-surface-container/90 border border-white/10 rounded-2xl py-2.5 pl-11 pr-4 text-xs text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-500 shadow-md backdrop-blur-md"
@@ -1820,10 +1822,12 @@
                 sidebar.classList.add('-translate-x-full');
                 sidebarOverlay.classList.add('hidden');
             }
+            window.closeSidebar = closeSidebar;
 
             sidebarToggle?.addEventListener('click', openSidebar);
             sidebarClose?.addEventListener('click', closeSidebar);
             sidebarOverlay?.addEventListener('click', closeSidebar);
+            document.getElementById('mobile-sidebar-back-btn')?.addEventListener('click', closeSidebar);
 
             // Close sidebar when clicking any navigation link (useful on mobile)
             sidebar.querySelectorAll('a, button').forEach(el => {
