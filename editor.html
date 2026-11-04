@@ -1074,7 +1074,10 @@
 
             // Motor de Audio IA: Map<blockId, HTMLAudioElement>
             const audioPool = new Map();
-            let playingAudioId = null;        // ID del bloque cuyo audio IA está sonando
+            const playedBlockIds = new Set();  // Set<blockId> reproducidos en la pasada actual para evitar repeticiones
+            let currentPlayingAudio = null;    // Instancia de Audio activa única en reproducción
+            let currentPlayingBlockId = null;  // ID del bloque actualmente activo
+            let playingAudioId = null;        // ID del bloque cuyo audio IA está sonando (retrocompatibilidad)
             let isInteractingBlock = false;   // Flag para evitar interferencias de hover mientras se arrastra o redimensiona
 
             // ═══════════════════════════════════════════════════════════
@@ -1571,6 +1574,7 @@
                 blocks = JSON.parse(undoStack.pop());
                 renderTimeline();
                 preloadAudioPool();
+                syncPlayedBlocksOnSeek(mainVideo.currentTime);
                 if (activeBlockId !== null) {
                     const exists = blocks.find(b => b.id === activeBlockId);
                     if (exists) selectBlock(activeBlockId); else selectBlock(blocks[0]?.id || null);
@@ -1585,6 +1589,7 @@
                 blocks = JSON.parse(redoStack.pop());
                 renderTimeline();
                 preloadAudioPool();
+                syncPlayedBlocksOnSeek(mainVideo.currentTime);
                 if (activeBlockId !== null) {
                     const exists = blocks.find(b => b.id === activeBlockId);
                     if (exists) selectBlock(activeBlockId); else selectBlock(blocks[0]?.id || null);
@@ -1658,10 +1663,35 @@
             }
 
             mainVideo.addEventListener('timeupdate', () => { if (!isScrubbing) updatePlayheadUI(mainVideo.currentTime); });
-            mainVideo.addEventListener('seeking', () => { updatePlayheadUI(mainVideo.currentTime); stopAllAudioPool(); });
-            mainVideo.addEventListener('play', () => { videoPlayIcon.textContent = 'pause'; });
-            mainVideo.addEventListener('pause', () => { videoPlayIcon.textContent = 'play_arrow'; stopAllAudioPool(); });
-            mainVideo.addEventListener('ended', () => { videoPlayIcon.textContent = 'play_arrow'; stopAllAudioPool(); });
+            mainVideo.addEventListener('seeking', () => {
+                updatePlayheadUI(mainVideo.currentTime);
+                stopActiveAudio();
+            });
+            mainVideo.addEventListener('seeked', () => {
+                syncPlayedBlocksOnSeek(mainVideo.currentTime);
+            });
+            mainVideo.addEventListener('play', () => {
+                videoPlayIcon.textContent = 'pause';
+                if (currentPlayingAudio && currentPlayingAudio.paused && !currentPlayingAudio.ended) {
+                    currentPlayingAudio.playbackRate = mainVideo.playbackRate || 1.0;
+                    currentPlayingAudio.play().catch(() => {});
+                }
+            });
+            mainVideo.addEventListener('pause', () => {
+                videoPlayIcon.textContent = 'play_arrow';
+                if (currentPlayingAudio && !currentPlayingAudio.paused) {
+                    currentPlayingAudio.pause();
+                }
+            });
+            mainVideo.addEventListener('ratechange', () => {
+                if (currentPlayingAudio) {
+                    currentPlayingAudio.playbackRate = mainVideo.playbackRate || 1.0;
+                }
+            });
+            mainVideo.addEventListener('ended', () => {
+                videoPlayIcon.textContent = 'play_arrow';
+                stopAllAudioPool();
+            });
 
             videoPlayBtn.addEventListener('click', () => { mainVideo.paused ? mainVideo.play() : mainVideo.pause(); });
             videoPrevBtn.addEventListener('click', () => { mainVideo.currentTime = Math.max(0, mainVideo.currentTime - SEEK_STEP); });
@@ -2078,80 +2108,192 @@
             }
 
             // ═══════════════════════════════════════════════════════════
-            //  MOTOR DE AUDIO IA
+            //  MOTOR DE AUDIODESCRIPCIÓN SINCRONIZADA Y BUFFER RESILIENTE
             // ═══════════════════════════════════════════════════════════
-            function preloadAudioPool() {
-                audioPool.forEach(a => a.pause()); audioPool.clear(); playingAudioId = null;
+
+            // Sincroniza el registro de bloques reproducidos cuando el usuario busca o salta en la línea de tiempo
+            function syncPlayedBlocksOnSeek(currentT) {
+                playedBlockIds.clear();
+                // Bloques que ya concluyeron antes de la posición actual se marcan como reproducidos
                 blocks.forEach(b => {
-                    let url = b.audio_url;
-                    if (!url && b.text) {
-                        url = `${FLASK_API}/api/tts?text=${encodeURIComponent(b.text)}&voice=${encodeURIComponent(b.voice || 'es-MX-JorgeNeural')}`;
-                    }
-                    if (url) {
-                        const a = new Audio(url);
-                        a.preload = 'auto';
-                        a.volume = 1.0; // Fuerza al audio a sonar al 100% de su capacidad
-                        audioPool.set(b.id, a);
+                    if (b.end <= currentT) {
+                        playedBlockIds.add(b.id);
                     }
                 });
+                stopActiveAudio();
             }
-            function tickAudioEngine(currentT) {
-                if (mainVideo.paused || mainVideo.seeking) { stopAllAudioPool(); return; }
 
-                // Ordenados por start para comprobar solapamientos fácilmente
-                const sortedBlocks = [...blocks].sort((a, b) => a.start - b.start);
+            // Detiene de forma limpia el audio que está sonando en este instante
+            function stopActiveAudio() {
+                if (currentPlayingAudio) {
+                    try {
+                        currentPlayingAudio.pause();
+                        currentPlayingAudio.currentTime = 0;
+                    } catch (_) {}
+                }
+                currentPlayingAudio = null;
+                currentPlayingBlockId = null;
+                playingAudioId = null;
+            }
 
-                // Buscar el bloque que está activo actualmente
-                let found = null;
-                for (let i = 0; i < sortedBlocks.length; i++) {
-                    const b = sortedBlocks[i];
-                    if (currentT >= b.start && currentT < b.end) {
-                        // Si el siguiente bloque empieza antes del final de este bloque y ya cruzamos su start, le damos prioridad
-                        const nextB = sortedBlocks[i + 1];
-                        if (nextB && nextB.start <= b.end && currentT >= nextB.start) {
-                            continue;
-                        }
-                        found = b;
-                        break;
+            // Detiene todos los audios de la piscina
+            function stopAllAudioPool() {
+                stopActiveAudio();
+                audioPool.forEach(a => {
+                    try {
+                        a.pause();
+                        a.currentTime = 0;
+                    } catch (_) {}
+                });
+            }
+
+            // Precarga y mantenimiento de buffers en memoria sin recargas innecesarias
+            function preloadAudioPool() {
+                const currentBlockIds = new Set(blocks.map(b => b.id));
+
+                // 1. Limpiar audios de bloques eliminados
+                for (const [id, a] of audioPool.entries()) {
+                    if (!currentBlockIds.has(id)) {
+                        try { a.pause(); a.currentTime = 0; } catch (_) {}
+                        audioPool.delete(id);
                     }
                 }
 
-                if (!found) { if (playingAudioId !== null) { const p = audioPool.get(playingAudioId); if (p) { p.pause(); p.currentTime = 0; } playingAudioId = null; } return; }
+                // 2. Precargar o actualizar audios de los bloques activos
+                blocks.forEach(b => {
+                    if (!b.text || !b.text.trim()) return;
 
-                const a = audioPool.get(found.id);
-                if (a) {
-                    // Pausar estrictamente si se pasa del final físico del bloque
-                    const relativeTime = currentT - found.start;
-                    const durationLimit = found.end - found.start;
-                    if (relativeTime >= durationLimit) {
-                        a.pause();
-                        if (playingAudioId === found.id) {
-                            playingAudioId = null;
-                        }
+                    const voice = b.voice || 'es-ES-AlvaroNeural';
+                    let targetUrl = b.audio_url;
+
+                    // Ajuste adaptativo de velocidad si el texto es muy largo para el espacio disponible
+                    const durationLimit = Math.max(1.0, (b.end || 0) - (b.start || 0));
+                    const estimatedSpeechSec = b.text.trim().length / 14.5;
+                    let speedRate = "+0%";
+                    if (estimatedSpeechSec > durationLimit) {
+                        const neededBoost = Math.min(40, Math.max(10, Math.round(((estimatedSpeechSec / durationLimit) - 1.0) * 100)));
+                        speedRate = `+${neededBoost}%`;
+                    }
+
+                    if (!targetUrl) {
+                        targetUrl = `${FLASK_API}/api/tts?text=${encodeURIComponent(b.text.trim())}&voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(speedRate)}`;
+                    }
+
+                    const existing = audioPool.get(b.id);
+                    // Si ya existe y conserva el mismo texto, voz y URL, mantener el buffer en memoria intacto
+                    if (existing && existing._meta && existing._meta.text === b.text && existing._meta.voice === voice && existing._meta.url === targetUrl) {
+                        existing.volume = mainVideo.muted ? 0 : (typeof masterVolume !== 'undefined' ? masterVolume : 1.0);
                         return;
                     }
 
-                    if (found.id !== playingAudioId) {
-                        if (playingAudioId !== null) {
-                            const prevAudio = audioPool.get(playingAudioId);
-                            if (prevAudio) { prevAudio.pause(); prevAudio.currentTime = 0; }
+                    // Si es nuevo o cambió, pausar el anterior si existía
+                    if (existing) {
+                        try { existing.pause(); } catch (_) {}
+                    }
+
+                    const a = new Audio();
+                    a.preload = 'auto';
+                    a.src = targetUrl;
+                    a.volume = mainVideo.muted ? 0 : (typeof masterVolume !== 'undefined' ? masterVolume : 1.0);
+                    a.playbackRate = mainVideo.playbackRate || 1.0;
+                    a._meta = { text: b.text, voice: voice, url: targetUrl };
+
+                    // Pre-almacenar en buffer del navegador de inmediato
+                    try { a.load(); } catch (_) {}
+
+                    audioPool.set(b.id, a);
+                });
+            }
+
+            // Ciclo de reloj del motor de audio (llamado por timeupdate / requestAnimationFrame)
+            function tickAudioEngine(currentT) {
+                // Si el video está en pausa o buscando, pausar el audio actual y salir
+                if (mainVideo.paused || mainVideo.seeking) {
+                    if (currentPlayingAudio && !currentPlayingAudio.paused) {
+                        try { currentPlayingAudio.pause(); } catch (_) {}
+                    }
+                    return;
+                }
+
+                // Si el video se reanudó y el audio activo estaba en pausa (sin haber terminado), reanudar
+                if (currentPlayingAudio && currentPlayingAudio.paused && !currentPlayingAudio.ended) {
+                    currentPlayingAudio.playbackRate = mainVideo.playbackRate || 1.0;
+                    currentPlayingAudio.play().catch(() => {});
+                }
+
+                // 1. Verificar si el bloque actualmente activo superó su tiempo límite o ya terminó
+                if (currentPlayingBlockId !== null) {
+                    const currentBlock = blocks.find(b => b.id === currentPlayingBlockId);
+                    if (!currentBlock || currentT >= currentBlock.end || currentPlayingAudio?.ended) {
+                        // El bloque terminó su intervalo o finalizó su alocución: detener limpiamente
+                        stopActiveAudio();
+                    }
+                }
+
+                // 2. Evaluar si debe iniciar un nuevo bloque
+                const sortedBlocks = [...blocks].sort((a, b) => a.start - b.start);
+
+                for (let i = 0; i < sortedBlocks.length; i++) {
+                    const b = sortedBlocks[i];
+
+                    // Solo bloques dentro de cuyo intervalo se encuentra el cabezal
+                    if (currentT >= b.start && currentT < b.end) {
+                        // REGLA FUNDAMENTAL: Si ya fue reproducido en esta pasada, IGNORAR (previene bucles y repeticiones)
+                        if (playedBlockIds.has(b.id)) {
+                            continue;
                         }
-                        a.currentTime = Math.max(0, relativeTime);
-                        a.play().catch(() => { });
-                        playingAudioId = found.id;
-                    } else {
-                        // Si ya está sonando, verificar que no se haya desincronizado más de 0.25 segundos del video
-                        if (Math.abs(a.currentTime - relativeTime) > 0.25) {
-                            a.currentTime = relativeTime;
+
+                        // Si ya está sonando este mismo bloque, nada que hacer
+                        if (currentPlayingBlockId === b.id) {
+                            break;
                         }
-                        // Si por alguna razón está pausado pero el cabezal sigue en rango, reanudar
-                        if (a.paused && relativeTime < durationLimit) {
-                            a.play().catch(() => { });
+
+                        // Si había otro bloque sonando, detenerlo primero para evitar solapamientos
+                        if (currentPlayingBlockId !== null) {
+                            stopActiveAudio();
                         }
+
+                        const a = audioPool.get(b.id);
+                        if (a) {
+                            // Registrar inmediatamente en playedBlockIds para que NUNCA se vuelva a disparar
+                            playedBlockIds.add(b.id);
+                            currentPlayingBlockId = b.id;
+                            currentPlayingAudio = a;
+                            playingAudioId = b.id;
+
+                            // Sincronizar volumen y velocidad exacta con el video
+                            a.volume = mainVideo.muted ? 0 : (typeof masterVolume !== 'undefined' ? masterVolume : 1.0);
+                            a.playbackRate = mainVideo.playbackRate || 1.0;
+
+                            // Sincronización de offset si el video arrancó unos milisegundos dentro del bloque
+                            const offset = Math.max(0, currentT - b.start);
+                            if (offset > 0.15 && a.duration && offset < a.duration) {
+                                try { a.currentTime = offset; } catch (_) {}
+                            } else {
+                                try { a.currentTime = 0; } catch (_) {}
+                            }
+
+                            // Reproducción con latencia 0 usando el buffer precargado
+                            const playPromise = a.play();
+                            if (playPromise !== undefined) {
+                                playPromise.catch(err => {
+                                    console.warn(`[AudioEngine] Error al reproducir bloque ${b.id}:`, err);
+                                });
+                            }
+
+                            // Callback al finalizar: limpiar estado activo manteniendo el ID en playedBlockIds
+                            a.onended = () => {
+                                if (currentPlayingBlockId === b.id) {
+                                    currentPlayingAudio = null;
+                                    currentPlayingBlockId = null;
+                                    playingAudioId = null;
+                                }
+                            };
+                        }
+                        break;
                     }
                 }
             }
-            function stopAllAudioPool() { audioPool.forEach(a => { a.pause(); a.currentTime = 0; }); playingAudioId = null; }
 
             // ═══════════════════════════════════════════════════════════
             //  RENDER DE BLOQUES CON INTEGRACIÓN OPTIMIZADA DE INTERACT.JS
@@ -2638,6 +2780,7 @@
                         refreshDurationDisplay();
 
                         checkTextLength();
+                        playedBlockIds.delete(block.id);
                         preloadAudioPool();
                         persistData();
                         showToast('Cambios aplicados correctamente', 'success');
@@ -2692,9 +2835,13 @@
             function eliminarBloqueActivo() {
                 if (activeBlockId === null) return;
                 saveState();
-                blocks = blocks.filter(b => b.id !== activeBlockId);
+                const removedId = activeBlockId;
+                blocks = blocks.filter(b => b.id !== removedId);
+                playedBlockIds.delete(removedId);
                 activeBlockId = null;
                 renderTimeline();
+                preloadAudioPool();
+                syncPlayedBlocksOnSeek(mainVideo.currentTime);
                 editSidebar.classList.add('hidden');
                 persistData();
                 showToast('Bloque eliminado', 'info');

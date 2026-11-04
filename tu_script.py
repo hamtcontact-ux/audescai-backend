@@ -960,11 +960,20 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
             if len(historial_ad) > 6:
                 historial_ad.pop(0)
 
-            # Pre-generar TTS
+            # Pre-generar TTS con verificación y ajuste de duración para que nunca desborde el intervalo
             voz_default = selected_voice or "es-ES-AlvaroNeural"
             if texto:
-                ruta_cache = obtener_ruta_cache_tts(texto, voz_default)
-                generar_tts_robusto(texto, voz_default, ruta_cache)
+                espacio_disponible = max(1.0, fin - inicio)
+                estimado_seg = len(texto.strip()) / 14.5
+                rate_ajustado = "+0%"
+
+                # Si el texto estimado es más largo que el espacio disponible, acelerar dicción
+                if estimado_seg > espacio_disponible:
+                    boost = min(45, max(10, int(((estimado_seg / espacio_disponible) - 1.0) * 100 + 10)))
+                    rate_ajustado = f"+{boost}%"
+
+                ruta_cache = obtener_ruta_cache_tts(texto, voz_default, rate_ajustado)
+                generar_tts_robusto(texto, voz_default, ruta_cache, rate=rate_ajustado)
                 try:
                     clip_audio = AudioFileClip(ruta_cache)
                     duracion_audio = clip_audio.duration
@@ -972,7 +981,20 @@ def procesar_video_task(video_url, api_key, proyecto_id, *args, **kwargs):
                 except Exception:
                     duracion_audio = len(texto) / 15.0
 
-                fin_limite = inicio + duracion_audio + 0.5
+                # Verificación estricta: Si aún con el rate inicial supera el espacio disponible, aumentar velocidad
+                if duracion_audio > espacio_disponible * 1.05:
+                    boost_extra = min(50, int(((duracion_audio / espacio_disponible) - 1.0) * 100 + 15))
+                    rate_ajustado = f"+{boost_extra}%"
+                    ruta_cache_rapida = obtener_ruta_cache_tts(texto, voz_default, rate_ajustado)
+                    generar_tts_robusto(texto, voz_default, ruta_cache_rapida, rate=rate_ajustado)
+                    try:
+                        clip_audio2 = AudioFileClip(ruta_cache_rapida)
+                        duracion_audio = clip_audio2.duration
+                        clip_audio2.close()
+                    except Exception:
+                        pass
+
+                fin_limite = inicio + duracion_audio + 0.3
                 if fin_limite < fin:
                     fin = float(f"{fin_limite:.2f}")
 
